@@ -322,7 +322,8 @@ class PerAppProxyPage extends HookConsumerWidget with PresLogger {
               subtitle: Text(
                 package.packageName,
                 style: Theme.of(context).textTheme.bodySmall,
-                maxLines: 1, overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               value: flag == null ? false : PkgFlag.checkboxValue(flag),
               tristate: true,

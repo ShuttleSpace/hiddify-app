@@ -111,7 +111,7 @@ Future<void> lazyBootstrap(WidgetsBinding widgetsBinding, Environment env) async
     // );
 
     if (PlatformUtils.isDesktop) {
-      await _safeInit("system tray", () => container.read(systemTrayNotifierProvider.future), timeout: 1000);
+      await _safeInit("system tray", () => container.read(systemTrayNotifierProvider.future), timeout: 2000);
     }
 
     if (PlatformUtils.isAndroid) {

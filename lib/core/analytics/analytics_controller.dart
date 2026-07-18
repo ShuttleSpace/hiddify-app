@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:hiddify/core/analytics/analytics_filter.dart';
 import 'package:hiddify/core/analytics/analytics_logger.dart';
+import 'package:hiddify/core/app_info/app_info_provider.dart';
 
 import 'package:hiddify/core/logger/logger_controller.dart';
 import 'package:hiddify/core/model/environment.dart';
@@ -35,7 +36,13 @@ class AnalyticsController extends _$AnalyticsController with AppLogger {
 
       // final env = ref.read(environmentProvider);
       // final appInfo = await ref.read(appInfoProvider.future);
-      final dsn = !kDebugMode || _testCrashReport ? Environment.sentryDSN : "";
+      final env = ref.read(environmentProvider);
+      final isDev = env == Environment.dev;
+      final dsn = !kDebugMode || _testCrashReport
+          ? Environment.sentryDSN
+          : isDev
+          ? Environment.localDSN
+          : "";
       final sentryLogger = SentryLoggyIntegration();
       LoggerController.instance.addPrinter("analytics", sentryLogger);
 
@@ -50,7 +57,8 @@ class AnalyticsController extends _$AnalyticsController with AppLogger {
         // options.attachScreenshot = true;
         options.serverName = "";
         options.attachThreads = true;
-        options.tracesSampleRate = 0.20;
+        options.tracesSampleRate = isDev ? 0.01 : 0.20;
+        options.enableAutoSessionTracking = !isDev;
         options.enableUserInteractionTracing = true;
         options.addIntegration(sentryLogger);
         options.beforeSend = sentryBeforeSend;
