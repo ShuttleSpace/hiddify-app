@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
@@ -10,23 +11,45 @@ import 'package:hiddify/hiddifycore/generated/v2/hcore/hcore.pb.dart';
 import 'package:hiddify/utils/custom_loggers.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class ActiveProxyFooter extends ConsumerWidget with InfraLogger {
+class ActiveProxyFooter extends ConsumerStatefulWidget with InfraLogger {
   const ActiveProxyFooter({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final connectionState = ref.watch(
-      connectionNotifierProvider.select((value) => value.valueOrNull ?? const Disconnected()),
-    );
+  ConsumerState<ActiveProxyFooter> createState() => _ActiveProxyFooterState();
+}
 
-    final activeProxy = ref.watch(activeProxyNotifierProvider.select((value) => value.valueOrNull));
+class _ActiveProxyFooterState extends ConsumerState<ActiveProxyFooter> with InfraLogger {
+  ConnectionStatus? _connectionState;
+  OutboundInfo? _activeProxy;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _connectionState = ref.read(connectionNotifierProvider).valueOrNull ?? const Disconnected();
+      _activeProxy = ref.read(activeProxyNotifierProvider).valueOrNull;
+      ref.listen(connectionNotifierProvider, (_, next) {
+        if (!mounted) return;
+        setState(() => _connectionState = next.valueOrNull ?? const Disconnected());
+      });
+      ref.listen(activeProxyNotifierProvider, (_, next) {
+        if (!mounted) return;
+        setState(() => _activeProxy = next.valueOrNull);
+      });
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final t = ref.watch(translationsProvider).requireValue;
 
-    // Early return if required data is not available
-    if (connectionState != const Connected() || activeProxy == null) {
+    if (_connectionState != const Connected() || _activeProxy == null) {
       return const SizedBox.shrink();
     }
 
+    final activeProxy = _activeProxy!;
     final theme = Theme.of(context);
 
     // Handle URL test in a way that won't trigger during build
@@ -123,66 +146,3 @@ String getRealOutboundTag(OutboundInfo group) {
   }
   return tag;
 }
-
-// class _StatsColumn extends HookConsumerWidget {
-//   const _StatsColumn();
-
-//   @override
-//   Widget build(BuildContext context, WidgetRef ref) {
-//     final t = ref.watch(translationsProvider).requireValue;
-//     final stats = ref.watch(statsNotifierProvider).value;
-
-//     return Directionality(
-//       textDirection: TextDirection.values[(Directionality.of(context).index + 1) % TextDirection.values.length],
-//       child: Flexible(
-//         child: Column(
-//           children: [
-//             _InfoProp(
-//               icon: FluentIcons.arrow_bidirectional_up_down_20_regular,
-//               text: (stats?.downlinkTotal ?? 0).size(),
-//               semanticLabel: t.stats.totalTransferred,
-//             ),
-//             const Gap(8),
-//             _InfoProp(
-//               icon: FluentIcons.arrow_download_20_regular,
-//               text: (stats?.downlink ?? 0).speed(),
-//               semanticLabel: t.stats.speed,
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-// class _InfoProp extends StatelessWidget {
-//   const _InfoProp({
-//     required this.icon,
-//     required this.text,
-//     this.semanticLabel,
-//   });
-
-//   final IconData icon;
-//   final String text;
-//   final String? semanticLabel;
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Semantics(
-//       label: semanticLabel,
-//       child: Row(
-//         children: [
-//           Icon(icon),
-//           const Gap(8),
-//           Flexible(
-//             child: Text(
-//               text,
-//               style: Theme.of(context).textTheme.labelMedium?.copyWith(fontFamily: FontFamily.emoji),
-//               overflow: TextOverflow.ellipsis,
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
