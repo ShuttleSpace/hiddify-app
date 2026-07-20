@@ -62,9 +62,15 @@ class Db extends _$Db with InfraLogger {
 
           await m.createTable(schema.appProxyEntries);
         },
-        from5To6: (m, schema) async {
-          await m.dropColumn(schema.profileEntries, 'profile_override');
-        },
+       from5To6: (m, schema) async {
+          final profileOverrideExists = await _columnExists(
+            schema.profileEntries.actualTableName,
+            'profile_override',
+          );
+          if (profileOverrideExists) {
+            await m.dropColumn(schema.profileEntries, 'profile_override');
+          }
+       },
       ),
     );
   }
