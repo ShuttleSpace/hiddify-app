@@ -1,4 +1,5 @@
 import 'package:hiddify/features/per_app_proxy/model/app_package_info.dart';
+import 'package:hiddify/features/per_app_proxy/model/pkg_flag.dart';
 
 enum AppPackageFilter { all, system, nonSystem, internet, noInternet }
 
@@ -23,4 +24,19 @@ List<AppPackageInfo> filterAndSearchApps(
         (normalizedQuery.isEmpty ||
             app.name.toLowerCase().contains(normalizedQuery));
   }).toList();
+}
+
+Set<String> packagesToToggle(
+  List<AppPackageInfo> visibleApps,
+  Map<String, int> flags,
+  bool select,
+) {
+  final result = <String>{};
+  for (final app in visibleApps) {
+    final flag = flags[app.packageName];
+    final current = PkgFlag.checkboxValue(flag ?? 0);
+    if (select && current != true) result.add(app.packageName);
+    if (!select && current != false) result.add(app.packageName);
+  }
+  return result;
 }
