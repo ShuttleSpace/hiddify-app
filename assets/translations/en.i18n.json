@@ -283,6 +283,17 @@
         "clearHistory": "Clear traffic history",
         "clearHistoryMsg": "This cannot be undone."
       },
+      "nodeBlacklist": {
+        "title": "Node blacklist",
+        "global": "Global rules",
+        "provider": "Provider rules",
+        "filteredCount": "Filtered nodes",
+        "showFiltered": "Show filtered nodes",
+        "importJson": "Import JSON",
+        "exportJson": "Export JSON",
+        "importText": "Import plain text",
+        "currentNodeBlocked": "Current node is blacklisted"
+      },
       "networkIdentity": {
         "title": "GeoIP & network identity",
         "refresh": "Refresh",

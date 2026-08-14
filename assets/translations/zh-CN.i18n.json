@@ -283,6 +283,17 @@
         "clearHistory": "清除流量历史",
         "clearHistoryMsg": "此操作无法撤销。"
       },
+      "nodeBlacklist": {
+        "title": "节点黑名单",
+        "global": "全局规则",
+        "provider": "提供商规则",
+        "filteredCount": "已过滤节点",
+        "showFiltered": "显示已过滤节点",
+        "importJson": "导入 JSON",
+        "exportJson": "导出 JSON",
+        "importText": "导入纯文本",
+        "currentNodeBlocked": "当前节点已被加入黑名单"
+      },
       "networkIdentity": {
         "title": "GeoIP 与网络身份",
         "refresh": "刷新",
