@@ -9,6 +9,7 @@ import 'package:hiddify/core/router/go_router/helper/active_breakpoint_notifier.
 import 'package:hiddify/core/router/go_router/helper/custom_transition.dart';
 import 'package:hiddify/core/router/go_router/refresh_listenable.dart';
 import 'package:hiddify/features/about/widget/about_page.dart';
+import 'package:hiddify/features/backup/overview/backup_page.dart';
 import 'package:hiddify/features/home/widget/home_page.dart';
 import 'package:hiddify/features/intro/widget/intro_page.dart';
 import 'package:hiddify/features/log/overview/logs_page.dart';
@@ -17,16 +18,21 @@ import 'package:hiddify/features/profile/details/profile_details_page.dart';
 import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
 import 'package:hiddify/features/profile/overview/profiles_page.dart';
 import 'package:hiddify/features/proxy/overview/proxies_overview_page.dart';
+import 'package:hiddify/features/proxy/overview/node_blacklist_management_page.dart';
 import 'package:hiddify/features/route_rules/notifier/rule_notifier.dart';
 import 'package:hiddify/features/route_rules/overview/generic_list_page.dart';
 import 'package:hiddify/features/route_rules/overview/rule_page.dart';
 import 'package:hiddify/features/settings/overview/sections/chain_options_page.dart';
+import 'package:hiddify/features/settings/overview/sections/appearance_page.dart';
 import 'package:hiddify/features/settings/overview/sections/dns_options_page.dart';
 import 'package:hiddify/features/settings/overview/sections/general_page.dart';
 import 'package:hiddify/features/settings/overview/sections/inbound_options_page.dart';
+import 'package:hiddify/features/settings/overview/sections/network_identity_page.dart';
 import 'package:hiddify/features/settings/overview/sections/routing_options_page.dart';
 import 'package:hiddify/features/settings/overview/sections/tls_tricks_page.dart';
 import 'package:hiddify/features/settings/overview/settings_page.dart';
+import 'package:hiddify/features/shortcut/overview/shortcuts_page.dart';
+import 'package:hiddify/features/stats/overview/traffic_stats_page.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -187,6 +193,54 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
                       path: 'general',
                       pageBuilder: (_, state) =>
                           customTransition(TransitionType.slide, state.pageKey, const GeneralPage()),
+                    ),
+                    GoRoute(
+                      name: 'appearance',
+                      path: 'appearance',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const AppearancePage()),
+                    ),
+                    GoRoute(
+                      name: 'trafficStats',
+                      path: 'traffic-stats',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const TrafficStatsPage()),
+                    ),
+                    GoRoute(
+                      name: 'nodeBlacklist',
+                      path: 'node-blacklist',
+                      pageBuilder: (_, state) => customTransition(
+                        TransitionType.slide,
+                        state.pageKey,
+                        const NodeBlacklistManagementPage(),
+                      ),
+                    ),
+                    GoRoute(
+                      name: 'providerNodeBlacklist',
+                      path: 'provider-node-blacklist/:id',
+                      pageBuilder: (_, state) => customTransition(
+                        TransitionType.slide,
+                        state.pageKey,
+                        NodeBlacklistManagementPage(profileId: state.pathParameters['id']),
+                      ),
+                    ),
+                    GoRoute(
+                      name: 'networkIdentity',
+                      path: 'network-identity',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const NetworkIdentityPage()),
+                    ),
+                    GoRoute(
+                      name: 'backup',
+                      path: 'backup',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const BackupPage()),
+                    ),
+                    GoRoute(
+                      name: 'shortcuts',
+                      path: 'shortcuts',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const ShortcutsPage()),
                     ),
                     GoRoute(
                       name: 'routingOptions',
