@@ -324,6 +324,34 @@ class PerAppProxyPage extends HookConsumerWidget with PresLogger {
                       onSelected: (_) => filter.value = item,
                     ),
                   ),
+                TextButton.icon(
+                  onPressed: () async {
+                    final toggles = packagesToToggle(
+                      displayedApps.valueOrNull ?? const [],
+                      selectedApps.valueOrNull ?? const {},
+                      true,
+                    );
+                    for (final packageName in toggles) {
+                      await ref.read(PerAppProxyProvider(mode).notifier).updatePkg(packageName);
+                    }
+                  },
+                  icon: const Icon(Icons.select_all_rounded),
+                  label: const Text('Select all'),
+                ),
+                TextButton.icon(
+                  onPressed: () async {
+                    final toggles = packagesToToggle(
+                      displayedApps.valueOrNull ?? const [],
+                      selectedApps.valueOrNull ?? const {},
+                      false,
+                    );
+                    for (final packageName in toggles) {
+                      await ref.read(PerAppProxyProvider(mode).notifier).updatePkg(packageName);
+                    }
+                  },
+                  icon: const Icon(Icons.deselect_rounded),
+                  label: const Text('Deselect all'),
+                ),
               ],
             ),
           ),
