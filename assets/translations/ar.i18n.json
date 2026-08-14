@@ -390,6 +390,19 @@
                 "title": "الاختيار التلقائي للتطبيقات",
                 "msg": "تم تعطيل ميزة الاختيار التلقائي للبروكسي بسبب تغيير المنطقة إلى \"${region}\""
               }
+            },
+            "filters": {
+              "all": "All",
+              "system": "System",
+              "nonSystem": "Non-system",
+              "internet": "Has internet permission",
+              "noInternet": "No internet permission"
+            },
+            "summary": {
+              "active": "$n active",
+              "user": "$n user",
+              "auto": "$n auto",
+              "forced": "$n forced"
             }
           }
         },

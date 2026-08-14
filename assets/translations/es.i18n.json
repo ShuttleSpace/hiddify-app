@@ -384,6 +384,19 @@
                 "title": "Selección automática de aplicaciones",
                 "msg": "La función de selección automática para el proxy por aplicación se ha desactivado debido al cambio de región a \"${region}\""
               }
+            },
+            "filters": {
+              "all": "All",
+              "system": "System",
+              "nonSystem": "Non-system",
+              "internet": "Has internet permission",
+              "noInternet": "No internet permission"
+            },
+            "summary": {
+              "active": "$n active",
+              "user": "$n user",
+              "auto": "$n auto",
+              "forced": "$n forced"
             }
           }
         },

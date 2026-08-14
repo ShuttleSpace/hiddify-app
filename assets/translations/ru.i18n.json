@@ -388,6 +388,19 @@
                 "title": "Автовыбор приложений",
                 "msg": "Функция автовыбора для прокси приложений была отключена из-за смены региона на \"${region}\""
               }
+            },
+            "filters": {
+              "all": "All",
+              "system": "System",
+              "nonSystem": "Non-system",
+              "internet": "Has internet permission",
+              "noInternet": "No internet permission"
+            },
+            "summary": {
+              "active": "$n active",
+              "user": "$n user",
+              "auto": "$n auto",
+              "forced": "$n forced"
             }
           }
         },

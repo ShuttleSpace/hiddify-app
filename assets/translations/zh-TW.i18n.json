@@ -384,6 +384,19 @@
                 "title": "自動選擇應用程式",
                 "msg": "由於地區更改為「${region}」，依應用程式代理的自動選擇功能已被停用"
               }
+            },
+            "filters": {
+              "all": "All",
+              "system": "System",
+              "nonSystem": "Non-system",
+              "internet": "Has internet permission",
+              "noInternet": "No internet permission"
+            },
+            "summary": {
+              "active": "$n active",
+              "user": "$n user",
+              "auto": "$n auto",
+              "forced": "$n forced"
             }
           }
         },
