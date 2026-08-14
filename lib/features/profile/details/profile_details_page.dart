@@ -121,6 +121,37 @@ class ProfileDetailsPage extends HookConsumerWidget with PresLogger {
                               ],
                             ),
                           ),
+                        if (data.profile case RemoteProfileEntity(:final subInfo?))
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            child: CustomTextFormField(
+                              maxLines: 1,
+                              initialValue: subInfo.webPageUrl ?? '',
+                              label: t.pages.profileDetails.form.homePage,
+                              hint: t.pages.profileDetails.form.homePageHint,
+                              onChanged: (value) {
+                                final remote = data.profile as RemoteProfileEntity;
+                                final updatedSubInfo = remote.subInfo!.copyWith(
+                                  webPageUrl: value.trim().isEmpty ? null : value.trim(),
+                                );
+                                ref
+                                    .read(ProfileDetailsNotifierProvider(id).notifier)
+                                    .updateProfile(remote.copyWith(subInfo: updatedSubInfo));
+                              },
+                            ),
+                          ),
+                        if (data.profile case RemoteProfileEntity(:final id)) ...[
+                          const Divider(indent: 16, endIndent: 16),
+                          ListTile(
+                            title: Text('Node blacklist'),
+                            subtitle: Text('Manage provider-specific node filtering'),
+                            trailing: const Icon(Icons.block_rounded),
+                            onTap: () => context.goNamed(
+                              'providerNodeBlacklist',
+                              pathParameters: {'id': id},
+                            ),
+                          ),
+                        ],
                         const Divider(indent: 16, endIndent: 16),
                         if (data.profile case RemoteProfileEntity(:final options)) ...[
                           SwitchListTile.adaptive(
