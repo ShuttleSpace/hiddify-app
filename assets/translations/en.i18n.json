@@ -348,6 +348,13 @@
           "perAppProxy": {
             "title": "Per-app proxy",
             "hideSysApps": "Hide system apps",
+            "filters": {
+              "all": "All",
+              "system": "System",
+              "nonSystem": "Non-system",
+              "internet": "Has internet permission",
+              "noInternet": "No internet permission"
+            },
             "options": {
               "import": {
                 "clipboard": "Import selection from clipboard",
@@ -384,6 +391,12 @@
                 "title": "Auto apps selection",
                 "msg": "The auto selection feature for per-app proxy was disabled due to the region change to \"${region}\""
               }
+            },
+            "summary": {
+              "active": "$n active",
+              "user": "$n user",
+              "auto": "$n auto",
+              "forced": "$n forced"
             }
           }
         },

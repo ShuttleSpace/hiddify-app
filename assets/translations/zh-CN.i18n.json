@@ -348,6 +348,13 @@
           "perAppProxy": {
             "title": "分应用代理",
             "hideSysApps": "隐藏系统应用",
+            "filters": {
+              "all": "全部",
+              "system": "系统应用",
+              "nonSystem": "非系统应用",
+              "internet": "有联网权限",
+              "noInternet": "无联网权限"
+            },
             "options": {
               "import": {
                 "clipboard": "从剪贴板导入选择",
@@ -384,6 +391,12 @@
                 "title": "自动选择应用",
                 "msg": "由于地区更改为 \"${region}\"，分应用代理的自动选择功能已被禁用"
               }
+            },
+            "summary": {
+              "active": "$n 个生效",
+              "user": "$n 个用户选择",
+              "auto": "$n 个自动选择",
+              "forced": "$n 个强制排除"
             }
           }
         },

@@ -310,7 +310,16 @@ class PerAppProxyPage extends HookConsumerWidget with PresLogger {
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: FilterChip(
-                      label: Text(item.name),
+                      label: Text(switch (item) {
+                        AppPackageFilter.all => t.pages.settings.routing.generalOptions.perAppProxy.filters.all,
+                        AppPackageFilter.system => t.pages.settings.routing.generalOptions.perAppProxy.filters.system,
+                        AppPackageFilter.nonSystem =>
+                          t.pages.settings.routing.generalOptions.perAppProxy.filters.nonSystem,
+                        AppPackageFilter.internet =>
+                          t.pages.settings.routing.generalOptions.perAppProxy.filters.internet,
+                        AppPackageFilter.noInternet =>
+                          t.pages.settings.routing.generalOptions.perAppProxy.filters.noInternet,
+                      }),
                       selected: filter.value == item,
                       onSelected: (_) => filter.value = item,
                     ),
@@ -318,7 +327,7 @@ class PerAppProxyPage extends HookConsumerWidget with PresLogger {
               ],
             ),
           ),
-          PerAppProxySummaryView(summary: computePerAppProxySummary(selectedApps.valueOrNull ?? const {})),
+          PerAppProxySummaryView(summary: computePerAppProxySummary(selectedApps.valueOrNull ?? const {}), t: t),
           Expanded(
             child: displayedApps.when(
               data: (packages) => ListView.builder(
