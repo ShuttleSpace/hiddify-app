@@ -908,7 +908,7 @@ import 'package:hiddify/features/proxy/notifier/node_blacklist_controller.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 final activeProxyBlacklistGuardProvider = Provider<void>((ref) {
-  ref.listen(activeProxyProvider, (_, next) {
+  ref.listen(activeProxyNotifierProvider, (_, next) {
     final node = next.valueOrNull;
     if (node == null) return;
     final doc = ref.read(nodeBlacklistControllerProvider);
