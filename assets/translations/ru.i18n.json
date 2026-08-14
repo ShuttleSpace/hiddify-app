@@ -390,17 +390,17 @@
               }
             },
             "filters": {
-              "all": "All",
-              "system": "System",
-              "nonSystem": "Non-system",
-              "internet": "Has internet permission",
-              "noInternet": "No internet permission"
+              "all": "Все",
+              "system": "Системные",
+              "nonSystem": "Несистемные",
+              "internet": "С доступом в интернет",
+              "noInternet": "Без доступа в интернет"
             },
             "summary": {
-              "active": "$n active",
-              "user": "$n user",
-              "auto": "$n auto",
-              "forced": "$n forced"
+              "active": "$n активно",
+              "user": "$n выбрано",
+              "auto": "$n автоматически",
+              "forced": "$n принудительно"
             }
           }
         },

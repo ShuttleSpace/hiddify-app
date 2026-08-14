@@ -392,17 +392,17 @@
               }
             },
             "filters": {
-              "all": "All",
-              "system": "System",
-              "nonSystem": "Non-system",
-              "internet": "Has internet permission",
-              "noInternet": "No internet permission"
+              "all": "الكل",
+              "system": "تطبيقات النظام",
+              "nonSystem": "تطبيقات غير النظام",
+              "internet": "لديه إذن الإنترنت",
+              "noInternet": "بدون إذن الإنترنت"
             },
             "summary": {
-              "active": "$n active",
-              "user": "$n user",
-              "auto": "$n auto",
-              "forced": "$n forced"
+              "active": "$n نشط",
+              "user": "$n محدد يدويًا",
+              "auto": "$n تلقائي",
+              "forced": "$n مستبعد"
             }
           }
         },

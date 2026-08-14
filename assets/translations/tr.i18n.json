@@ -386,17 +386,17 @@
               }
             },
             "filters": {
-              "all": "All",
-              "system": "System",
-              "nonSystem": "Non-system",
-              "internet": "Has internet permission",
-              "noInternet": "No internet permission"
+              "all": "Tümü",
+              "system": "Sistem",
+              "nonSystem": "Sistem dışı",
+              "internet": "İnternet izni var",
+              "noInternet": "İnternet izni yok"
             },
             "summary": {
-              "active": "$n active",
-              "user": "$n user",
-              "auto": "$n auto",
-              "forced": "$n forced"
+              "active": "$n aktif",
+              "user": "$n kullanıcı",
+              "auto": "$n otomatik",
+              "forced": "$n zorunlu"
             }
           }
         },

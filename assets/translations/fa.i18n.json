@@ -386,17 +386,17 @@
               }
             },
             "filters": {
-              "all": "All",
-              "system": "System",
-              "nonSystem": "Non-system",
-              "internet": "Has internet permission",
-              "noInternet": "No internet permission"
+              "all": "همه",
+              "system": "سیستمی",
+              "nonSystem": "غیرسیستمی",
+              "internet": "دارای دسترسی اینترنت",
+              "noInternet": "بدون دسترسی اینترنت"
             },
             "summary": {
-              "active": "$n active",
-              "user": "$n user",
-              "auto": "$n auto",
-              "forced": "$n forced"
+              "active": "$n فعال",
+              "user": "$n انتخاب کاربر",
+              "auto": "$n خودکار",
+              "forced": "$n حذف اجباری"
             }
           }
         },

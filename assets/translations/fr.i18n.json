@@ -386,17 +386,17 @@
               }
             },
             "filters": {
-              "all": "All",
-              "system": "System",
-              "nonSystem": "Non-system",
-              "internet": "Has internet permission",
-              "noInternet": "No internet permission"
+              "all": "Tous",
+              "system": "Système",
+              "nonSystem": "Non système",
+              "internet": "Accès Internet",
+              "noInternet": "Sans accès Internet"
             },
             "summary": {
-              "active": "$n active",
-              "user": "$n user",
-              "auto": "$n auto",
-              "forced": "$n forced"
+              "active": "$n actifs",
+              "user": "$n utilisateur",
+              "auto": "$n automatique",
+              "forced": "$n forcé"
             }
           }
         },

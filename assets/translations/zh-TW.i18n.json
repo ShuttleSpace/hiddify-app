@@ -386,17 +386,17 @@
               }
             },
             "filters": {
-              "all": "All",
-              "system": "System",
-              "nonSystem": "Non-system",
-              "internet": "Has internet permission",
-              "noInternet": "No internet permission"
+              "all": "全部",
+              "system": "系統應用",
+              "nonSystem": "非系統應用",
+              "internet": "有網路權限",
+              "noInternet": "無網路權限"
             },
             "summary": {
-              "active": "$n active",
-              "user": "$n user",
-              "auto": "$n auto",
-              "forced": "$n forced"
+              "active": "$n 個生效",
+              "user": "$n 個使用者選擇",
+              "auto": "$n 個自動選擇",
+              "forced": "$n 個強制排除"
             }
           }
         },
