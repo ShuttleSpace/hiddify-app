@@ -48,3 +48,23 @@ Set<String> packagesToToggle(
 }
 
 bool needsSecondSelectUpdate(int? flag) => flag != null && PkgFlag.forceDeselection.check(flag);
+
+Future<List<String>> runVisibleAppBatch({
+  required List<String> toggles,
+  required Map<String, int> flags,
+  required bool select,
+  required Future<void> Function(String packageName) updatePkg,
+}) async {
+  final failed = <String>[];
+  for (final packageName in toggles) {
+    try {
+      await updatePkg(packageName);
+      if (select && needsSecondSelectUpdate(flags[packageName])) {
+        await updatePkg(packageName);
+      }
+    } catch (_) {
+      failed.add(packageName);
+    }
+  }
+  return failed;
+}

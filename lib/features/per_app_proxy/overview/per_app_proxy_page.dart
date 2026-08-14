@@ -30,17 +30,12 @@ Future<void> selectVisibleApps(
   bool select,
 ) async {
   final toggles = packagesToToggle(visibleApps, flags, select);
-  final failed = <String>[];
-  for (final packageName in toggles) {
-    try {
-      await ref.read(PerAppProxyProvider(mode).notifier).updatePkg(packageName);
-      if (select && needsSecondSelectUpdate(flags[packageName])) {
-        await ref.read(PerAppProxyProvider(mode).notifier).updatePkg(packageName);
-      }
-    } catch (_) {
-      failed.add(packageName);
-    }
-  }
+  final failed = await runVisibleAppBatch(
+    toggles: toggles.toList(),
+    flags: flags,
+    select: select,
+    updatePkg: (packageName) => ref.read(PerAppProxyProvider(mode).notifier).updatePkg(packageName),
+  );
   if (failed.isNotEmpty) {
     ref
         .read(inAppNotificationControllerProvider)
