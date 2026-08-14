@@ -7,8 +7,11 @@ import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/preferences/preferences_provider.dart';
 import 'package:hiddify/core/utils/preferences_utils.dart';
 import 'package:hiddify/features/connection/notifier/connection_notifier.dart';
+import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
 import 'package:hiddify/features/proxy/data/proxy_data_providers.dart';
+import 'package:hiddify/features/proxy/data/node_blacklist_engine.dart';
 import 'package:hiddify/features/proxy/model/proxy_failure.dart';
+import 'package:hiddify/features/proxy/notifier/node_blacklist_controller.dart';
 import 'package:hiddify/hiddifycore/generated/v2/hcore/hcore.pb.dart';
 
 import 'package:hiddify/utils/riverpod_utils.dart';
@@ -90,6 +93,23 @@ class ProxiesOverviewNotifier extends _$ProxiesOverviewNotifier with AppLogger {
             throw err;
           }),
         )
+        .map((proxies) {
+          if (proxies == null) return proxies;
+          final profileId = ref.read(activeProfileProvider).valueOrNull?.id;
+          final doc = ref.read(nodeBlacklistControllerProvider);
+          final rules = effectiveRules(doc, profileId);
+          final filteredItems = proxies.items
+              .where((node) => !isNodeBlacklisted(node, rules))
+              .toList();
+          return OutboundGroup(
+            tag: proxies.tag,
+            type: proxies.type,
+            selected: proxies.selected,
+            selectable: proxies.selectable,
+            isExpand: proxies.isExpand,
+            items: filteredItems,
+          );
+        })
         .asyncMap((proxies) async => await _sortOutbounds(proxies, sortBy));
   }
 

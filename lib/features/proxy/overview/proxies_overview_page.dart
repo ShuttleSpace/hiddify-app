@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/model/failures.dart';
 import 'package:hiddify/features/proxy/overview/proxies_overview_notifier.dart';
@@ -28,6 +29,11 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
       appBar: AppBar(
         title: Text(t.pages.proxies.title),
         actions: [
+          IconButton(
+            tooltip: 'Node blacklist',
+            onPressed: () => context.goNamed('nodeBlacklist'),
+            icon: const Icon(Icons.block_rounded),
+          ),
           PopupMenuButton<ProxiesSort>(
             initialValue: sortBy,
             onSelected: ref.read(proxiesSortNotifierProvider.notifier).update,
