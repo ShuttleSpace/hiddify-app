@@ -1,4 +1,3 @@
-import 'package:dartx/dartx.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -9,15 +8,18 @@ import 'package:hiddify/core/model/region.dart';
 import 'package:hiddify/core/preferences/general_preferences.dart';
 import 'package:hiddify/core/router/bottom_sheets/bottom_sheets_notifier.dart';
 import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
+import 'package:hiddify/features/per_app_proxy/data/app_package_metadata_provider.dart';
+import 'package:hiddify/features/per_app_proxy/domain/per_app_proxy_filters.dart';
+import 'package:hiddify/features/per_app_proxy/domain/per_app_proxy_summary.dart';
 import 'package:hiddify/features/per_app_proxy/model/app_package_info.dart';
 import 'package:hiddify/features/per_app_proxy/model/per_app_proxy_mode.dart';
 import 'package:hiddify/features/per_app_proxy/model/pkg_flag.dart';
 import 'package:hiddify/features/per_app_proxy/overview/per_app_proxy_loading_notifier.dart';
 import 'package:hiddify/features/per_app_proxy/overview/per_app_proxy_notifier.dart';
+import 'package:hiddify/features/per_app_proxy/widget/per_app_proxy_summary_view.dart';
 import 'package:hiddify/features/settings/data/config_option_repository.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:installed_apps/index.dart';
 
 class PerAppProxyPage extends HookConsumerWidget with PresLogger {
   const PerAppProxyPage({super.key});
@@ -34,12 +36,23 @@ class PerAppProxyPage extends HookConsumerWidget with PresLogger {
     }
   }
 
-  Future<Set<AppPackageInfo>> getApps(bool hideSystem) async {
-    if (!PlatformUtils.isAndroid) return {};
-    return (await InstalledApps.getInstalledApps(
-      hideSystem,
-      true,
-    )).map((e) => AppPackageInfo(packageName: e.packageName, name: e.name, icon: e.icon)).toSet();
+  Future<List<AppPackageInfo>> getApps(WidgetRef ref) async {
+    if (!PlatformUtils.isAndroid) return const [];
+    final repo = ref.read(appPackageMetadataRepositoryProvider);
+    final apps = await repo.getInstalledApps();
+    return apps
+        .map(
+          (app) => app.icon == null
+              ? app
+              : AppPackageInfo(
+                  packageName: app.packageName,
+                  name: app.name,
+                  icon: app.icon,
+                  isSystemApp: app.isSystemApp,
+                  hasInternetPermission: app.hasInternetPermission,
+                ),
+        )
+        .toList();
   }
 
   @override
@@ -51,42 +64,35 @@ class PerAppProxyPage extends HookConsumerWidget with PresLogger {
     final mode = ref.watch(Preferences.perAppProxyMode).toAppProxy();
     final selectedApps = ref.watch(PerAppProxyProvider(mode));
 
-    final hideSystemApps = useState(false);
     final isSearching = useState(false);
     final searchQuery = useState("");
     final sortListener = useState(false);
 
-    final asyncApps = useFuture(useMemoized(() => getApps(false)));
-    final asyncAppsHideSys = useFuture(useMemoized(() => getApps(true)));
+    final filter = useState(AppPackageFilter.all);
 
-    final asyncFilteredApps = hideSystemApps.value ? asyncAppsHideSys : asyncApps;
+    final asyncApps = useFuture(useMemoized(() => getApps(ref)));
 
     final displayedApps = useMemoized<AsyncValue<List<AppPackageInfo>>>(
       () {
         if (!(selectedApps.hasValue &&
             selectedApps is AsyncData &&
-            asyncFilteredApps.hasData &&
-            asyncFilteredApps.connectionState == ConnectionState.done))
+            asyncApps.hasData &&
+            asyncApps.connectionState == ConnectionState.done)) {
           return const AsyncValue.loading();
-        final appsList = asyncFilteredApps.requireData.toList();
-        if (searchQuery.value.isBlank) {
-          appsList.sort((a, b) {
-            final priorityA = _getPriority(a, selectedApps.requireValue);
-            final priorityB = _getPriority(b, selectedApps.requireValue);
-            return priorityA.compareTo(priorityB);
-          });
-          return AsyncValue.data(appsList);
         }
-        final filteredAppsList = appsList
-            .filter((e) => e.name.toLowerCase().contains(searchQuery.value.toLowerCase()))
-            .toList();
-        return AsyncValue.data(filteredAppsList);
+        final appsList = filterAndSearchApps(asyncApps.requireData, filter.value, searchQuery.value);
+        appsList.sort((a, b) {
+          final priorityA = _getPriority(a, selectedApps.requireValue);
+          final priorityB = _getPriority(b, selectedApps.requireValue);
+          return priorityA.compareTo(priorityB);
+        });
+        return AsyncValue.data(appsList);
       },
       [
-        asyncFilteredApps.connectionState == ConnectionState.done,
-        hideSystemApps.value,
+        asyncApps.connectionState == ConnectionState.done,
         selectedApps.hasValue,
         searchQuery.value,
+        filter.value,
         sortListener.value,
       ],
     );
@@ -244,8 +250,9 @@ class PerAppProxyPage extends HookConsumerWidget with PresLogger {
                         tooltip: (mode?.toPerAppProxy() ?? PerAppProxyMode.off).present(t).message,
                         initialValue: mode?.toPerAppProxy() ?? PerAppProxyMode.off,
                         onSelected: (e) async {
-                          if (ref.read(Preferences.autoAppsSelectionRegion) != null)
+                          if (ref.read(Preferences.autoAppsSelectionRegion) != null) {
                             await ref.read(PerAppProxyProvider(mode).notifier).clearAutoSelected();
+                          }
                           if (e == PerAppProxyMode.off && context.mounted) context.pop();
                           await ref.read(Preferences.perAppProxyMode.notifier).update(e);
                         },
@@ -268,12 +275,6 @@ class PerAppProxyPage extends HookConsumerWidget with PresLogger {
                             ],
                           ),
                         ),
-                      ),
-                      const Gap(8),
-                      ChoiceChip(
-                        label: Text(t.pages.settings.routing.generalOptions.perAppProxy.hideSysApps),
-                        selected: hideSystemApps.value,
-                        onSelected: (value) => hideSystemApps.value = value,
                       ),
                     ],
                   ),
@@ -298,45 +299,69 @@ class PerAppProxyPage extends HookConsumerWidget with PresLogger {
               ),
             )
           : null,
-      body: displayedApps.when(
-        data: (packages) => ListView.builder(
-          padding: const EdgeInsets.only(bottom: 88),
-          controller: scrollController,
-          itemBuilder: (context, index) {
-            final package = packages[index];
-            final flag = selectedApps.requireValue[package.packageName];
-            return CheckboxListTile.adaptive(
-              title: Row(
-                children: [
-                  Flexible(child: Text(package.name, maxLines: 1, overflow: TextOverflow.ellipsis)),
-                  if (flag != null && PkgFlag.forceDeselection.check(flag)) ...[
-                    const Gap(6),
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(color: theme.colorScheme.error, shape: BoxShape.circle),
+      body: Column(
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                for (final item in AppPackageFilter.values)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(item.name),
+                      selected: filter.value == item,
+                      onSelected: (_) => filter.value = item,
                     ),
-                  ],
-                ],
+                  ),
+              ],
+            ),
+          ),
+          PerAppProxySummaryView(summary: computePerAppProxySummary(selectedApps.valueOrNull ?? const {})),
+          Expanded(
+            child: displayedApps.when(
+              data: (packages) => ListView.builder(
+                padding: const EdgeInsets.only(bottom: 88),
+                controller: scrollController,
+                itemBuilder: (context, index) {
+                  final package = packages[index];
+                  final flag = selectedApps.requireValue[package.packageName];
+                  return CheckboxListTile.adaptive(
+                    title: Row(
+                      children: [
+                        Flexible(child: Text(package.name, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                        if (flag != null && PkgFlag.forceDeselection.check(flag)) ...[
+                          const Gap(6),
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(color: theme.colorScheme.error, shape: BoxShape.circle),
+                          ),
+                        ],
+                      ],
+                    ),
+                    subtitle: Text(
+                      package.packageName,
+                      style: Theme.of(context).textTheme.bodySmall,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    value: flag == null ? false : PkgFlag.checkboxValue(flag),
+                    tristate: true,
+                    onChanged: (_) => ref.read(PerAppProxyProvider(mode).notifier).updatePkg(package.packageName),
+                    secondary: package.icon == null
+                        ? null
+                        : Image.memory(package.icon!, width: 48, height: 48, cacheWidth: 48, cacheHeight: 48),
+                  );
+                },
+                itemCount: packages.length,
               ),
-              subtitle: Text(
-                package.packageName,
-                style: Theme.of(context).textTheme.bodySmall,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              value: flag == null ? false : PkgFlag.checkboxValue(flag),
-              tristate: true,
-              onChanged: (_) => ref.read(PerAppProxyProvider(mode).notifier).updatePkg(package.packageName),
-              secondary: package.icon == null
-                  ? null
-                  : Image.memory(package.icon!, width: 48, height: 48, cacheWidth: 48, cacheHeight: 48),
-            );
-          },
-          itemCount: packages.length,
-        ),
-        error: (error, _) => SliverErrorBodyPlaceholder(error.toString()),
-        loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => SliverErrorBodyPlaceholder(error.toString()),
+              loading: () => const Center(child: CircularProgressIndicator()),
+            ),
+          ),
+        ],
       ),
     );
   }
