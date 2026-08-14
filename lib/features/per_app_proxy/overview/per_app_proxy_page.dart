@@ -62,19 +62,20 @@ class PerAppProxyPage extends HookConsumerWidget with PresLogger {
     if (!PlatformUtils.isAndroid) return const [];
     final repo = ref.read(appPackageMetadataRepositoryProvider);
     final apps = await repo.getInstalledApps();
-    return apps
-        .map(
-          (app) => app.icon == null
-              ? app
-              : AppPackageInfo(
-                  packageName: app.packageName,
-                  name: app.name,
-                  icon: app.icon,
-                  isSystemApp: app.isSystemApp,
-                  hasInternetPermission: app.hasInternetPermission,
-                ),
-        )
-        .toList();
+    final result = <AppPackageInfo>[];
+    for (final app in apps) {
+      final icon = await repo.getIcon(app.packageName);
+      result.add(
+        AppPackageInfo(
+          packageName: app.packageName,
+          name: app.name,
+          icon: icon,
+          isSystemApp: app.isSystemApp,
+          hasInternetPermission: app.hasInternetPermission,
+        ),
+      );
+    }
+    return result;
   }
 
   @override
@@ -89,13 +90,18 @@ class PerAppProxyPage extends HookConsumerWidget with PresLogger {
     final isSearching = useState(false);
     final searchQuery = useState("");
     final sortListener = useState(false);
+    final retryCounter = useState(0);
 
     final filter = useState(AppPackageFilter.all);
 
-    final asyncApps = useFuture(useMemoized(() => getApps(ref)));
+    final appsFuture = useMemoized(() => getApps(ref), [ref, retryCounter.value]);
+    final asyncApps = useFuture(appsFuture);
 
     final displayedApps = useMemoized<AsyncValue<List<AppPackageInfo>>>(
       () {
+        if (asyncApps.hasError) {
+          return AsyncValue.error(asyncApps.error!, asyncApps.stackTrace ?? StackTrace.current);
+        }
         if (!(selectedApps.hasValue &&
             selectedApps is AsyncData &&
             asyncApps.hasData &&
@@ -410,7 +416,22 @@ class PerAppProxyPage extends HookConsumerWidget with PresLogger {
                 },
                 itemCount: packages.length,
               ),
-              error: (error, _) => SliverErrorBodyPlaceholder(error.toString()),
+              error: (error, _) => Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(FluentIcons.error_circle_24_regular),
+                    const Gap(16),
+                    Text(error.toString()),
+                    const Gap(16),
+                    TextButton.icon(
+                      onPressed: () => retryCounter.value++,
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: Text(t.pages.settings.networkIdentity.refresh),
+                    ),
+                  ],
+                ),
+              ),
               loading: () => const Center(child: CircularProgressIndicator()),
             ),
           ),

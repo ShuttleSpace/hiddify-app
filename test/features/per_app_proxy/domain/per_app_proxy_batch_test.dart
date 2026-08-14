@@ -17,6 +17,13 @@ void main() {
     expect(needsSecondSelectUpdate(null), isFalse);
   });
 
+  test('needsSecondDeselectUpdate detects pure auto selected packages', () {
+    expect(needsSecondDeselectUpdate(PkgFlag.autoSelection.add(0)), isTrue);
+    expect(needsSecondDeselectUpdate(PkgFlag.autoSelection.add(PkgFlag.forceDeselection.add(0))), isFalse);
+    expect(needsSecondDeselectUpdate(PkgFlag.autoSelection.add(PkgFlag.userSelection.add(0))), isFalse);
+    expect(needsSecondDeselectUpdate(null), isFalse);
+  });
+
   test('runVisibleAppBatch continues after failures and retries force deselected packages', () async {
     final called = <String>[];
     Future<void> updatePkg(String packageName) async {
@@ -33,5 +40,22 @@ void main() {
 
     expect(failed, ['fail']);
     expect(called, ['fail', 'forced', 'forced', 'ok']);
+  });
+
+  test('runVisibleAppBatch retries pure auto selected packages when deselecting', () async {
+    final called = <String>[];
+    Future<void> updatePkg(String packageName) async {
+      called.add(packageName);
+    }
+
+    final failed = await runVisibleAppBatch(
+      toggles: const ['auto'],
+      flags: {'auto': PkgFlag.autoSelection.add(0)},
+      select: false,
+      updatePkg: updatePkg,
+    );
+
+    expect(failed, isEmpty);
+    expect(called, ['auto', 'auto']);
   });
 }

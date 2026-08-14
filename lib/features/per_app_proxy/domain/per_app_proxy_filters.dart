@@ -49,6 +49,12 @@ Set<String> packagesToToggle(
 
 bool needsSecondSelectUpdate(int? flag) => flag != null && PkgFlag.forceDeselection.check(flag);
 
+bool needsSecondDeselectUpdate(int? flag) =>
+    flag != null &&
+    PkgFlag.autoSelection.check(flag) &&
+    !PkgFlag.forceDeselection.check(flag) &&
+    !PkgFlag.userSelection.check(flag);
+
 Future<List<String>> runVisibleAppBatch({
   required List<String> toggles,
   required Map<String, int> flags,
@@ -60,6 +66,8 @@ Future<List<String>> runVisibleAppBatch({
     try {
       await updatePkg(packageName);
       if (select && needsSecondSelectUpdate(flags[packageName])) {
+        await updatePkg(packageName);
+      } else if (!select && needsSecondDeselectUpdate(flags[packageName])) {
         await updatePkg(packageName);
       }
     } catch (_) {
