@@ -73,4 +73,43 @@ void main() {
 
     expect(toggles, {'visible.unselected', 'visible.auto'});
   });
+
+  test('packagesToToggle deselect omits absent and zero flags', () {
+    const visibleAbsent = AppPackageInfo(
+      packageName: 'visible.absent',
+      name: 'Visible Absent',
+      icon: null,
+      hasInternetPermission: true,
+    );
+    const visibleZero = AppPackageInfo(
+      packageName: 'visible.zero',
+      name: 'Visible Zero',
+      icon: null,
+      hasInternetPermission: true,
+    );
+    const visibleSelected = AppPackageInfo(
+      packageName: 'visible.selected',
+      name: 'Visible Selected',
+      icon: null,
+      hasInternetPermission: true,
+    );
+    const visibleAuto = AppPackageInfo(
+      packageName: 'visible.auto',
+      name: 'Visible Auto',
+      icon: null,
+      hasInternetPermission: true,
+    );
+
+    final toggles = packagesToToggle(
+      const [visibleAbsent, visibleZero, visibleSelected, visibleAuto],
+      {
+        'visible.zero': 0,
+        'visible.selected': PkgFlag.userSelection.add(0),
+        'visible.auto': PkgFlag.autoSelection.add(0),
+      },
+      false,
+    );
+
+    expect(toggles, {'visible.selected', 'visible.auto'});
+  });
 }

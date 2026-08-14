@@ -34,9 +34,15 @@ Set<String> packagesToToggle(
   final result = <String>{};
   for (final app in visibleApps) {
     final flag = flags[app.packageName];
-    final current = PkgFlag.checkboxValue(flag ?? 0);
-    if (select && current != true) result.add(app.packageName);
-    if (!select && current != false) result.add(app.packageName);
+    if (select) {
+      if (PkgFlag.checkboxValue(flag ?? 0) != true) {
+        result.add(app.packageName);
+      }
+    } else if (flag != null &&
+        flag != 0 &&
+        PkgFlag.checkboxValue(flag) != false) {
+      result.add(app.packageName);
+    }
   }
   return result;
 }
