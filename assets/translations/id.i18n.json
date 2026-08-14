@@ -348,6 +348,8 @@
           "perAppProxy": {
             "title": "Proxy per aplikasi",
             "hideSysApps": "Sembunyikan aplikasi sistem",
+            "selectAll": "Select all",
+            "deselectAll": "Deselect all",
             "options": {
               "import": {
                 "clipboard": "Impor pilihan dari papan klip",

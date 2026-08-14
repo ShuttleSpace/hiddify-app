@@ -352,6 +352,8 @@
           "perAppProxy": {
             "title": "Прокси для приложений",
             "hideSysApps": "Скрыть системные приложения",
+            "selectAll": "Select all",
+            "deselectAll": "Deselect all",
             "options": {
               "import": {
                 "clipboard": "Импортировать выбор из буфера обмена",

@@ -348,6 +348,8 @@
           "perAppProxy": {
             "title": "Proxy por aplicativo",
             "hideSysApps": "Ocultar aplicativos do sistema",
+            "selectAll": "Select all",
+            "deselectAll": "Deselect all",
             "options": {
               "import": {
                 "clipboard": "Importar seleção da área de transferência",

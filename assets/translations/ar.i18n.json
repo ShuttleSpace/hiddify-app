@@ -354,6 +354,8 @@
           "perAppProxy": {
             "title": "بروكسي لكل تطبيق",
             "hideSysApps": "إخفاء تطبيقات النظام",
+            "selectAll": "Select all",
+            "deselectAll": "Deselect all",
             "options": {
               "import": {
                 "clipboard": "استيراد التحديد من الحافظة",

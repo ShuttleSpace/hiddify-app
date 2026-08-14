@@ -348,6 +348,8 @@
           "perAppProxy": {
             "title": "Uygulama bazlı proxy",
             "hideSysApps": "Sistem uygulamalarını gizle",
+            "selectAll": "Select all",
+            "deselectAll": "Deselect all",
             "options": {
               "import": {
                 "clipboard": "Seçimi panodan içe aktar",

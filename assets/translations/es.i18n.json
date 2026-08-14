@@ -348,6 +348,8 @@
           "perAppProxy": {
             "title": "Proxy por aplicación",
             "hideSysApps": "Ocultar aplicaciones del sistema",
+            "selectAll": "Select all",
+            "deselectAll": "Deselect all",
             "options": {
               "import": {
                 "clipboard": "Importar selección desde el portapapeles",

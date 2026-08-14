@@ -459,6 +459,8 @@
           "perAppProxy": {
             "title": "分应用代理",
             "hideSysApps": "隐藏系统应用",
+            "selectAll": "全选",
+            "deselectAll": "取消全选",
             "filters": {
               "all": "全部",
               "system": "系统应用",

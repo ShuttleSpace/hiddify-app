@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/model/region.dart';
+import 'package:hiddify/core/notification/in_app_notification_controller.dart';
 import 'package:hiddify/core/preferences/general_preferences.dart';
 import 'package:hiddify/core/router/bottom_sheets/bottom_sheets_notifier.dart';
 import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
@@ -20,6 +21,35 @@ import 'package:hiddify/features/per_app_proxy/widget/per_app_proxy_summary_view
 import 'package:hiddify/features/settings/data/config_option_repository.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+
+Future<void> selectVisibleApps(
+  WidgetRef ref,
+  AppProxyMode mode,
+  List<AppPackageInfo> visibleApps,
+  Map<String, int> flags,
+  bool select,
+) async {
+  final toggles = packagesToToggle(visibleApps, flags, select);
+  final failed = <String>[];
+  for (final packageName in toggles) {
+    try {
+      await ref.read(PerAppProxyProvider(mode).notifier).updatePkg(packageName);
+      if (select &&
+          flags[packageName] != null &&
+          PkgFlag.forceDeselection.check(flags[packageName]!) &&
+          !PkgFlag.autoSelection.check(flags[packageName]!)) {
+        await ref.read(PerAppProxyProvider(mode).notifier).updatePkg(packageName);
+      }
+    } catch (_) {
+      failed.add(packageName);
+    }
+  }
+  if (failed.isNotEmpty) {
+    ref
+        .read(inAppNotificationControllerProvider)
+        .showErrorToast('Failed to update ${failed.length} apps: ${failed.join(', ')}');
+  }
+}
 
 class PerAppProxyPage extends HookConsumerWidget with PresLogger {
   const PerAppProxyPage({super.key});
@@ -325,32 +355,26 @@ class PerAppProxyPage extends HookConsumerWidget with PresLogger {
                     ),
                   ),
                 TextButton.icon(
-                  onPressed: () async {
-                    final toggles = packagesToToggle(
-                      displayedApps.valueOrNull ?? const [],
-                      selectedApps.valueOrNull ?? const {},
-                      true,
-                    );
-                    for (final packageName in toggles) {
-                      await ref.read(PerAppProxyProvider(mode).notifier).updatePkg(packageName);
-                    }
-                  },
+                  onPressed: () => selectVisibleApps(
+                    ref,
+                    mode!,
+                    displayedApps.valueOrNull ?? const [],
+                    selectedApps.valueOrNull ?? const {},
+                    true,
+                  ),
                   icon: const Icon(Icons.select_all_rounded),
-                  label: const Text('Select all'),
+                  label: Text(t.pages.settings.routing.generalOptions.perAppProxy.selectAll),
                 ),
                 TextButton.icon(
-                  onPressed: () async {
-                    final toggles = packagesToToggle(
-                      displayedApps.valueOrNull ?? const [],
-                      selectedApps.valueOrNull ?? const {},
-                      false,
-                    );
-                    for (final packageName in toggles) {
-                      await ref.read(PerAppProxyProvider(mode).notifier).updatePkg(packageName);
-                    }
-                  },
+                  onPressed: () => selectVisibleApps(
+                    ref,
+                    mode!,
+                    displayedApps.valueOrNull ?? const [],
+                    selectedApps.valueOrNull ?? const {},
+                    false,
+                  ),
                   icon: const Icon(Icons.deselect_rounded),
-                  label: const Text('Deselect all'),
+                  label: Text(t.pages.settings.routing.generalOptions.perAppProxy.deselectAll),
                 ),
               ],
             ),

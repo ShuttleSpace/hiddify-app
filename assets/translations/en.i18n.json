@@ -459,6 +459,8 @@
           "perAppProxy": {
             "title": "Per-app proxy",
             "hideSysApps": "Hide system apps",
+            "selectAll": "Select all",
+            "deselectAll": "Deselect all",
             "filters": {
               "all": "All",
               "system": "System",

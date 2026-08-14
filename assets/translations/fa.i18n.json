@@ -348,6 +348,8 @@
           "perAppProxy": {
             "title": "پروکسی برای هر برنامه",
             "hideSysApps": "پنهان کردن برنامه‌های سیستمی",
+            "selectAll": "Select all",
+            "deselectAll": "Deselect all",
             "options": {
               "import": {
                 "clipboard": "وارد کردن انتخاب‌ها از کلیپ‌بورد",

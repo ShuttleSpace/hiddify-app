@@ -348,6 +348,8 @@
           "perAppProxy": {
             "title": "依應用程式代理",
             "hideSysApps": "隱藏系統應用程式",
+            "selectAll": "Select all",
+            "deselectAll": "Deselect all",
             "options": {
               "import": {
                 "clipboard": "從剪貼簿匯入選擇",
