@@ -34,10 +34,7 @@ Future<void> selectVisibleApps(
   for (final packageName in toggles) {
     try {
       await ref.read(PerAppProxyProvider(mode).notifier).updatePkg(packageName);
-      if (select &&
-          flags[packageName] != null &&
-          PkgFlag.forceDeselection.check(flags[packageName]!) &&
-          !PkgFlag.autoSelection.check(flags[packageName]!)) {
+      if (select && needsSecondSelectUpdate(flags[packageName])) {
         await ref.read(PerAppProxyProvider(mode).notifier).updatePkg(packageName);
       }
     } catch (_) {

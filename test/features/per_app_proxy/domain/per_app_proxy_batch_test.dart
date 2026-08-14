@@ -11,4 +11,9 @@ void main() {
     final toggles = packagesToToggle(const [appA, appB], {'a': PkgFlag.userSelection.add(0)}, true);
     expect(toggles, {'b'});
   });
+
+  test('needsSecondSelectUpdate detects force deselected packages', () {
+    expect(needsSecondSelectUpdate(PkgFlag.autoSelection.add(PkgFlag.forceDeselection.add(0))), isTrue);
+    expect(needsSecondSelectUpdate(null), isFalse);
+  });
 }

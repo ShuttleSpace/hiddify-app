@@ -46,3 +46,5 @@ Set<String> packagesToToggle(
   }
   return result;
 }
+
+bool needsSecondSelectUpdate(int? flag) => flag != null && PkgFlag.forceDeselection.check(flag);
