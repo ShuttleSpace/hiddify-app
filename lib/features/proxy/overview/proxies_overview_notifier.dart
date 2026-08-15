@@ -7,12 +7,9 @@ import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/preferences/preferences_provider.dart';
 import 'package:hiddify/core/utils/preferences_utils.dart';
 import 'package:hiddify/features/connection/notifier/connection_notifier.dart';
-import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
 import 'package:hiddify/features/proxy/data/proxy_data_providers.dart';
-import 'package:hiddify/features/proxy/data/node_blacklist_engine.dart';
 import 'package:hiddify/features/proxy/model/proxy_failure.dart';
 import 'package:hiddify/features/proxy/notifier/active_proxy_group_notifier.dart';
-import 'package:hiddify/features/proxy/notifier/node_blacklist_controller.dart';
 import 'package:hiddify/hiddifycore/generated/v2/hcore/hcore.pb.dart';
 
 import 'package:hiddify/utils/riverpod_utils.dart';
@@ -103,45 +100,17 @@ class ProxiesOverviewNotifier extends _$ProxiesOverviewNotifier with AppLogger {
           final proxies = groups.firstOrNullWhere((group) => group.tag == selectedTag);
           if (proxies == null) return null;
 
-          final profileId = ref.read(activeProfileProvider).valueOrNull?.id;
-          final doc = ref.read(nodeBlacklistControllerProvider);
-          final rules = effectiveRules(doc, profileId);
-          final normalItems = <OutboundInfo>[];
-          final blacklistedItems = <OutboundInfo>[];
-          for (final node in proxies.items) {
-            if (isNodeBlacklisted(node, rules)) {
-              blacklistedItems.add(node);
-            } else {
-              normalItems.add(node);
-            }
-          }
           final filteredGroup = OutboundGroup(
             tag: proxies.tag,
             type: proxies.type,
             selected: proxies.selected,
             selectable: proxies.selectable,
             isExpand: proxies.isExpand,
-            items: [...normalItems, ...blacklistedItems],
+            items: proxies.items,
           );
           final sortedGroup = await _sortOutbounds(filteredGroup, sortBy);
           if (sortedGroup == null) return null;
-          final sortedNormal = <OutboundInfo>[];
-          final sortedBlacklisted = <OutboundInfo>[];
-          for (final node in sortedGroup.items) {
-            if (isNodeBlacklisted(node, rules)) {
-              sortedBlacklisted.add(node);
-            } else {
-              sortedNormal.add(node);
-            }
-          }
-          return OutboundGroup(
-            tag: sortedGroup.tag,
-            type: sortedGroup.type,
-            selected: sortedGroup.selected,
-            selectable: sortedGroup.selectable,
-            isExpand: sortedGroup.isExpand,
-            items: [...sortedNormal, ...sortedBlacklisted],
-          );
+          return sortedGroup;
         });
   }
 
