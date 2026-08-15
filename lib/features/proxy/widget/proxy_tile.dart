@@ -8,60 +8,70 @@ import 'package:hiddify/utils/platform_utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class ProxyTile extends HookConsumerWidget with PresLogger {
-  const ProxyTile(this.proxy, {super.key, required this.selected, required this.onTap});
+  const ProxyTile(this.proxy, {super.key, required this.selected, required this.onTap, this.highlight = false});
 
   final OutboundInfo proxy;
   final bool selected;
   final GestureTapCallback? onTap;
+  final bool highlight;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    return ListTile(
-      // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: Text(
-        proxy.tagDisplay,
-        overflow: TextOverflow.ellipsis,
-        style: PlatformUtils.isWindows ? const TextStyle(fontFamily: FontFamily.emoji) : null,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+      decoration: BoxDecoration(
+        color: highlight ? theme.colorScheme.tertiaryContainer.withValues(alpha: 0.45) : Colors.transparent,
+        border: Border.all(color: highlight ? theme.colorScheme.primary : Colors.transparent, width: 2),
+        borderRadius: BorderRadius.circular(12),
       ),
-      leading: IPCountryFlag(
-        countryCode: proxy.ipinfo.countryCode,
-        organization: proxy.ipinfo.org,
-        size: 40,
-        padding: const EdgeInsetsDirectional.only(end: 8),
-      ),
-      subtitle: Text.rich(
-        TextSpan(
-          text: proxy.type,
+      child: ListTile(
+        // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Text(
+          proxy.tagDisplay,
+          overflow: TextOverflow.ellipsis,
+          style: PlatformUtils.isWindows ? const TextStyle(fontFamily: FontFamily.emoji) : null,
+        ),
+        leading: IPCountryFlag(
+          countryCode: proxy.ipinfo.countryCode,
+          organization: proxy.ipinfo.org,
+          size: 40,
+          padding: const EdgeInsetsDirectional.only(end: 8),
+        ),
+        subtitle: Text.rich(
+          TextSpan(
+            text: proxy.type,
+            children: [
+              if (proxy.isGroup)
+                TextSpan(
+                  text: ' (${proxy.groupSelectedTagDisplay.trim()})',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+            ],
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: Column(
           children: [
-            if (proxy.isGroup)
-              TextSpan(
-                text: ' (${proxy.groupSelectedTagDisplay.trim()})',
-                style: Theme.of(context).textTheme.bodySmall,
+            if (proxy.urlTestDelay != 0)
+              Text(
+                proxy.urlTestDelay > 65000 ? "×" : proxy.urlTestDelay.toString(),
+                style: TextStyle(color: delayColor(context, proxy.urlTestDelay)),
               ),
+
+            if (proxy.download > 0) Text("⬩", style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: Column(
-        children: [
-          if (proxy.urlTestDelay != 0)
-            Text(
-              proxy.urlTestDelay > 65000 ? "×" : proxy.urlTestDelay.toString(),
-              style: TextStyle(color: delayColor(context, proxy.urlTestDelay)),
-            ),
 
-          if (proxy.download > 0) Text("⬩", style: Theme.of(context).textTheme.bodySmall),
-        ],
+        selected: selected,
+        selectedTileColor: theme.colorScheme.primaryContainer,
+        onTap: onTap,
+        onLongPress: () async => await ref.read(dialogNotifierProvider.notifier).showProxyInfo(outboundInfo: proxy),
+        horizontalTitleGap: 4,
       ),
-
-      selected: selected,
-      selectedTileColor: theme.colorScheme.primaryContainer,
-      onTap: onTap,
-      onLongPress: () async => await ref.read(dialogNotifierProvider.notifier).showProxyInfo(outboundInfo: proxy),
-      horizontalTitleGap: 4,
     );
   }
 
