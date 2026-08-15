@@ -9,6 +9,10 @@ import 'package:hiddify/core/model/directories.dart';
 import 'package:hiddify/core/notification/in_app_notification_controller.dart';
 import 'package:hiddify/core/preferences/general_preferences.dart';
 import 'package:hiddify/features/connection/model/connection_failure.dart';
+import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
+import 'package:hiddify/features/proxy/data/node_blacklist_engine.dart';
+import 'package:hiddify/features/proxy/notifier/node_blacklist_controller.dart';
+import 'package:hiddify/features/proxy/overview/all_proxies_overview_provider.dart';
 import 'package:hiddify/features/settings/data/config_option_repository.dart';
 import 'package:hiddify/hiddifycore/core_interface/core_interface.dart';
 import 'package:hiddify/hiddifycore/generated/v2/hcommon/common.pb.dart';
@@ -117,12 +121,24 @@ class HiddifyCoreService with InfraLogger {
       loggy.debug("changing options");
       // latestOptions = options;
       try {
+        final optionsJson = options.toJson();
+        final profileId = ref.read(activeProfileProvider).valueOrNull?.id;
+        final blacklistDoc = ref.read(nodeBlacklistControllerProvider);
+        final rules = effectiveRules(blacklistDoc, profileId);
+        final groups = ref.read(allProxiesOverviewProvider).valueOrNull ?? const [];
+        final blacklistedTags = groups
+            .expand((group) => group.items)
+            .where((node) => isNodeBlacklisted(node, rules))
+            .map((node) => node.tagDisplay)
+            .toSet()
+            .toList();
+        optionsJson['blacklisted-tags'] = blacklistedTags;
         final res = await core.fgClient.changeHiddifySettings(
-          ChangeHiddifySettingsRequest(hiddifySettingsJson: jsonEncode(options.toJson())),
+          ChangeHiddifySettingsRequest(hiddifySettingsJson: jsonEncode(optionsJson)),
         );
         if (res.messageType != MessageType.EMPTY) return left("${res.messageType} ${res.message}");
         await core.bgClient.changeHiddifySettings(
-          ChangeHiddifySettingsRequest(hiddifySettingsJson: jsonEncode(options.toJson())),
+          ChangeHiddifySettingsRequest(hiddifySettingsJson: jsonEncode(optionsJson)),
         );
       } on GrpcError catch (e) {
         if (e.code == StatusCode.unavailable) {
