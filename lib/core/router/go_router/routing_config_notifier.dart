@@ -138,6 +138,26 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
                       path: 'proxies',
                       pageBuilder: (_, state) =>
                           customTransition(TransitionType.fade, state.pageKey, const ProxiesOverviewPage()),
+                      routes: <GoRoute>[
+                        GoRoute(
+                          name: 'nodeBlacklist',
+                          path: 'node-blacklist',
+                          pageBuilder: (_, state) => customTransition(
+                            TransitionType.slide,
+                            state.pageKey,
+                            const NodeBlacklistManagementPage(),
+                          ),
+                        ),
+                        GoRoute(
+                          name: 'providerNodeBlacklist',
+                          path: 'provider-node-blacklist/:id',
+                          pageBuilder: (_, state) => customTransition(
+                            TransitionType.slide,
+                            state.pageKey,
+                            NodeBlacklistManagementPage(profileId: state.pathParameters['id']),
+                          ),
+                        ),
+                      ],
                     ),
                     if (isMobileBreakpoint)
                       GoRoute(
@@ -205,24 +225,6 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
                       path: 'traffic-stats',
                       pageBuilder: (_, state) =>
                           customTransition(TransitionType.slide, state.pageKey, const TrafficStatsPage()),
-                    ),
-                    GoRoute(
-                      name: 'nodeBlacklist',
-                      path: 'node-blacklist',
-                      pageBuilder: (_, state) => customTransition(
-                        TransitionType.slide,
-                        state.pageKey,
-                        const NodeBlacklistManagementPage(),
-                      ),
-                    ),
-                    GoRoute(
-                      name: 'providerNodeBlacklist',
-                      path: 'provider-node-blacklist/:id',
-                      pageBuilder: (_, state) => customTransition(
-                        TransitionType.slide,
-                        state.pageKey,
-                        NodeBlacklistManagementPage(profileId: state.pathParameters['id']),
-                      ),
                     ),
                     GoRoute(
                       name: 'networkIdentity',

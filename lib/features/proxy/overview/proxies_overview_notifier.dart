@@ -106,16 +106,42 @@ class ProxiesOverviewNotifier extends _$ProxiesOverviewNotifier with AppLogger {
           final profileId = ref.read(activeProfileProvider).valueOrNull?.id;
           final doc = ref.read(nodeBlacklistControllerProvider);
           final rules = effectiveRules(doc, profileId);
-          final filteredItems = proxies.items.where((node) => !isNodeBlacklisted(node, rules)).toList();
+          final normalItems = <OutboundInfo>[];
+          final blacklistedItems = <OutboundInfo>[];
+          for (final node in proxies.items) {
+            if (isNodeBlacklisted(node, rules)) {
+              blacklistedItems.add(node);
+            } else {
+              normalItems.add(node);
+            }
+          }
           final filteredGroup = OutboundGroup(
             tag: proxies.tag,
             type: proxies.type,
             selected: proxies.selected,
             selectable: proxies.selectable,
             isExpand: proxies.isExpand,
-            items: filteredItems,
+            items: [...normalItems, ...blacklistedItems],
           );
-          return await _sortOutbounds(filteredGroup, sortBy);
+          final sortedGroup = await _sortOutbounds(filteredGroup, sortBy);
+          if (sortedGroup == null) return null;
+          final sortedNormal = <OutboundInfo>[];
+          final sortedBlacklisted = <OutboundInfo>[];
+          for (final node in sortedGroup.items) {
+            if (isNodeBlacklisted(node, rules)) {
+              sortedBlacklisted.add(node);
+            } else {
+              sortedNormal.add(node);
+            }
+          }
+          return OutboundGroup(
+            tag: sortedGroup.tag,
+            type: sortedGroup.type,
+            selected: sortedGroup.selected,
+            selectable: sortedGroup.selectable,
+            isExpand: sortedGroup.isExpand,
+            items: [...sortedNormal, ...sortedBlacklisted],
+          );
         });
   }
 

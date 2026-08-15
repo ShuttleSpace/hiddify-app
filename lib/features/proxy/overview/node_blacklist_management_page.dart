@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/features/proxy/data/node_blacklist_io.dart';
 import 'package:hiddify/features/proxy/model/node_blacklist.dart';
 import 'package:hiddify/features/proxy/notifier/node_blacklist_controller.dart';
@@ -12,28 +13,27 @@ class NodeBlacklistManagementPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider).requireValue;
     final document = ref.watch(nodeBlacklistControllerProvider);
     final provider = profileId == null ? null : document.providers[profileId];
     final rules = profileId == null ? document.globalRules : provider?.rules ?? const [];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Node Blacklist'),
+        title: Text(t.pages.proxies.nodeBlacklist.title),
         actions: [
           IconButton(
-            tooltip: 'Copy JSON',
+            tooltip: t.pages.proxies.nodeBlacklist.copyJson,
             icon: const Icon(Icons.copy_rounded),
             onPressed: () => Clipboard.setData(ClipboardData(text: exportToJson(document))),
           ),
           IconButton(
-            tooltip: 'Paste JSON',
+            tooltip: t.pages.proxies.nodeBlacklist.pasteJson,
             icon: const Icon(Icons.content_paste_rounded),
             onPressed: () async {
               final text = await Clipboard.getData(Clipboard.kTextPlain);
               if (text?.text == null) return;
-              ref
-                  .read(nodeBlacklistControllerProvider.notifier)
-                  .importDocument(importFromJson(text!.text!));
+              ref.read(nodeBlacklistControllerProvider.notifier).importDocument(importFromJson(text!.text!));
             },
           ),
         ],
@@ -58,6 +58,7 @@ class NodeBlacklistManagementPage extends ConsumerWidget {
               subtitle: Text(rules[i].matchMode.name),
               trailing: IconButton(
                 icon: const Icon(Icons.delete_outline),
+                tooltip: t.pages.proxies.nodeBlacklist.delete,
                 onPressed: () {
                   if (profileId == null) {
                     ref.read(nodeBlacklistControllerProvider.notifier).deleteGlobalRule(i);
@@ -73,7 +74,7 @@ class NodeBlacklistManagementPage extends ConsumerWidget {
         onPressed: () async {
           final rule = await showDialog<NodeBlacklistRule>(
             context: context,
-            builder: (context) => const _AddNodeBlacklistRuleDialog(),
+            builder: (context) => _AddNodeBlacklistRuleDialog(t: t),
           );
           if (rule == null) return;
           if (profileId == null) {
@@ -89,7 +90,9 @@ class NodeBlacklistManagementPage extends ConsumerWidget {
 }
 
 class _AddNodeBlacklistRuleDialog extends StatefulWidget {
-  const _AddNodeBlacklistRuleDialog();
+  const _AddNodeBlacklistRuleDialog({required this.t});
+
+  final Translations t;
 
   @override
   State<_AddNodeBlacklistRuleDialog> createState() => _AddNodeBlacklistRuleDialogState();
@@ -111,18 +114,19 @@ class _AddNodeBlacklistRuleDialogState extends State<_AddNodeBlacklistRuleDialog
 
   @override
   Widget build(BuildContext context) {
+    final labels = widget.t.pages.proxies.nodeBlacklist;
     return AlertDialog(
-      title: const Text('Add blacklist rule'),
+      title: Text(labels.addRule),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Rule name'),
+            decoration: InputDecoration(labelText: labels.ruleName),
           ),
           DropdownButtonFormField<NodeBlacklistMatchMode>(
             initialValue: _matchMode,
-            decoration: const InputDecoration(labelText: 'Match mode'),
+            decoration: InputDecoration(labelText: labels.matchMode),
             items: NodeBlacklistMatchMode.values
                 .map((mode) => DropdownMenuItem(value: mode, child: Text(mode.name)))
                 .toList(),
@@ -130,7 +134,7 @@ class _AddNodeBlacklistRuleDialogState extends State<_AddNodeBlacklistRuleDialog
           ),
           DropdownButtonFormField<NodeBlacklistField>(
             initialValue: _field,
-            decoration: const InputDecoration(labelText: 'Field'),
+            decoration: InputDecoration(labelText: labels.field),
             items: NodeBlacklistField.values
                 .map((field) => DropdownMenuItem(value: field, child: Text(field.name)))
                 .toList(),
@@ -138,7 +142,7 @@ class _AddNodeBlacklistRuleDialogState extends State<_AddNodeBlacklistRuleDialog
           ),
           DropdownButtonFormField<NodeBlacklistOperator>(
             initialValue: _operator,
-            decoration: const InputDecoration(labelText: 'Operator'),
+            decoration: InputDecoration(labelText: labels.operator),
             items: NodeBlacklistOperator.values
                 .map((operator) => DropdownMenuItem(value: operator, child: Text(operator.name)))
                 .toList(),
@@ -146,15 +150,12 @@ class _AddNodeBlacklistRuleDialogState extends State<_AddNodeBlacklistRuleDialog
           ),
           TextField(
             controller: _valueController,
-            decoration: const InputDecoration(labelText: 'Value'),
+            decoration: InputDecoration(labelText: labels.value),
           ),
         ],
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(labels.cancel)),
         FilledButton(
           onPressed: () {
             final rule = NodeBlacklistRule(
@@ -162,16 +163,12 @@ class _AddNodeBlacklistRuleDialogState extends State<_AddNodeBlacklistRuleDialog
               name: _nameController.text.trim().isEmpty ? 'Custom rule' : _nameController.text.trim(),
               matchMode: _matchMode,
               conditions: [
-                NodeBlacklistCondition(
-                  field: _field,
-                  operator: _operator,
-                  value: _valueController.text.trim(),
-                ),
+                NodeBlacklistCondition(field: _field, operator: _operator, value: _valueController.text.trim()),
               ],
             );
             Navigator.of(context).pop(rule);
           },
-          child: const Text('Save'),
+          child: Text(labels.save),
         ),
       ],
     );

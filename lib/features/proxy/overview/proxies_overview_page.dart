@@ -32,6 +32,7 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
 
     final proxies = ref.watch(proxiesOverviewNotifierProvider);
     final sortBy = ref.watch(proxiesSortNotifierProvider);
+    final gridLayout = useState(true);
     final searchQuery = useState('');
     final searchController = useMemoized(TextEditingController.new);
     // ignore: no_leading_underscores_for_local_identifiers
@@ -125,6 +126,11 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
         title: Text(t.pages.proxies.title),
         actions: [
           IconButton(
+            tooltip: gridLayout.value ? 'List view' : 'Grid view',
+            onPressed: () => gridLayout.value = !gridLayout.value,
+            icon: Icon(gridLayout.value ? Icons.view_list_rounded : Icons.grid_view_rounded),
+          ),
+          IconButton(
             tooltip: 'Node blacklist',
             onPressed: () => context.goNamed('nodeBlacklist'),
             icon: const Icon(Icons.block_rounded),
@@ -179,31 +185,41 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
                             builder: (context, constraints) {
                               final width = constraints.maxWidth;
                               final crossAxisCount = crossAxisCountForWidth(width);
-                              return GridView.builder(
-                                controller: scrollController,
-                                padding: const EdgeInsets.only(bottom: 86),
-                                itemCount: group.items.length,
-                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: crossAxisCount,
-                                  mainAxisExtent: 72,
-                                ),
-                                itemBuilder: (context, index) {
-                                  final proxy = group.items[index];
-                                  return ProxyTile(
-                                    proxy,
-                                    selected: group.selected == proxy.tag,
-                                    highlight: _highlightedNode.value == proxy.tag,
-                                    onTap: () async {
-                                      await ref
-                                          .read(proxiesOverviewNotifierProvider.notifier)
-                                          .changeProxy(group.tag, proxy.tag);
-                                      // if (selectActiveProxyMutation.state.isInProgress) return;
-                                      // selectActiveProxyMutation.setFuture(
-                                      // );
-                                    },
-                                  );
-                                },
-                              );
+                              Widget tileBuilder(int index) {
+                                final proxy = group.items[index];
+                                final blacklisted = isNodeBlacklisted(proxy, rules);
+                                return ProxyTile(
+                                  proxy,
+                                  selected: group.selected == proxy.tag,
+                                  highlight: _highlightedNode.value == proxy.tag,
+                                  disabled: blacklisted,
+                                  onTap: blacklisted
+                                      ? null
+                                      : () async {
+                                          await ref
+                                              .read(proxiesOverviewNotifierProvider.notifier)
+                                              .changeProxy(group.tag, proxy.tag);
+                                        },
+                                );
+                              }
+
+                              return gridLayout.value
+                                  ? GridView.builder(
+                                      controller: scrollController,
+                                      padding: const EdgeInsets.only(bottom: 86),
+                                      itemCount: group.items.length,
+                                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: crossAxisCount,
+                                        mainAxisExtent: 72,
+                                      ),
+                                      itemBuilder: (context, index) => tileBuilder(index),
+                                    )
+                                  : ListView.builder(
+                                      controller: scrollController,
+                                      padding: const EdgeInsets.only(bottom: 86),
+                                      itemCount: group.items.length,
+                                      itemBuilder: (context, index) => tileBuilder(index),
+                                    );
                             },
                           )
                         : Center(child: Text(t.pages.proxies.empty)),

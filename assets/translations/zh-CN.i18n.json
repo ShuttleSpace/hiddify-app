@@ -109,6 +109,21 @@
       "sort": "排序代理",
       "testDelay": "测试延迟",
       "empty": "无可用代理",
+      "nodeBlacklist": {
+        "title": "节点黑名单",
+        "copyJson": "复制 JSON",
+        "pasteJson": "粘贴 JSON",
+        "policy": "策略",
+        "delete": "删除",
+        "addRule": "添加黑名单规则",
+        "ruleName": "规则名称",
+        "matchMode": "匹配模式",
+        "field": "字段",
+        "operator": "运算符",
+        "value": "值",
+        "cancel": "取消",
+        "save": "保存"
+      },
       "activeProxy": "当前代理",
       "unknownIp": "未知 IP",
       "sortOptions": {

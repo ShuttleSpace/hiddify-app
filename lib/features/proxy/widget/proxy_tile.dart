@@ -8,12 +8,20 @@ import 'package:hiddify/utils/platform_utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class ProxyTile extends HookConsumerWidget with PresLogger {
-  const ProxyTile(this.proxy, {super.key, required this.selected, required this.onTap, this.highlight = false});
+  const ProxyTile(
+    this.proxy, {
+    super.key,
+    required this.selected,
+    required this.onTap,
+    this.highlight = false,
+    this.disabled = false,
+  });
 
   final OutboundInfo proxy;
   final bool selected;
   final GestureTapCallback? onTap;
   final bool highlight;
+  final bool disabled;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -23,7 +31,11 @@ class ProxyTile extends HookConsumerWidget with PresLogger {
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeOut,
       decoration: BoxDecoration(
-        color: highlight ? theme.colorScheme.tertiaryContainer.withValues(alpha: 0.45) : Colors.transparent,
+        color: highlight
+            ? theme.colorScheme.tertiaryContainer.withValues(alpha: 0.45)
+            : disabled
+            ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45)
+            : Colors.transparent,
         border: Border.all(color: highlight ? theme.colorScheme.primary : Colors.transparent, width: 2),
         borderRadius: BorderRadius.circular(12),
       ),
@@ -54,21 +66,30 @@ class ProxyTile extends HookConsumerWidget with PresLogger {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        trailing: Column(
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            if (proxy.urlTestDelay != 0)
-              Text(
-                proxy.urlTestDelay > 65000 ? "×" : proxy.urlTestDelay.toString(),
-                style: TextStyle(color: delayColor(context, proxy.urlTestDelay)),
-              ),
-
-            if (proxy.download > 0) Text("⬩", style: Theme.of(context).textTheme.bodySmall),
+            Column(
+              children: [
+                if (proxy.urlTestDelay != 0)
+                  Text(
+                    proxy.urlTestDelay > 65000 ? "×" : proxy.urlTestDelay.toString(),
+                    style: TextStyle(color: delayColor(context, proxy.urlTestDelay)),
+                  ),
+                if (proxy.download > 0) Text("⬩", style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
+            if (disabled)
+              const Icon(Icons.block_rounded, size: 18, color: Colors.grey)
+            else if (selected)
+              Icon(Icons.check_circle_rounded, size: 18, color: theme.colorScheme.primary),
           ],
         ),
 
         selected: selected,
+        enabled: !disabled,
         selectedTileColor: theme.colorScheme.primaryContainer,
-        onTap: onTap,
+        onTap: disabled ? null : onTap,
         onLongPress: () async => await ref.read(dialogNotifierProvider.notifier).showProxyInfo(outboundInfo: proxy),
         horizontalTitleGap: 4,
       ),

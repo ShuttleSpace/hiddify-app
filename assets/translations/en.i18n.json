@@ -109,6 +109,21 @@
       "sort": "Sort proxies",
       "testDelay": "Test delay",
       "empty": "No proxies available",
+      "nodeBlacklist": {
+        "title": "Node blacklist",
+        "copyJson": "Copy JSON",
+        "pasteJson": "Paste JSON",
+        "policy": "Policy",
+        "delete": "Delete",
+        "addRule": "Add blacklist rule",
+        "ruleName": "Rule name",
+        "matchMode": "Match mode",
+        "field": "Field",
+        "operator": "Operator",
+        "value": "Value",
+        "cancel": "Cancel",
+        "save": "Save"
+      },
       "activeProxy": "Active proxy",
       "unknownIp": "Unknown IP",
       "sortOptions": {
