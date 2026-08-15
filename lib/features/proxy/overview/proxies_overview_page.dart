@@ -8,13 +8,17 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/model/failures.dart';
+import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
+import 'package:hiddify/features/proxy/data/node_blacklist_engine.dart';
 import 'package:hiddify/features/proxy/domain/proxy_search.dart';
 import 'package:hiddify/features/proxy/model/proxy_search_result.dart';
 import 'package:hiddify/features/proxy/notifier/active_proxy_group_notifier.dart';
+import 'package:hiddify/features/proxy/notifier/node_blacklist_controller.dart';
 import 'package:hiddify/features/proxy/overview/all_proxies_overview_provider.dart';
 import 'package:hiddify/features/proxy/overview/proxies_overview_notifier.dart';
 import 'package:hiddify/features/proxy/widget/proxy_search_overlay.dart';
 import 'package:hiddify/features/proxy/widget/proxy_tile.dart';
+import 'package:hiddify/hiddifycore/generated/v2/hcore/hcore.pb.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -28,13 +32,28 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
     final proxies = ref.watch(proxiesOverviewNotifierProvider);
     final sortBy = ref.watch(proxiesSortNotifierProvider);
     final searchQuery = useState('');
+    final searchController = useMemoized(TextEditingController.new);
     // ignore: no_leading_underscores_for_local_identifiers
     final _highlightedNode = useState<String?>(null);
+    final pendingSearchTarget = useState<ProxySearchResult?>(null);
     final didAutoLocate = useState(false);
     final scrollController = useScrollController();
 
     final groups = ref.watch(allProxiesOverviewProvider).valueOrNull ?? const [];
-    final results = searchProxyGroups(groups, searchQuery.value);
+    final profileId = ref.watch(activeProfileProvider).valueOrNull?.id;
+    final rules = effectiveRules(ref.watch(nodeBlacklistControllerProvider), profileId);
+    final searchableGroups = [
+      for (final group in groups)
+        OutboundGroup(
+          tag: group.tag,
+          type: group.type,
+          selected: group.selected,
+          selectable: group.selectable,
+          isExpand: group.isExpand,
+          items: group.items.where((node) => !isNodeBlacklisted(node, rules)).toList(),
+        ),
+    ];
+    final results = searchProxyGroups(searchableGroups, searchQuery.value);
     final displayedGroup = proxies.valueOrNull;
 
     int crossAxisCountForWidth(double width) =>
@@ -53,12 +72,25 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
 
     void onSearchResultSelected(ProxySearchResult result) {
       ref.read(activeProxyGroupNotifierProvider.notifier).select(result.groupTag);
+      searchController.clear();
       searchQuery.value = '';
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToNode(result.nodeTag);
-        _highlightedNode.value = result.nodeTag;
-      });
+      pendingSearchTarget.value = result;
     }
+
+    useEffect(() => searchController.dispose, []);
+
+    useEffect(() {
+      final target = pendingSearchTarget.value;
+      if (target == null) return null;
+      final group = displayedGroup;
+      if (group == null || group.tag != target.groupTag) return null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToNode(target.nodeTag);
+        _highlightedNode.value = target.nodeTag;
+      });
+      pendingSearchTarget.value = null;
+      return null;
+    }, [displayedGroup?.tag, pendingSearchTarget.value]);
 
     useEffect(() {
       if (didAutoLocate.value || displayedGroup == null || displayedGroup.selected.isEmpty) return null;
@@ -113,6 +145,7 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
             child: TextField(
+              controller: searchController,
               onChanged: (value) => searchQuery.value = value,
               decoration: const InputDecoration(hintText: 'Search', prefixIcon: Icon(Icons.search), isDense: true),
             ),
