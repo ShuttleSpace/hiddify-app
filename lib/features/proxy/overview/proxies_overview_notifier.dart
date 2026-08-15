@@ -13,6 +13,7 @@ import 'package:hiddify/features/proxy/data/node_blacklist_engine.dart';
 import 'package:hiddify/features/proxy/model/proxy_failure.dart';
 import 'package:hiddify/features/proxy/notifier/active_proxy_group_notifier.dart';
 import 'package:hiddify/features/proxy/notifier/node_blacklist_controller.dart';
+import 'package:hiddify/features/proxy/overview/all_proxies_overview_provider.dart';
 import 'package:hiddify/hiddifycore/generated/v2/hcore/hcore.pb.dart';
 
 import 'package:hiddify/utils/riverpod_utils.dart';
@@ -87,14 +88,7 @@ class ProxiesOverviewNotifier extends _$ProxiesOverviewNotifier with AppLogger {
     //     )
     //     .asyncMap((proxies) async => _sortOutbounds(proxies, sortBy));
     return ref
-        .watch(proxyRepositoryProvider)
-        .watchActiveProxies()
-        .map(
-          (event) => event.getOrElse((err) {
-            loggy.warning("error receiving proxies", err);
-            throw err;
-          }),
-        )
+        .watch(allProxiesOverviewProvider.stream)
         .map((groups) {
           ref.read(activeProxyGroupNotifierProvider.notifier).setDefault(groups);
           final proxies = groups.firstOrNullWhere((group) => group.tag == selectedTag);
