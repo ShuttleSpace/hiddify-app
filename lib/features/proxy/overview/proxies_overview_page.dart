@@ -8,6 +8,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/model/failures.dart';
+import 'package:hiddify/core/notification/in_app_notification_controller.dart';
 import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
 import 'package:hiddify/features/proxy/data/node_blacklist_engine.dart';
 import 'package:hiddify/features/proxy/domain/proxy_search.dart';
@@ -71,6 +72,10 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
     }
 
     void onSearchResultSelected(ProxySearchResult result) {
+      if (!searchableGroups.any((group) => group.tag == result.groupTag)) {
+        ref.read(inAppNotificationControllerProvider).showErrorToast(t.pages.proxies.empty);
+        return;
+      }
       ref.read(activeProxyGroupNotifierProvider.notifier).select(result.groupTag);
       searchController.clear();
       searchQuery.value = '';
@@ -136,7 +141,8 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async => await ref.read(proxiesOverviewNotifierProvider.notifier).urlTest("select"),
+        onPressed: () async =>
+            await ref.read(proxiesOverviewNotifierProvider.notifier).urlTest(displayedGroup?.tag ?? "select"),
         tooltip: t.pages.proxies.testDelay,
         child: const Icon(FluentIcons.flash_24_filled),
       ),
@@ -147,7 +153,11 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
             child: TextField(
               controller: searchController,
               onChanged: (value) => searchQuery.value = value,
-              decoration: const InputDecoration(hintText: 'Search', prefixIcon: Icon(Icons.search), isDense: true),
+              decoration: InputDecoration(
+                hintText: t.common.filter,
+                prefixIcon: const Icon(Icons.search),
+                isDense: true,
+              ),
             ),
           ),
           Expanded(
@@ -192,7 +202,9 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
                     loading: () => const Center(child: CircularProgressIndicator()),
                   ),
                 ),
-                if (results.isNotEmpty)
+                if (searchQuery.value.isNotEmpty && results.isEmpty)
+                  Center(child: Text(t.pages.proxies.empty))
+                else if (results.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 86),
                     child: ProxySearchOverlay(results: results, onSelected: onSearchResultSelected),

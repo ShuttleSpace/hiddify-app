@@ -87,26 +87,24 @@ class ProxiesOverviewNotifier extends _$ProxiesOverviewNotifier with AppLogger {
     //       ),
     //     )
     //     .asyncMap((proxies) async => _sortOutbounds(proxies, sortBy));
-    return ref
-        .watch(allProxiesOverviewProvider.stream)
-        .map((groups) {
-          ref.read(activeProxyGroupNotifierProvider.notifier).setDefault(groups);
-          final proxies = groups.firstOrNullWhere((group) => group.tag == selectedTag);
-          if (proxies == null) return null;
-          final profileId = ref.read(activeProfileProvider).valueOrNull?.id;
-          final doc = ref.read(nodeBlacklistControllerProvider);
-          final rules = effectiveRules(doc, profileId);
-          final filteredItems = proxies.items.where((node) => !isNodeBlacklisted(node, rules)).toList();
-          return OutboundGroup(
-            tag: proxies.tag,
-            type: proxies.type,
-            selected: proxies.selected,
-            selectable: proxies.selectable,
-            isExpand: proxies.isExpand,
-            items: filteredItems,
-          );
-        })
-        .asyncMap((proxies) async => await _sortOutbounds(proxies, sortBy));
+    final groups = ref.watch(allProxiesOverviewProvider).valueOrNull ?? const <OutboundGroup>[];
+    ref.read(activeProxyGroupNotifierProvider.notifier).setDefault(groups);
+    final proxies = groups.firstOrNullWhere((group) => group.tag == selectedTag);
+    if (proxies == null) return Stream.value(null);
+
+    final profileId = ref.read(activeProfileProvider).valueOrNull?.id;
+    final doc = ref.read(nodeBlacklistControllerProvider);
+    final rules = effectiveRules(doc, profileId);
+    final filteredItems = proxies.items.where((node) => !isNodeBlacklisted(node, rules)).toList();
+    final filteredGroup = OutboundGroup(
+      tag: proxies.tag,
+      type: proxies.type,
+      selected: proxies.selected,
+      selectable: proxies.selectable,
+      isExpand: proxies.isExpand,
+      items: filteredItems,
+    );
+    return Stream.value(filteredGroup).asyncMap((group) async => await _sortOutbounds(group, sortBy));
   }
 
   // Future<List<OutboundGroup>> _sortOutbounds(
