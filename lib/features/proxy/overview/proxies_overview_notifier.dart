@@ -13,7 +13,6 @@ import 'package:hiddify/features/proxy/data/node_blacklist_engine.dart';
 import 'package:hiddify/features/proxy/model/proxy_failure.dart';
 import 'package:hiddify/features/proxy/notifier/active_proxy_group_notifier.dart';
 import 'package:hiddify/features/proxy/notifier/node_blacklist_controller.dart';
-import 'package:hiddify/features/proxy/overview/all_proxies_overview_provider.dart';
 import 'package:hiddify/hiddifycore/generated/v2/hcore/hcore.pb.dart';
 
 import 'package:hiddify/utils/riverpod_utils.dart';
@@ -61,6 +60,8 @@ class ProxiesSortNotifier extends _$ProxiesSortNotifier with AppLogger {
 
 @riverpod
 class ProxiesOverviewNotifier extends _$ProxiesOverviewNotifier with AppLogger {
+  List<OutboundGroup> _lastGroups = [];
+
   @override
   Stream<OutboundGroup?> build() {
     ref.disposeDelay(const Duration(seconds: 15));
@@ -87,24 +88,35 @@ class ProxiesOverviewNotifier extends _$ProxiesOverviewNotifier with AppLogger {
     //       ),
     //     )
     //     .asyncMap((proxies) async => _sortOutbounds(proxies, sortBy));
-    final groups = ref.watch(allProxiesOverviewProvider).valueOrNull ?? const <OutboundGroup>[];
-    ref.read(activeProxyGroupNotifierProvider.notifier).setDefault(groups);
-    final proxies = groups.firstOrNullWhere((group) => group.tag == selectedTag);
-    if (proxies == null) return Stream.value(null);
+    return ref
+        .watch(proxyRepositoryProvider)
+        .watchAllGroups()
+        .map(
+          (event) => event.getOrElse((error) {
+            if (_lastGroups.isNotEmpty) return _lastGroups;
+            throw error;
+          }),
+        )
+        .asyncMap((groups) async {
+          _lastGroups = groups;
+          ref.read(activeProxyGroupNotifierProvider.notifier).setDefault(groups);
+          final proxies = groups.firstOrNullWhere((group) => group.tag == selectedTag);
+          if (proxies == null) return null;
 
-    final profileId = ref.read(activeProfileProvider).valueOrNull?.id;
-    final doc = ref.read(nodeBlacklistControllerProvider);
-    final rules = effectiveRules(doc, profileId);
-    final filteredItems = proxies.items.where((node) => !isNodeBlacklisted(node, rules)).toList();
-    final filteredGroup = OutboundGroup(
-      tag: proxies.tag,
-      type: proxies.type,
-      selected: proxies.selected,
-      selectable: proxies.selectable,
-      isExpand: proxies.isExpand,
-      items: filteredItems,
-    );
-    return Stream.value(filteredGroup).asyncMap((group) async => await _sortOutbounds(group, sortBy));
+          final profileId = ref.read(activeProfileProvider).valueOrNull?.id;
+          final doc = ref.read(nodeBlacklistControllerProvider);
+          final rules = effectiveRules(doc, profileId);
+          final filteredItems = proxies.items.where((node) => !isNodeBlacklisted(node, rules)).toList();
+          final filteredGroup = OutboundGroup(
+            tag: proxies.tag,
+            type: proxies.type,
+            selected: proxies.selected,
+            selectable: proxies.selectable,
+            isExpand: proxies.isExpand,
+            items: filteredItems,
+          );
+          return await _sortOutbounds(filteredGroup, sortBy);
+        });
   }
 
   // Future<List<OutboundGroup>> _sortOutbounds(

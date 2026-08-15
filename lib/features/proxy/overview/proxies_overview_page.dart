@@ -41,6 +41,7 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
     final scrollController = useScrollController();
 
     final groups = ref.watch(allProxiesOverviewProvider).valueOrNull ?? const [];
+    final allGroupsError = ref.watch(allProxiesOverviewProvider).error;
     final profileId = ref.watch(activeProfileProvider).valueOrNull?.id;
     final rules = effectiveRules(ref.watch(nodeBlacklistControllerProvider), profileId);
     final searchableGroups = [
@@ -160,6 +161,14 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
               ),
             ),
           ),
+          if (allGroupsError != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+              child: Text(
+                t.presentShortError(allGroupsError),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
           Expanded(
             child: Stack(
               children: [
