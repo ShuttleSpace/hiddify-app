@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hiddify/core/localization/translations.dart';
@@ -56,16 +58,56 @@ class NodeBlacklistManagementPage extends ConsumerWidget {
             ListTile(
               title: Text(rules[i].name),
               subtitle: Text(rules[i].matchMode.name),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete_outline),
-                tooltip: t.pages.proxies.nodeBlacklist.delete,
-                onPressed: () {
-                  if (profileId == null) {
-                    ref.read(nodeBlacklistControllerProvider.notifier).deleteGlobalRule(i);
-                  } else {
-                    ref.read(nodeBlacklistControllerProvider.notifier).deleteProviderRule(profileId!, i);
-                  }
-                },
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Tooltip(
+                    message: rules[i].enabled
+                        ? t.pages.proxies.nodeBlacklist.disableRule
+                        : t.pages.proxies.nodeBlacklist.enableRule,
+                    child: Switch(
+                      value: rules[i].enabled,
+                      onChanged: (enabled) {
+                        if (profileId == null) {
+                          ref.read(nodeBlacklistControllerProvider.notifier).setGlobalRuleEnabled(i, enabled);
+                        } else {
+                          ref
+                              .read(nodeBlacklistControllerProvider.notifier)
+                              .setProviderRuleEnabled(profileId!, i, enabled);
+                        }
+                      },
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined),
+                    tooltip: t.pages.proxies.nodeBlacklist.edit,
+                    onPressed: () async {
+                      final updated = await showDialog<NodeBlacklistRule>(
+                        context: context,
+                        builder: (context) => _EditNodeBlacklistRuleDialog(t: t, rule: rules[i]),
+                      );
+                      if (updated == null) return;
+                      if (profileId == null) {
+                        await ref.read(nodeBlacklistControllerProvider.notifier).upsertGlobalRule(updated, index: i);
+                      } else {
+                        await ref
+                            .read(nodeBlacklistControllerProvider.notifier)
+                            .upsertProviderRule(profileId!, updated, index: i);
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    tooltip: t.pages.proxies.nodeBlacklist.delete,
+                    onPressed: () {
+                      if (profileId == null) {
+                        ref.read(nodeBlacklistControllerProvider.notifier).deleteGlobalRule(i);
+                      } else {
+                        ref.read(nodeBlacklistControllerProvider.notifier).deleteProviderRule(profileId!, i);
+                      }
+                    },
+                  ),
+                ],
               ),
             ),
         ],
@@ -167,6 +209,147 @@ class _AddNodeBlacklistRuleDialogState extends State<_AddNodeBlacklistRuleDialog
               ],
             );
             Navigator.of(context).pop(rule);
+          },
+          child: Text(labels.save),
+        ),
+      ],
+    );
+  }
+}
+
+class _EditNodeBlacklistRuleDialog extends StatefulWidget {
+  const _EditNodeBlacklistRuleDialog({required this.t, required this.rule});
+
+  final Translations t;
+  final NodeBlacklistRule rule;
+
+  @override
+  State<_EditNodeBlacklistRuleDialog> createState() => _EditNodeBlacklistRuleDialogState();
+}
+
+class _EditNodeBlacklistRuleDialogState extends State<_EditNodeBlacklistRuleDialog> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _valueController;
+  late final TextEditingController _jsonController;
+  late NodeBlacklistField _field;
+  late NodeBlacklistOperator _operator;
+  late NodeBlacklistMatchMode _matchMode;
+  bool _formMode = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final rule = widget.rule;
+    final firstCondition = rule.conditions.isEmpty
+        ? const NodeBlacklistCondition(
+            field: NodeBlacklistField.countryCode,
+            operator: NodeBlacklistOperator.equals,
+            value: '',
+          )
+        : rule.conditions.first;
+    _nameController = TextEditingController(text: rule.name);
+    _valueController = TextEditingController(text: firstCondition.value);
+    _jsonController = TextEditingController(text: const JsonEncoder.withIndent('  ').convert(rule.toJson()));
+    _field = firstCondition.field;
+    _operator = firstCondition.operator;
+    _matchMode = rule.matchMode;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _valueController.dispose();
+    _jsonController.dispose();
+    super.dispose();
+  }
+
+  NodeBlacklistRule _buildFormRule() {
+    return NodeBlacklistRule(
+      enabled: widget.rule.enabled,
+      name: _nameController.text.trim().isEmpty ? 'Custom rule' : _nameController.text.trim(),
+      matchMode: _matchMode,
+      conditions: [NodeBlacklistCondition(field: _field, operator: _operator, value: _valueController.text.trim())],
+    );
+  }
+
+  NodeBlacklistRule _buildEditorRule() {
+    return NodeBlacklistRule.fromJson(jsonDecode(_jsonController.text) as Map<String, dynamic>);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final labels = widget.t.pages.proxies.nodeBlacklist;
+    return AlertDialog(
+      title: Text(labels.editRule),
+      content: SizedBox(
+        width: 460,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SegmentedButton<bool>(
+              segments: [
+                ButtonSegment(value: true, label: Text(labels.form)),
+                ButtonSegment(value: false, label: Text(labels.editor)),
+              ],
+              selected: {_formMode},
+              onSelectionChanged: (selection) {
+                setState(() => _formMode = selection.single);
+              },
+              showSelectedIcon: false,
+            ),
+            const SizedBox(height: 12),
+            if (_formMode) ...[
+              TextField(
+                controller: _nameController,
+                decoration: InputDecoration(labelText: labels.ruleName),
+              ),
+              DropdownButtonFormField<NodeBlacklistMatchMode>(
+                initialValue: _matchMode,
+                decoration: InputDecoration(labelText: labels.matchMode),
+                items: NodeBlacklistMatchMode.values
+                    .map((mode) => DropdownMenuItem(value: mode, child: Text(mode.name)))
+                    .toList(),
+                onChanged: (value) => setState(() => _matchMode = value ?? NodeBlacklistMatchMode.any),
+              ),
+              DropdownButtonFormField<NodeBlacklistField>(
+                initialValue: _field,
+                decoration: InputDecoration(labelText: labels.field),
+                items: NodeBlacklistField.values
+                    .map((field) => DropdownMenuItem(value: field, child: Text(field.name)))
+                    .toList(),
+                onChanged: (value) => setState(() => _field = value ?? NodeBlacklistField.countryCode),
+              ),
+              DropdownButtonFormField<NodeBlacklistOperator>(
+                initialValue: _operator,
+                decoration: InputDecoration(labelText: labels.operator),
+                items: NodeBlacklistOperator.values
+                    .map((operator) => DropdownMenuItem(value: operator, child: Text(operator.name)))
+                    .toList(),
+                onChanged: (value) => setState(() => _operator = value ?? NodeBlacklistOperator.equals),
+              ),
+              TextField(
+                controller: _valueController,
+                decoration: InputDecoration(labelText: labels.value),
+              ),
+            ] else
+              TextField(
+                controller: _jsonController,
+                maxLines: 8,
+                decoration: const InputDecoration(labelText: 'JSON', border: OutlineInputBorder()),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(labels.cancel)),
+        FilledButton(
+          onPressed: () {
+            try {
+              final rule = _formMode ? _buildFormRule() : _buildEditorRule();
+              Navigator.of(context).pop(rule);
+            } catch (_) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid JSON')));
+            }
           },
           child: Text(labels.save),
         ),

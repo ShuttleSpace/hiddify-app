@@ -127,6 +127,8 @@
         "value": "Value",
         "cancel": "Cancel",
         "save": "Save",
+        "enableRule": "Enable rule",
+        "disableRule": "Disable rule",
         "nodeDisabled": "$name has been disabled"
       },
       "activeProxy": "Active proxy",

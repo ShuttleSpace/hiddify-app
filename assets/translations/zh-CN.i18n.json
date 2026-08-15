@@ -127,6 +127,8 @@
         "value": "值",
         "cancel": "取消",
         "save": "保存",
+        "enableRule": "启用规则",
+        "disableRule": "禁用规则",
         "nodeDisabled": "$name 已被禁用"
       },
       "activeProxy": "当前代理",

@@ -7,21 +7,13 @@ enum NodeBlacklistMatchMode { any, all }
 enum NodeBlacklistPolicy { useGlobal, customOnly, globalPlusCustom }
 
 class NodeBlacklistCondition {
-  const NodeBlacklistCondition({
-    required this.field,
-    required this.operator,
-    required this.value,
-  });
+  const NodeBlacklistCondition({required this.field, required this.operator, required this.value});
 
   final NodeBlacklistField field;
   final NodeBlacklistOperator operator;
   final String value;
 
-  Map<String, dynamic> toJson() => {
-    'field': field.name,
-    'operator': operator.name,
-    'value': value,
-  };
+  Map<String, dynamic> toJson() => {'field': field.name, 'operator': operator.name, 'value': value};
 
   static NodeBlacklistCondition fromJson(Map<String, dynamic> json) => NodeBlacklistCondition(
     field: NodeBlacklistField.values.byName(json['field'] as String),
@@ -29,11 +21,8 @@ class NodeBlacklistCondition {
     value: json['value'] as String,
   );
 
-  NodeBlacklistCondition copyWith({String? value}) => NodeBlacklistCondition(
-    field: field,
-    operator: operator,
-    value: value ?? this.value,
-  );
+  NodeBlacklistCondition copyWith({String? value}) =>
+      NodeBlacklistCondition(field: field, operator: operator, value: value ?? this.value);
 }
 
 class NodeBlacklistRule {
@@ -64,21 +53,29 @@ class NodeBlacklistRule {
         .map((e) => NodeBlacklistCondition.fromJson(e as Map<String, dynamic>))
         .toList(),
   );
+
+  NodeBlacklistRule copyWith({
+    bool? enabled,
+    String? name,
+    NodeBlacklistMatchMode? matchMode,
+    List<NodeBlacklistCondition>? conditions,
+  }) {
+    return NodeBlacklistRule(
+      enabled: enabled ?? this.enabled,
+      name: name ?? this.name,
+      matchMode: matchMode ?? this.matchMode,
+      conditions: conditions ?? this.conditions,
+    );
+  }
 }
 
 class ProviderNodeBlacklist {
-  const ProviderNodeBlacklist({
-    required this.policy,
-    required this.rules,
-  });
+  const ProviderNodeBlacklist({required this.policy, required this.rules});
 
   final NodeBlacklistPolicy policy;
   final List<NodeBlacklistRule> rules;
 
-  Map<String, dynamic> toJson() => {
-    'policy': policy.name,
-    'rules': rules.map((e) => e.toJson()).toList(),
-  };
+  Map<String, dynamic> toJson() => {'policy': policy.name, 'rules': rules.map((e) => e.toJson()).toList()};
 
   static ProviderNodeBlacklist fromJson(Map<String, dynamic> json) => ProviderNodeBlacklist(
     policy: NodeBlacklistPolicy.values.byName(json['policy'] as String? ?? 'useGlobal'),
@@ -89,11 +86,7 @@ class ProviderNodeBlacklist {
 }
 
 class NodeBlacklistDocument {
-  const NodeBlacklistDocument({
-    required this.version,
-    required this.globalRules,
-    required this.providers,
-  });
+  const NodeBlacklistDocument({required this.version, required this.globalRules, required this.providers});
 
   final int version;
   final List<NodeBlacklistRule> globalRules;
@@ -110,7 +103,8 @@ class NodeBlacklistDocument {
     globalRules: ((json['global'] as Map<String, dynamic>?)?['rules'] as List<dynamic>? ?? [])
         .map((e) => NodeBlacklistRule.fromJson(e as Map<String, dynamic>))
         .toList(),
-    providers: ((json['providers'] as Map<String, dynamic>?) ?? {})
-        .map((key, value) => MapEntry(key, ProviderNodeBlacklist.fromJson(value as Map<String, dynamic>))),
+    providers: ((json['providers'] as Map<String, dynamic>?) ?? {}).map(
+      (key, value) => MapEntry(key, ProviderNodeBlacklist.fromJson(value as Map<String, dynamic>)),
+    ),
   );
 }

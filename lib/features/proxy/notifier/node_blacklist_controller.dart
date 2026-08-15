@@ -37,16 +37,25 @@ class NodeBlacklistController extends StateNotifier<NodeBlacklistDocument> {
     await _save(NodeBlacklistDocument(version: state.version, globalRules: rules, providers: state.providers));
   }
 
+  Future<void> setGlobalRuleEnabled(int index, bool enabled) async {
+    final rules = [...state.globalRules];
+    if (index < 0 || index >= rules.length) return;
+    rules[index] = rules[index].copyWith(enabled: enabled);
+    await _save(NodeBlacklistDocument(version: state.version, globalRules: rules, providers: state.providers));
+  }
+
   Future<void> setProviderPolicy(String profileId, NodeBlacklistPolicy policy) async {
     final providers = {...state.providers};
-    final current = providers[profileId] ?? const ProviderNodeBlacklist(policy: NodeBlacklistPolicy.useGlobal, rules: []);
+    final current =
+        providers[profileId] ?? const ProviderNodeBlacklist(policy: NodeBlacklistPolicy.useGlobal, rules: []);
     providers[profileId] = ProviderNodeBlacklist(policy: policy, rules: current.rules);
     await _save(NodeBlacklistDocument(version: state.version, globalRules: state.globalRules, providers: providers));
   }
 
   Future<void> upsertProviderRule(String profileId, NodeBlacklistRule rule, {int? index}) async {
     final providers = {...state.providers};
-    final current = providers[profileId] ?? const ProviderNodeBlacklist(policy: NodeBlacklistPolicy.useGlobal, rules: []);
+    final current =
+        providers[profileId] ?? const ProviderNodeBlacklist(policy: NodeBlacklistPolicy.useGlobal, rules: []);
     final rules = [...current.rules];
     if (index == null) {
       rules.add(rule);
@@ -64,6 +73,16 @@ class NodeBlacklistController extends StateNotifier<NodeBlacklistDocument> {
     final current = providers[profileId];
     if (current == null || index < 0 || index >= current.rules.length) return;
     final rules = [...current.rules]..removeAt(index);
+    providers[profileId] = ProviderNodeBlacklist(policy: current.policy, rules: rules);
+    await _save(NodeBlacklistDocument(version: state.version, globalRules: state.globalRules, providers: providers));
+  }
+
+  Future<void> setProviderRuleEnabled(String profileId, int index, bool enabled) async {
+    final providers = {...state.providers};
+    final current = providers[profileId];
+    if (current == null || index < 0 || index >= current.rules.length) return;
+    final rules = [...current.rules];
+    rules[index] = rules[index].copyWith(enabled: enabled);
     providers[profileId] = ProviderNodeBlacklist(policy: current.policy, rules: rules);
     await _save(NodeBlacklistDocument(version: state.version, globalRules: state.globalRules, providers: providers));
   }
