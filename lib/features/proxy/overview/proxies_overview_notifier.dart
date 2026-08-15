@@ -11,6 +11,7 @@ import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
 import 'package:hiddify/features/proxy/data/proxy_data_providers.dart';
 import 'package:hiddify/features/proxy/data/node_blacklist_engine.dart';
 import 'package:hiddify/features/proxy/model/proxy_failure.dart';
+import 'package:hiddify/features/proxy/notifier/active_proxy_group_notifier.dart';
 import 'package:hiddify/features/proxy/notifier/node_blacklist_controller.dart';
 import 'package:hiddify/hiddifycore/generated/v2/hcore/hcore.pb.dart';
 
@@ -67,6 +68,7 @@ class ProxiesOverviewNotifier extends _$ProxiesOverviewNotifier with AppLogger {
       return Stream.error(const ServiceNotRunning());
     }
     final sortBy = ref.watch(proxiesSortNotifierProvider);
+    final selectedTag = ref.watch(activeProxyGroupNotifierProvider);
     // yield* ref
     //     .watch(proxyRepositoryProvider)
     //     .watchProxies()
@@ -86,21 +88,21 @@ class ProxiesOverviewNotifier extends _$ProxiesOverviewNotifier with AppLogger {
     //     .asyncMap((proxies) async => _sortOutbounds(proxies, sortBy));
     return ref
         .watch(proxyRepositoryProvider)
-        .watchProxies()
+        .watchActiveProxies()
         .map(
           (event) => event.getOrElse((err) {
             loggy.warning("error receiving proxies", err);
             throw err;
           }),
         )
-        .map((proxies) {
-          if (proxies == null) return proxies;
+        .map((groups) {
+          ref.read(activeProxyGroupNotifierProvider.notifier).setDefault(groups);
+          final proxies = groups.firstOrNullWhere((group) => group.tag == selectedTag);
+          if (proxies == null) return null;
           final profileId = ref.read(activeProfileProvider).valueOrNull?.id;
           final doc = ref.read(nodeBlacklistControllerProvider);
           final rules = effectiveRules(doc, profileId);
-          final filteredItems = proxies.items
-              .where((node) => !isNodeBlacklisted(node, rules))
-              .toList();
+          final filteredItems = proxies.items.where((node) => !isNodeBlacklisted(node, rules)).toList();
           return OutboundGroup(
             tag: proxies.tag,
             type: proxies.type,
