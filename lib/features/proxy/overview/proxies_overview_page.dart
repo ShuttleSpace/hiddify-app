@@ -110,7 +110,11 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
                     loading: () => const Center(child: CircularProgressIndicator()),
                   ),
                 ),
-                if (results.isNotEmpty) ProxySearchOverlay(results: results, onSelected: (_) {}),
+                if (results.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 86),
+                    child: ProxySearchOverlay(results: results, onSelected: (_) {}),
+                  ),
               ],
             ),
           ),
