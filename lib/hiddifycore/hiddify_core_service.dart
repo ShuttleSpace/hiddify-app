@@ -10,9 +10,9 @@ import 'package:hiddify/core/notification/in_app_notification_controller.dart';
 import 'package:hiddify/core/preferences/general_preferences.dart';
 import 'package:hiddify/features/connection/model/connection_failure.dart';
 import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
+import 'package:hiddify/features/profile/data/profile_data_providers.dart';
 import 'package:hiddify/features/proxy/data/node_blacklist_engine.dart';
 import 'package:hiddify/features/proxy/notifier/node_blacklist_controller.dart';
-import 'package:hiddify/features/proxy/overview/all_proxies_overview_provider.dart';
 import 'package:hiddify/features/settings/data/config_option_repository.dart';
 import 'package:hiddify/hiddifycore/core_interface/core_interface.dart';
 import 'package:hiddify/hiddifycore/generated/v2/hcommon/common.pb.dart';
@@ -116,23 +116,30 @@ class HiddifyCoreService with InfraLogger {
     });
   }
 
-  TaskEither<String, Unit> changeOptions(SingboxConfigOption options) {
+  TaskEither<String, Unit> changeOptions(SingboxConfigOption options, {String? profileId}) {
     return TaskEither(() async {
       loggy.debug("changing options");
       // latestOptions = options;
       try {
         final optionsJson = options.toJson();
-        final profileId = ref.read(activeProfileProvider).valueOrNull?.id;
+        final effectiveProfileId =
+            profileId ?? (await ref.read(activeProfileProvider.future).catchError((Object _) => null))?.id;
         final blacklistDoc = ref.read(nodeBlacklistControllerProvider);
-        final rules = effectiveRules(blacklistDoc, profileId);
-        final groups = ref.read(allProxiesOverviewProvider).valueOrNull ?? const [];
-        final blacklistedTags = groups
-            .expand((group) => group.items)
-            .where((node) => isNodeBlacklisted(node, rules))
-            .map((node) => node.tagDisplay)
-            .toSet()
-            .toList();
-        optionsJson['blacklisted-tags'] = blacklistedTags;
+        final rules = effectiveRules(blacklistDoc, effectiveProfileId);
+        if (effectiveProfileId != null) {
+          final rawTags = await _loadRawOutboundTags(effectiveProfileId);
+          loggy.info("node blacklist profile: $effectiveProfileId, raw tags: ${rawTags.length}");
+          final candidates = <OutboundInfo>{
+            for (final tag in rawTags) OutboundInfo(tag: tag, tagDisplay: _trimTagName(tag)),
+          };
+          final blacklistedTags = candidates
+              .where((node) => isNodeBlacklisted(node, rules))
+              .map((node) => node.tag)
+              .toSet()
+              .toList();
+          loggy.info("node blacklist tags: $blacklistedTags");
+          optionsJson['blacklisted-tags'] = blacklistedTags;
+        }
         final res = await core.fgClient.changeHiddifySettings(
           ChangeHiddifySettingsRequest(hiddifySettingsJson: jsonEncode(optionsJson)),
         );
@@ -151,6 +158,31 @@ class HiddifyCoreService with InfraLogger {
       return right(unit);
     });
   }
+
+  Future<Set<String>> _loadRawOutboundTags(String? profileId) async {
+    if (profileId == null) return const {};
+    try {
+      final file = ref.read(profilePathResolverProvider).file(profileId);
+      final content = await file.readAsString();
+      final decoded = jsonDecode(content);
+      if (decoded is! Map<String, dynamic>) return const {};
+      final tags = <String>{};
+      for (final key in const ['outbounds', 'endpoints']) {
+        final items = decoded[key];
+        if (items is! List) continue;
+        for (final item in items) {
+          if (item is Map && item['tag'] is String) {
+            tags.add(item['tag'] as String);
+          }
+        }
+      }
+      return tags;
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  String _trimTagName(String tag) => tag.split('§').first.trim();
 
   TaskEither<ConnectionFailure, Unit> start(String path, String name, bool disableMemoryLimit) {
     return TaskEither(() async {
