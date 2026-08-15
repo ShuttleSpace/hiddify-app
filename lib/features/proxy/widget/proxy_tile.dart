@@ -46,7 +46,10 @@ class ProxyTile extends HookConsumerWidget with PresLogger {
         title: Text(
           proxy.tagDisplay,
           overflow: TextOverflow.ellipsis,
-          style: PlatformUtils.isWindows ? const TextStyle(fontFamily: FontFamily.emoji) : null,
+          style: TextStyle(
+            fontFamily: PlatformUtils.isWindows ? FontFamily.emoji : null,
+            color: disabled ? theme.disabledColor : null,
+          ),
         ),
         leading: IPCountryFlag(
           countryCode: proxy.ipinfo.countryCode,
@@ -56,9 +59,7 @@ class ProxyTile extends HookConsumerWidget with PresLogger {
         ),
         subtitle: Text.rich(
           TextSpan(
-            text: blacklistReason == null
-                ? proxy.type
-                : '${proxy.type} · ${blacklistReason}',
+            text: blacklistReason == null ? proxy.type : '${proxy.type} · $blacklistReason',
             children: [
               if (proxy.isGroup)
                 TextSpan(
@@ -69,6 +70,7 @@ class ProxyTile extends HookConsumerWidget with PresLogger {
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
+          style: TextStyle(color: disabled ? theme.disabledColor : null),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -91,9 +93,8 @@ class ProxyTile extends HookConsumerWidget with PresLogger {
         ),
 
         selected: selected,
-        enabled: !disabled,
         selectedTileColor: theme.colorScheme.primaryContainer,
-        onTap: disabled ? null : onTap,
+        onTap: onTap,
         onLongPress: () async => await ref.read(dialogNotifierProvider.notifier).showProxyInfo(outboundInfo: proxy),
         horizontalTitleGap: 4,
       ),

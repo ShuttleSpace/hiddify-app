@@ -7,9 +7,13 @@ import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/preferences/preferences_provider.dart';
 import 'package:hiddify/core/utils/preferences_utils.dart';
 import 'package:hiddify/features/connection/notifier/connection_notifier.dart';
+import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
+import 'package:hiddify/features/proxy/data/node_blacklist_engine.dart';
 import 'package:hiddify/features/proxy/data/proxy_data_providers.dart';
+import 'package:hiddify/features/proxy/model/node_blacklist.dart';
 import 'package:hiddify/features/proxy/model/proxy_failure.dart';
 import 'package:hiddify/features/proxy/notifier/active_proxy_group_notifier.dart';
+import 'package:hiddify/features/proxy/notifier/node_blacklist_controller.dart';
 import 'package:hiddify/hiddifycore/generated/v2/hcore/hcore.pb.dart';
 
 import 'package:hiddify/utils/riverpod_utils.dart';
@@ -68,6 +72,8 @@ class ProxiesOverviewNotifier extends _$ProxiesOverviewNotifier with AppLogger {
     }
     final sortBy = ref.watch(proxiesSortNotifierProvider);
     final selectedTag = ref.watch(activeProxyGroupNotifierProvider);
+    final profileId = ref.watch(activeProfileProvider).valueOrNull?.id;
+    final rules = effectiveRules(ref.watch(nodeBlacklistControllerProvider), profileId);
     // yield* ref
     //     .watch(proxyRepositoryProvider)
     //     .watchProxies()
@@ -108,7 +114,7 @@ class ProxiesOverviewNotifier extends _$ProxiesOverviewNotifier with AppLogger {
             isExpand: proxies.isExpand,
             items: proxies.items,
           );
-          final sortedGroup = await _sortOutbounds(filteredGroup, sortBy);
+          final sortedGroup = await _sortOutbounds(filteredGroup, sortBy, rules);
           if (sortedGroup == null) return null;
           return sortedGroup;
         });
@@ -157,44 +163,41 @@ class ProxiesOverviewNotifier extends _$ProxiesOverviewNotifier with AppLogger {
   //   return sortedProxies;
   // }
 
-  Future<OutboundGroup?> _sortOutbounds(OutboundGroup? proxies, ProxiesSort sortBy) async {
+  Future<OutboundGroup?> _sortOutbounds(
+    OutboundGroup? proxies,
+    ProxiesSort sortBy,
+    List<NodeBlacklistRule> blacklistRules,
+  ) async {
     if (proxies == null) return null;
 
-    final sortedItems = switch (sortBy) {
-      ProxiesSort.name => proxies.items.sortedWith((a, b) {
-        if (a.isGroup && !b.isGroup) return -1;
-        if (!a.isGroup && b.isGroup) return 1;
-        return a.tag.compareTo(b.tag);
-      }),
-      ProxiesSort.delay => proxies.items.sortedWith((a, b) {
-        if (a.isGroup && !b.isGroup) return -1;
-        if (!a.isGroup && b.isGroup) return 1;
-
-        final ai = a.urlTestDelay;
-        final bi = b.urlTestDelay;
-        if (ai == 0 && bi == 0) return -1;
-        if (ai == 0 && bi > 0) return 1;
-        if (ai > 0 && bi == 0) return -1;
-        return ai.compareTo(bi);
-      }),
-      ProxiesSort.unsorted => proxies.items,
-      ProxiesSort.usage => proxies.items.sortedWith((a, b) {
-        if (a.isGroup && !b.isGroup) return -1;
-        if (!a.isGroup && b.isGroup) return 1;
-        return (b.upload + b.download).compareTo(a.upload + a.download);
-      }),
-    };
-    final items = <OutboundInfo>[];
-    for (final item in sortedItems) {
-      // if (groupWithSelected.keys.contains(item.tag)) {
-      //   items.add(item.copyWith(selectedTag: groupWithSelected[item.tag]));
-      // } else {
-      items.add(item);
-      // }
-    }
+    final normalItems = proxies.items.where((item) => !isNodeBlacklisted(item, blacklistRules));
+    final blacklistedItems = proxies.items.where((item) => isNodeBlacklisted(item, blacklistRules));
     proxies.items.clear();
-    proxies.items.addAll(items);
+    proxies.items.addAll([..._sortItems(normalItems, sortBy), ..._sortItems(blacklistedItems, sortBy)]);
     return proxies;
+  }
+
+  List<OutboundInfo> _sortItems(Iterable<OutboundInfo> items, ProxiesSort sortBy) {
+    return items.sortedWith((a, b) {
+      if (a.isGroup && !b.isGroup) return -1;
+      if (!a.isGroup && b.isGroup) return 1;
+
+      return switch (sortBy) {
+        ProxiesSort.unsorted => 0,
+        ProxiesSort.name => a.tag.compareTo(b.tag),
+        ProxiesSort.delay => _compareDelay(a, b),
+        ProxiesSort.usage => (b.upload + b.download).compareTo(a.upload + a.download),
+      };
+    }).toList();
+  }
+
+  int _compareDelay(OutboundInfo a, OutboundInfo b) {
+    final ai = a.urlTestDelay;
+    final bi = b.urlTestDelay;
+    if (ai == 0 && bi == 0) return 0;
+    if (ai == 0 && bi > 0) return 1;
+    if (ai > 0 && bi == 0) return -1;
+    return ai.compareTo(bi);
   }
 
   // Future<void> changeProxy(String groupTag, String outboundTag) async {

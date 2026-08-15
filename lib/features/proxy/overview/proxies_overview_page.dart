@@ -131,7 +131,7 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
             icon: Icon(gridLayout.value ? Icons.view_list_rounded : Icons.grid_view_rounded),
           ),
           IconButton(
-            tooltip: 'Node blacklist',
+            tooltip: t.pages.proxies.nodeBlacklist.title,
             onPressed: () => context.goNamed('nodeBlacklist'),
             icon: const Icon(Icons.block_rounded),
           ),
@@ -187,16 +187,31 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
                               final crossAxisCount = crossAxisCountForWidth(width);
                               Widget tileBuilder(int index) {
                                 final proxy = group.items[index];
-                                return ProxyTile(
+                                final blacklisted = isNodeBlacklisted(proxy, rules);
+                                final disabledReason = blacklisted
+                                    ? t.pages.proxies.nodeBlacklist.nodeDisabled(name: proxy.tagDisplay)
+                                    : null;
+                                final tile = ProxyTile(
                                   proxy,
                                   selected: group.selected == proxy.tag,
                                   highlight: _highlightedNode.value == proxy.tag,
+                                  disabled: blacklisted,
+                                  blacklistReason: disabledReason,
                                   onTap: () async {
+                                    if (blacklisted) {
+                                      ref
+                                          .read(inAppNotificationControllerProvider)
+                                          .showInfoToast(
+                                            t.pages.proxies.nodeBlacklist.nodeDisabled(name: proxy.tagDisplay),
+                                          );
+                                      return;
+                                    }
                                     await ref
                                         .read(proxiesOverviewNotifierProvider.notifier)
                                         .changeProxy(group.tag, proxy.tag);
                                   },
                                 );
+                                return blacklisted ? Tooltip(message: disabledReason, child: tile) : tile;
                               }
 
                               return gridLayout.value

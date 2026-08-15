@@ -114,6 +114,10 @@
         "copyJson": "复制 JSON",
         "pasteJson": "粘贴 JSON",
         "policy": "策略",
+        "edit": "编辑",
+        "editRule": "编辑黑名单规则",
+        "form": "表单",
+        "editor": "编辑器",
         "delete": "删除",
         "addRule": "添加黑名单规则",
         "ruleName": "规则名称",
@@ -122,7 +126,8 @@
         "operator": "运算符",
         "value": "值",
         "cancel": "取消",
-        "save": "保存"
+        "save": "保存",
+        "nodeDisabled": "$name 已被禁用"
       },
       "activeProxy": "当前代理",
       "unknownIp": "未知 IP",

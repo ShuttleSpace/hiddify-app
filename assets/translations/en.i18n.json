@@ -114,6 +114,10 @@
         "copyJson": "Copy JSON",
         "pasteJson": "Paste JSON",
         "policy": "Policy",
+        "edit": "Edit",
+        "editRule": "Edit blacklist rule",
+        "form": "Form",
+        "editor": "Editor",
         "delete": "Delete",
         "addRule": "Add blacklist rule",
         "ruleName": "Rule name",
@@ -122,7 +126,8 @@
         "operator": "Operator",
         "value": "Value",
         "cancel": "Cancel",
-        "save": "Save"
+        "save": "Save",
+        "nodeDisabled": "$name has been disabled"
       },
       "activeProxy": "Active proxy",
       "unknownIp": "Unknown IP",
