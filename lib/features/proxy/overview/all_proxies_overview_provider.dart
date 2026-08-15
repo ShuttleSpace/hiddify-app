@@ -9,5 +9,5 @@ List<OutboundGroup> resolveAllProxiesResult(Either<ProxyFailure, List<OutboundGr
     event.getOrElse((failure) => throw failure);
 
 final allProxiesOverviewProvider = StreamProvider<List<OutboundGroup>>((ref) {
-  return ref.watch(proxyRepositoryProvider).watchActiveProxies().map(resolveAllProxiesResult);
+  return ref.watch(proxyRepositoryProvider).watchAllGroups().map(resolveAllProxiesResult);
 });

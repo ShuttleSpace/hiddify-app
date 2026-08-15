@@ -315,6 +315,22 @@ class HiddifyCoreService with InfraLogger {
     }
   }
 
+  Stream<List<OutboundGroup>> watchAllGroups() async* {
+    loggy.info("watching all proxy groups");
+
+    if (!core.isInitialized()) {
+      loggy.debug("core is not initialized, returning empty all-groups stream");
+      return;
+    }
+
+    try {
+      yield* core.bgClient.outboundsInfo(Empty()).map((event) => event.items.toList());
+    } catch (e) {
+      loggy.error("error watching all proxy groups: $e");
+      rethrow;
+    }
+  }
+
   //
   // Stream<SingboxStatus> watchStatus() => _status;
 

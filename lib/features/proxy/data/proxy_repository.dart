@@ -13,6 +13,7 @@ abstract interface class ProxyRepository {
   // Stream<Either<ProxyFailure, List<OutboundGroup>>> watchProxies();
   Stream<Either<ProxyFailure, OutboundGroup?>> watchProxies();
   Stream<Either<ProxyFailure, List<OutboundGroup>>> watchActiveProxies();
+  Stream<Either<ProxyFailure, List<OutboundGroup>>> watchAllGroups();
   TaskEither<ProxyFailure, oldipinfo.IpInfo> getCurrentIpInfo(CancelToken cancelToken);
   TaskEither<ProxyFailure, Unit> selectProxy(String groupTag, String outboundTag);
   TaskEither<ProxyFailure, Unit> urlTest(String groupTag);
@@ -71,6 +72,14 @@ class ProxyRepositoryImpl with ExceptionHandler, InfraLogger implements ProxyRep
   Stream<Either<ProxyFailure, List<OutboundGroup>>> watchActiveProxies() {
     return singbox.watchActiveGroups().handleExceptions((error, stackTrace) {
       loggy.error("error watching active proxies", error, stackTrace);
+      return ProxyUnexpectedFailure(error, stackTrace);
+    });
+  }
+
+  @override
+  Stream<Either<ProxyFailure, List<OutboundGroup>>> watchAllGroups() {
+    return singbox.watchAllGroups().handleExceptions((error, stackTrace) {
+      loggy.error("error watching all proxy groups", error, stackTrace);
       return ProxyUnexpectedFailure(error, stackTrace);
     });
   }
