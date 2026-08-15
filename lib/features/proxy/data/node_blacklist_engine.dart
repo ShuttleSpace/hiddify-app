@@ -44,14 +44,36 @@ bool _conditionMatches(OutboundInfo node, NodeBlacklistCondition condition) {
     NodeBlacklistField.asn => node.ipinfo.asn.toString(),
     NodeBlacklistField.organization => node.ipinfo.org,
   };
-  final value = raw.trim().toLowerCase();
-  final target = condition.value.trim().toLowerCase();
+  var value = raw.trim().toLowerCase();
+  var target = condition.value.trim().toLowerCase();
+  if (condition.field == NodeBlacklistField.countryCode) {
+    value = _normalizeCountry(value);
+    target = _normalizeCountry(target);
+  }
 
   return switch (condition.operator) {
     NodeBlacklistOperator.equals => value == target,
     NodeBlacklistOperator.contains => value.contains(target),
     NodeBlacklistOperator.startsWith => value.startsWith(target),
     NodeBlacklistOperator.cidrMatch => false,
+  };
+}
+
+String _normalizeCountry(String value) {
+  return switch (value) {
+    'hk' || 'hong kong' || '香港' => 'hk',
+    'tw' || 'taiwan' || '台湾' || '台灣' => 'tw',
+    'sg' || 'singapore' || '新加坡' => 'sg',
+    'jp' || 'japan' || '日本' => 'jp',
+    'us' || 'usa' || 'united states' || '美国' || '美國' => 'us',
+    'kr' || 'south korea' || '韩国' || '韓國' => 'kr',
+    'de' || 'germany' || '德国' || '德國' => 'de',
+    'gb' || 'uk' || 'united kingdom' || '英国' || '英國' => 'gb',
+    'fr' || 'france' || '法国' || '法國' => 'fr',
+    'ca' || 'canada' || '加拿大' => 'ca',
+    'au' || 'australia' || '澳大利亚' || '澳洲' => 'au',
+    'mo' || 'macau' || '澳门' || '澳門' => 'mo',
+    _ => value,
   };
 }
 
