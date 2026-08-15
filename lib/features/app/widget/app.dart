@@ -12,12 +12,20 @@ import 'package:hiddify/core/model/constants.dart';
 import 'package:hiddify/core/router/go_router/go_router_notifier.dart';
 import 'package:hiddify/core/router/go_router/helper/active_breakpoint_notifier.dart';
 import 'package:hiddify/core/theme/app_theme.dart';
+import 'package:hiddify/core/theme/appearance_options.dart';
 import 'package:hiddify/core/theme/theme_preferences.dart';
 import 'package:hiddify/features/app_update/notifier/app_update_notifier.dart';
+import 'package:hiddify/features/backup/data/backup_scheduler.dart';
+import 'package:hiddify/features/connection/notifier/connection_notifier.dart';
 import 'package:hiddify/features/connection/widget/connection_wrapper.dart';
 import 'package:hiddify/features/per_app_proxy/overview/per_app_proxy_service_notifier.dart';
+import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
 import 'package:hiddify/features/profile/notifier/profiles_update_notifier.dart';
+import 'package:hiddify/features/proxy/notifier/active_proxy_blacklist_guard.dart';
+import 'package:hiddify/features/proxy/notifier/node_blacklist_controller.dart';
 import 'package:hiddify/features/shortcut/shortcut_wrapper.dart';
+import 'package:hiddify/features/shortcut/notifier/global_hotkey_notifier.dart';
+import 'package:hiddify/features/stats/notifier/traffic_history_recorder.dart';
 import 'package:hiddify/features/system_tray/notifier/system_tray_notifier.dart';
 import 'package:hiddify/features/window/widget/window_wrapper.dart';
 import 'package:hiddify/hiddifycore/hiddify_core_service_provider.dart';
@@ -58,13 +66,25 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
     final router = ref.watch(goRouterNotiferProvider);
     final locale = ref.watch(localePreferencesProvider);
     final themeMode = ref.watch(themePreferencesProvider);
-    final theme = AppTheme(themeMode, locale.preferredFontFamily);
+    final textScaleMode = ref.watch(AppearanceOptions.textScaleMode);
+    final colorSource = ref.watch(AppearanceOptions.colorSource);
+    final seedColor = Color(ref.watch(AppearanceOptions.seedColorValue));
+    final theme = AppTheme(themeMode, locale.preferredFontFamily, seedColor: seedColor);
     final upgrader = ref.watch(upgraderProvider);
     final activeBreakpoint = Breakpoint(context).activeBreakpoint;
 
+    ref.listen(nodeBlacklistControllerProvider, (_, next) async {
+      if (!ref.read(serviceRunningProvider)) return;
+      final activeProfile = await ref.read(activeProfileProvider.future);
+      await ref.read(connectionNotifierProvider.notifier).reconnect(activeProfile);
+    });
+    ref.listen(activeProxyBlacklistGuardProvider, (_, _) {});
     ref.listen(foregroundProfilesUpdateNotifierProvider, (_, _) {});
     if (PlatformUtils.isAndroid) ref.listen(perAppProxyServiceProvider, (_, _) {});
     if (PlatformUtils.isDesktop) ref.listen(systemTrayNotifierProvider, (_, _) {});
+    if (PlatformUtils.isDesktop) ref.listen(globalHotkeyNotifierProvider, (_, _) {});
+    ref.listen(trafficHistoryRecorderProvider, (_, _) {});
+    ref.listen(backupSchedulerProvider, (_, _) {});
 
     // updating ActiveBreakpointNotifier value
     useEffect(() {
@@ -79,6 +99,16 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
           child: ConnectionWrapper(
             DynamicColorBuilder(
               builder: (ColorScheme? lightColorScheme, ColorScheme? darkColorScheme) {
+                final effectiveLight = switch (colorSource) {
+                  AppColorSource.dynamicColor => lightColorScheme,
+                  AppColorSource.seed => ColorScheme.fromSeed(seedColor: seedColor),
+                  AppColorSource.brand => null,
+                };
+                final effectiveDark = switch (colorSource) {
+                  AppColorSource.dynamicColor => darkColorScheme,
+                  AppColorSource.seed => ColorScheme.fromSeed(seedColor: seedColor, brightness: Brightness.dark),
+                  AppColorSource.brand => null,
+                };
                 return MaterialApp.router(
                   routerConfig: router,
                   locale: locale.flutterLocale,
@@ -86,15 +116,22 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
                   localizationsDelegates: GlobalMaterialLocalizations.delegates,
                   debugShowCheckedModeBanner: false,
                   themeMode: themeMode.flutterThemeMode,
-                  theme: theme.lightTheme(lightColorScheme),
-                  darkTheme: theme.darkTheme(darkColorScheme),
+                  theme: theme.lightTheme(effectiveLight),
+                  darkTheme: theme.darkTheme(effectiveDark),
                   title: Constants.appName,
                   builder: (context, child) {
                     final theme = Theme.of(context);
+                    final safeChild = child ?? const SizedBox();
+                    child = textScaleMode == AppTextScaleMode.system
+                        ? safeChild
+                        : MediaQuery(
+                            data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScaleMode.scale)),
+                            child: safeChild,
+                          );
                     child = UpgradeAlert(
                       upgrader: upgrader,
                       navigatorKey: router.routerDelegate.navigatorKey,
-                      child: child ?? const SizedBox(),
+                      child: child,
                     );
                     if (kDebugMode && _debugAccessibility) {
                       return AccessibilityTools(checkFontOverflows: true, child: child);
