@@ -46,6 +46,7 @@ class HiddifyCoreService with InfraLogger {
   final CallOptions? grpcOptions = null; //CallOptions(timeout: const Duration(milliseconds: 10000));
   final Map<String, StreamSubscription?> subscriptions = {};
   List<OutboundGroup> latest = [];
+  List<String> lastBlacklistedTags = [];
 
   Future<void> init() async {
     await setup()
@@ -126,20 +127,22 @@ class HiddifyCoreService with InfraLogger {
             profileId ?? (await ref.read(activeProfileProvider.future).catchError((Object _) => null))?.id;
         final blacklistDoc = ref.read(nodeBlacklistControllerProvider);
         final rules = effectiveRules(blacklistDoc, effectiveProfileId);
+        var blacklistedTags = lastBlacklistedTags;
         if (effectiveProfileId != null) {
           final rawTags = await _loadRawOutboundTags(effectiveProfileId);
           loggy.info("node blacklist profile: $effectiveProfileId, raw tags: ${rawTags.length}");
           final candidates = <OutboundInfo>{
             for (final tag in rawTags) OutboundInfo(tag: tag, tagDisplay: _trimTagName(tag)),
           };
-          final blacklistedTags = candidates
+          blacklistedTags = candidates
               .where((node) => isNodeBlacklisted(node, rules))
               .map((node) => node.tag)
               .toSet()
               .toList();
           loggy.info("node blacklist tags: $blacklistedTags");
-          optionsJson['blacklisted-tags'] = blacklistedTags;
+          lastBlacklistedTags = blacklistedTags;
         }
+        optionsJson['blacklisted-tags'] = blacklistedTags;
         final res = await core.fgClient.changeHiddifySettings(
           ChangeHiddifySettingsRequest(hiddifySettingsJson: jsonEncode(optionsJson)),
         );
