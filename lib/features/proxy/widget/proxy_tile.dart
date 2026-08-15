@@ -15,6 +15,7 @@ class ProxyTile extends HookConsumerWidget with PresLogger {
     required this.onTap,
     this.highlight = false,
     this.disabled = false,
+    this.blacklistReason,
   });
 
   final OutboundInfo proxy;
@@ -22,6 +23,7 @@ class ProxyTile extends HookConsumerWidget with PresLogger {
   final GestureTapCallback? onTap;
   final bool highlight;
   final bool disabled;
+  final String? blacklistReason;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -54,7 +56,9 @@ class ProxyTile extends HookConsumerWidget with PresLogger {
         ),
         subtitle: Text.rich(
           TextSpan(
-            text: proxy.type,
+            text: blacklistReason == null
+                ? proxy.type
+                : '${proxy.type} · ${blacklistReason}',
             children: [
               if (proxy.isGroup)
                 TextSpan(

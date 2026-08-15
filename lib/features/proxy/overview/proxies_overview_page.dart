@@ -188,11 +188,16 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
                               Widget tileBuilder(int index) {
                                 final proxy = group.items[index];
                                 final blacklisted = isNodeBlacklisted(proxy, rules);
+                                final matching = matchingRules(proxy, rules);
+                                final blacklistReason = matching.isEmpty
+                                    ? null
+                                    : matching.map((rule) => rule.name).join(', ');
                                 return ProxyTile(
                                   proxy,
                                   selected: group.selected == proxy.tag,
                                   highlight: _highlightedNode.value == proxy.tag,
                                   disabled: blacklisted,
+                                  blacklistReason: blacklistReason,
                                   onTap: blacklisted
                                       ? null
                                       : () async {
