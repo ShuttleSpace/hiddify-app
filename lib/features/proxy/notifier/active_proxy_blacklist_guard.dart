@@ -7,8 +7,9 @@ import 'package:hiddify/features/proxy/notifier/node_blacklist_controller.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 final activeProxyBlacklistGuardProvider = Provider<void>((ref) {
-  ref.listen(activeProxyNotifierProvider, (_, next) {
-    final node = next.valueOrNull;
+  ref.listen(nodeBlacklistMutationVersionProvider, (previous, next) {
+    if (previous == next) return;
+    final node = ref.read(activeProxyNotifierProvider).valueOrNull;
     if (node == null) return;
     final doc = ref.read(nodeBlacklistControllerProvider);
     final profileId = ref.read(activeProfileProvider).valueOrNull?.id;

@@ -11,9 +11,10 @@ final nodeBlacklistRepositoryProvider = Provider<NodeBlacklistRepository>((ref) 
 });
 
 class NodeBlacklistController extends StateNotifier<NodeBlacklistDocument> {
-  NodeBlacklistController(this._repo) : super(_repo.load());
+  NodeBlacklistController(this._repo, {this.onMutation}) : super(_repo.load());
 
   final NodeBlacklistRepository _repo;
+  final void Function()? onMutation;
 
   Future<void> _save(NodeBlacklistDocument document) async {
     state = document;
@@ -30,6 +31,7 @@ class NodeBlacklistController extends StateNotifier<NodeBlacklistDocument> {
       rules.add(rule);
     }
     await _save(NodeBlacklistDocument(version: state.version, globalRules: rules, providers: state.providers));
+    if (rule.enabled) onMutation?.call();
   }
 
   Future<void> deleteGlobalRule(int index) async {
@@ -42,6 +44,7 @@ class NodeBlacklistController extends StateNotifier<NodeBlacklistDocument> {
     if (index < 0 || index >= rules.length) return;
     rules[index] = rules[index].copyWith(enabled: enabled);
     await _save(NodeBlacklistDocument(version: state.version, globalRules: rules, providers: state.providers));
+    if (enabled) onMutation?.call();
   }
 
   Future<void> setProviderPolicy(String profileId, NodeBlacklistPolicy policy) async {
@@ -66,6 +69,7 @@ class NodeBlacklistController extends StateNotifier<NodeBlacklistDocument> {
     }
     providers[profileId] = ProviderNodeBlacklist(policy: current.policy, rules: rules);
     await _save(NodeBlacklistDocument(version: state.version, globalRules: state.globalRules, providers: providers));
+    if (rule.enabled) onMutation?.call();
   }
 
   Future<void> deleteProviderRule(String profileId, int index) async {
@@ -85,13 +89,22 @@ class NodeBlacklistController extends StateNotifier<NodeBlacklistDocument> {
     rules[index] = rules[index].copyWith(enabled: enabled);
     providers[profileId] = ProviderNodeBlacklist(policy: current.policy, rules: rules);
     await _save(NodeBlacklistDocument(version: state.version, globalRules: state.globalRules, providers: providers));
+    if (enabled) onMutation?.call();
   }
 
-  Future<void> importDocument(NodeBlacklistDocument document) => _save(document);
+  Future<void> importDocument(NodeBlacklistDocument document) async {
+    await _save(document);
+    onMutation?.call();
+  }
 
   NodeBlacklistDocument exportDocument() => state;
 }
 
 final nodeBlacklistControllerProvider = StateNotifierProvider<NodeBlacklistController, NodeBlacklistDocument>(
-  (ref) => NodeBlacklistController(ref.watch(nodeBlacklistRepositoryProvider)),
+  (ref) => NodeBlacklistController(
+    ref.watch(nodeBlacklistRepositoryProvider),
+    onMutation: () => ref.read(nodeBlacklistMutationVersionProvider.notifier).state++,
+  ),
 );
+
+final nodeBlacklistMutationVersionProvider = StateProvider<int>((ref) => 0);
