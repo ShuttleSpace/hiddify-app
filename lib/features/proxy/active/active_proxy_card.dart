@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
@@ -25,24 +24,18 @@ class _ActiveProxyFooterState extends ConsumerState<ActiveProxyFooter> with Infr
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _connectionState = ref.read(connectionNotifierProvider).valueOrNull ?? const Disconnected();
-      _activeProxy = ref.read(activeProxyNotifierProvider).valueOrNull;
-      ref.listen(connectionNotifierProvider, (_, next) {
-        if (!mounted) return;
-        setState(() => _connectionState = next.valueOrNull ?? const Disconnected());
-      });
-      ref.listen(activeProxyNotifierProvider, (_, next) {
-        if (!mounted) return;
-        setState(() => _activeProxy = next.valueOrNull);
-      });
-      if (mounted) setState(() {});
-    });
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(connectionNotifierProvider, (_, next) {
+      if (!mounted) return;
+      setState(() => _connectionState = next.valueOrNull ?? const Disconnected());
+    });
+    ref.listen(activeProxyNotifierProvider, (_, next) {
+      if (!mounted) return;
+      setState(() => _activeProxy = next.valueOrNull);
+    });
     final t = ref.watch(translationsProvider).requireValue;
 
     if (_connectionState != const Connected() || _activeProxy == null) {
