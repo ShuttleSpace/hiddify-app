@@ -170,8 +170,8 @@ class ProxiesOverviewNotifier extends _$ProxiesOverviewNotifier with AppLogger {
   ) async {
     if (proxies == null) return null;
 
-    final normalItems = proxies.items.where((item) => !isNodeBlacklisted(item, blacklistRules));
-    final blacklistedItems = proxies.items.where((item) => isNodeBlacklisted(item, blacklistRules));
+    final normalItems = proxies.items.where((item) => !isNodeBlacklisted(item, blacklistRules)).toList();
+    final blacklistedItems = proxies.items.where((item) => isNodeBlacklisted(item, blacklistRules)).toList();
     proxies.items.clear();
     proxies.items.addAll([..._sortItems(normalItems, sortBy), ..._sortItems(blacklistedItems, sortBy)]);
     return proxies;
