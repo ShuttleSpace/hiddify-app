@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -21,6 +22,11 @@ class CustomAlertDialog extends HookConsumerWidget {
         child: SizedBox(width: 468, child: Text(message, textDirection: TextDirection.ltr)),
       ),
       actions: [
+        IconButton(
+          tooltip: t.common.copy,
+          onPressed: () => Clipboard.setData(ClipboardData(text: message)),
+          icon: const Icon(Icons.copy_rounded),
+        ),
         TextButton(
           onPressed: () {
             context.pop();

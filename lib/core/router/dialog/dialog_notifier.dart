@@ -41,9 +41,9 @@ class DialogNotifier extends _$DialogNotifier {
     final context = rootNavKey.currentContext;
     if (context == null) return null;
     // ref.read(popupCountNotifierProvider.notifier).increase();
-    return await Navigator.of(context).push<T>(DialogRoute(context: context, builder: (context) => child)).then((
-      value,
-    ) {
+    return await Navigator.of(context).push<T>(
+      DialogRoute(context: context, builder: (context) => SelectionArea(child: child)),
+    ).then((value) {
       // ref.read(popupCountNotifierProvider.notifier).decrease();
       return value;
     });
