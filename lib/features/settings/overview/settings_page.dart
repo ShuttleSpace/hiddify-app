@@ -35,7 +35,7 @@ class SettingsPage extends HookConsumerWidget {
     final entries = _buildSearchEntries(context, ref, t);
     final searchResults = searchQuery.value.trim().isEmpty
         ? null
-        : entries.where((entry) => _fuzzyMatch(searchQuery.value, entry.title)).toList();
+        : entries.where((entry) => _matchesSearchEntry(searchQuery.value, entry)).toList();
 
     useEffect(() => searchController.dispose, []);
     // final scrollController = useScrollController();
@@ -81,7 +81,7 @@ class SettingsPage extends HookConsumerWidget {
             if (searchResults.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(24),
-                child: Center(child: Text(t.pages.proxies.empty)),
+                child: Center(child: Text(t.common.empty)),
               )
             else
               for (final entry in searchResults)
@@ -181,23 +181,104 @@ class SettingsPage extends HookConsumerWidget {
 
   List<_SettingsSearchEntry> _buildSearchEntries(BuildContext context, WidgetRef ref, Translations t) {
     return [
-      _SettingsSearchEntry(t.pages.settings.general.title, Icons.layers_rounded, context.namedLocation('general')),
+      _SettingsSearchEntry(
+        t.pages.settings.general.openMainWindowOnStartup,
+        Icons.open_in_new_rounded,
+        context.namedLocation('general'),
+        subtitle: t.pages.settings.general.title,
+        keywords: const ['打开', '启动', '主界面', '窗口', 'open', 'start'],
+      ),
+      _SettingsSearchEntry(
+        t.pages.settings.appearance.textSize,
+        Icons.text_fields_rounded,
+        context.namedLocation('appearance'),
+        subtitle: t.pages.settings.appearance.title,
+        keywords: const ['文本', '大小', '缩放', 'text', 'size'],
+      ),
+      _SettingsSearchEntry(
+        t.pages.settings.appearance.themeColor,
+        Icons.color_lens_rounded,
+        context.namedLocation('appearance'),
+        subtitle: t.pages.settings.appearance.title,
+        keywords: const ['主题', '颜色', '外观', 'theme', 'color'],
+      ),
+      _SettingsSearchEntry(
+        t.pages.settings.inbound.serviceMode,
+        Icons.input_rounded,
+        context.namedLocation('inboundOptions'),
+        subtitle: t.pages.settings.inbound.title,
+        keywords: const ['系统代理', 'TUN', '代理模式', 'service', 'mode'],
+      ),
+      _SettingsSearchEntry(
+        t.pages.settings.inbound.mixedPort,
+        Icons.numbers_rounded,
+        context.namedLocation('inboundOptions'),
+        subtitle: t.pages.settings.inbound.title,
+        keywords: const ['端口', '混合', 'port'],
+      ),
+      _SettingsSearchEntry(
+        t.pages.settings.dns.remoteDns,
+        Icons.dns_rounded,
+        context.namedLocation('dnsOptions'),
+        subtitle: t.pages.settings.dns.title,
+        keywords: const ['DNS', '远程', '域名'],
+      ),
+      _SettingsSearchEntry(
+        t.pages.settings.dns.enableFakeDns,
+        Icons.dns_rounded,
+        context.namedLocation('dnsOptions'),
+        subtitle: t.pages.settings.dns.title,
+        keywords: const ['DNS', 'Fake', '域名'],
+      ),
+      _SettingsSearchEntry(
+        t.pages.settings.routing.generalOptions.region,
+        Icons.route_rounded,
+        context.namedLocation('routingOptions'),
+        subtitle: t.pages.settings.routing.title,
+        keywords: const ['地区', '区域', '路由', 'region'],
+      ),
+      _SettingsSearchEntry(
+        t.pages.settings.routing.generalOptions.resolveDestination,
+        Icons.route_rounded,
+        context.namedLocation('routingOptions'),
+        subtitle: t.pages.settings.routing.title,
+        keywords: const ['解析', '域名', '目的地', 'resolve'],
+      ),
+      _SettingsSearchEntry(
+        t.pages.settings.general.title,
+        Icons.layers_rounded,
+        context.namedLocation('general'),
+        keywords: const ['常规', '通用', 'general', '语言', '内存', '调试', '日志级别'],
+      ),
       _SettingsSearchEntry(
         t.pages.settings.appearance.title,
         Icons.palette_rounded,
         context.namedLocation('appearance'),
+        keywords: const ['外观', '主题', '颜色', '文本', '缩放'],
       ),
-      _SettingsSearchEntry(t.pages.settings.traffic.title, Icons.speed_rounded, context.namedLocation('trafficStats')),
+      _SettingsSearchEntry(
+        t.pages.settings.traffic.title,
+        Icons.speed_rounded,
+        context.namedLocation('trafficStats'),
+        keywords: const ['流量', '网速', '统计', '历史', 'traffic', 'speed'],
+      ),
       _SettingsSearchEntry(
         t.pages.settings.networkIdentity.title,
         Icons.public_rounded,
         context.namedLocation('networkIdentity'),
+        keywords: const ['网络', '身份', '国家', '地区', '城市', 'ASN', 'GeoIP'],
       ),
-      _SettingsSearchEntry(t.pages.settings.backup.title, Icons.backup_rounded, context.namedLocation('backup')),
+      _SettingsSearchEntry(
+        t.pages.settings.backup.title,
+        Icons.backup_rounded,
+        context.namedLocation('backup'),
+        keywords: const ['备份', '恢复', 'WebDAV', '本地', '导入', '导出', 'backup'],
+      ),
       _SettingsSearchEntry(
         t.pages.settings.shortcuts.title,
         Icons.keyboard_command_key_rounded,
         context.namedLocation('shortcuts'),
+        keywords: const ['快捷键', '热键', '打开设置', 'shortcut'],
       ),
       if (ref.watch(hasAnyProfileProvider).value ?? false)
         _SettingsSearchEntry(
@@ -205,28 +286,53 @@ class SettingsPage extends HookConsumerWidget {
           Icons.webhook_rounded,
           context.namedLocation('chainOptions'),
           subtitle: t.pages.settings.chain.subtitle,
+          keywords: const ['链', 'WARP', 'Psiphon', '中转'],
         ),
       _SettingsSearchEntry(
         t.pages.settings.routing.title,
         Icons.route_rounded,
         context.namedLocation('routingOptions'),
+        keywords: const ['路由', '规则', '直连', '代理', '局域网', 'GeoIP', 'GeoSite'],
       ),
-      _SettingsSearchEntry(t.pages.settings.dns.title, Icons.dns_rounded, context.namedLocation('dnsOptions')),
+      _SettingsSearchEntry(
+        t.pages.settings.dns.title,
+        Icons.dns_rounded,
+        context.namedLocation('dnsOptions'),
+        keywords: const ['DNS', '远程', '直连', 'Fake', '域名'],
+      ),
       _SettingsSearchEntry(
         t.pages.settings.inbound.title,
         Icons.input_rounded,
         context.namedLocation('inboundOptions'),
+        keywords: const ['入站', '端口', 'TUN', '系统代理', '局域网', 'inbound'],
       ),
       _SettingsSearchEntry(
         t.pages.settings.tlsTricks.title,
         Icons.content_cut_rounded,
         context.namedLocation('tlsTricks'),
+        keywords: const ['TLS', '分片', 'Padding', 'SNI', '伪装'],
       ),
       if (Breakpoint(context).isMobile()) ...[
-        _SettingsSearchEntry(t.pages.logs.title, Icons.description_rounded, context.namedLocation('logs')),
-        _SettingsSearchEntry(t.pages.about.title, Icons.info_rounded, context.namedLocation('about')),
+        _SettingsSearchEntry(
+          t.pages.logs.title,
+          Icons.description_rounded,
+          context.namedLocation('logs'),
+          keywords: const ['日志', 'log'],
+        ),
+        _SettingsSearchEntry(
+          t.pages.about.title,
+          Icons.info_rounded,
+          context.namedLocation('about'),
+          keywords: const ['关于', '版本', 'about'],
+        ),
       ],
     ];
+  }
+
+  bool _matchesSearchEntry(String query, _SettingsSearchEntry entry) {
+    if (_fuzzyMatch(query, entry.title)) return true;
+    if (entry.subtitle != null && _fuzzyMatch(query, entry.subtitle!)) return true;
+    return entry.keywords.any((keyword) => _fuzzyMatch(query, keyword));
   }
 
   bool _fuzzyMatch(String query, String text) {
@@ -242,12 +348,13 @@ class SettingsPage extends HookConsumerWidget {
 }
 
 class _SettingsSearchEntry {
-  const _SettingsSearchEntry(this.title, this.icon, this.namedLocation, {this.subtitle});
+  const _SettingsSearchEntry(this.title, this.icon, this.namedLocation, {this.subtitle, this.keywords = const []});
 
   final String title;
   final IconData icon;
   final String namedLocation;
   final String? subtitle;
+  final List<String> keywords;
 }
 
 class SettingsSection extends HookConsumerWidget {
