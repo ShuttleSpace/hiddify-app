@@ -294,6 +294,11 @@ for service in \$(networksetup -listallnetworkservices | tail -n +2); do
   networksetup -setsecurewebproxystate "\$service" off >/dev/null 2>&1
   networksetup -setsocksfirewallproxystate "\$service" off >/dev/null 2>&1
 done
+if pgrep -x cc-switch >/dev/null 2>&1; then
+  pkill -x cc-switch 2>/dev/null || true
+  sleep 1
+  open -a 'CC Switch' >/dev/null 2>&1 || true
+fi
 ''';
     Process.start('/bin/sh', ['-c', script], mode: ProcessStartMode.detached)
         .then((process) {
