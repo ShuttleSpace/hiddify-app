@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:fpdart/fpdart.dart';
@@ -47,6 +48,7 @@ class HiddifyCoreService with InfraLogger {
   final Map<String, StreamSubscription?> subscriptions = {};
   List<OutboundGroup> latest = [];
   List<String> lastBlacklistedTags = [];
+  Process? _systemProxyWatchdog;
 
   Future<void> init() async {
     await setup()
@@ -131,6 +133,7 @@ class HiddifyCoreService with InfraLogger {
         if (effectiveProfileId != null) {
           final rawTags = await _loadRawOutboundTags(effectiveProfileId);
           loggy.info("node blacklist profile: $effectiveProfileId, raw tags: ${rawTags.length}");
+          loggy.info("node blacklist rules: ${rules.length}, names: ${rules.map((rule) => rule.name).join(', ')}");
           final candidates = <OutboundInfo>{
             for (final tag in rawTags) OutboundInfo(tag: tag, tagDisplay: _trimTagName(tag)),
           };
@@ -143,6 +146,11 @@ class HiddifyCoreService with InfraLogger {
           lastBlacklistedTags = blacklistedTags;
         }
         optionsJson['blacklisted-tags'] = blacklistedTags;
+        if (options.setSystemProxy) {
+          _startSystemProxyWatchdog();
+        } else {
+          _stopSystemProxyWatchdog();
+        }
         final res = await core.fgClient.changeHiddifySettings(
           ChangeHiddifySettingsRequest(hiddifySettingsJson: jsonEncode(optionsJson)),
         );
@@ -255,6 +263,7 @@ class HiddifyCoreService with InfraLogger {
   TaskEither<String, Unit> stop() {
     return TaskEither(() async {
       loggy.debug("stopping");
+      _stopSystemProxyWatchdog();
       var errMsg = "";
       try {
         final res = await core.bgClient.stop(Empty());
@@ -273,6 +282,37 @@ class HiddifyCoreService with InfraLogger {
       if (errMsg.isNotEmpty) return left(errMsg);
       return right(unit);
     });
+  }
+
+  void _startSystemProxyWatchdog() {
+    _stopSystemProxyWatchdog();
+    final script =
+        '''
+while kill -0 $pid 2>/dev/null; do sleep 1; done
+for service in \$(networksetup -listallnetworkservices | tail -n +2); do
+  networksetup -setwebproxystate "\$service" off >/dev/null 2>&1
+  networksetup -setsecurewebproxystate "\$service" off >/dev/null 2>&1
+  networksetup -setsocksfirewallproxystate "\$service" off >/dev/null 2>&1
+done
+''';
+    Process.start('/bin/sh', ['-c', script], mode: ProcessStartMode.detached)
+        .then((process) {
+          _systemProxyWatchdog = process;
+          process.exitCode.then((_) {
+            if (identical(_systemProxyWatchdog, process)) {
+              _systemProxyWatchdog = null;
+            }
+          });
+        })
+        .catchError((Object _) {
+          loggy.warning("failed to start system proxy watchdog");
+        });
+  }
+
+  void _stopSystemProxyWatchdog() {
+    final process = _systemProxyWatchdog;
+    _systemProxyWatchdog = null;
+    process?.kill(ProcessSignal.sigkill);
   }
 
   TaskEither<String, Unit> restart(String path, String name, bool disableMemoryLimit) {
