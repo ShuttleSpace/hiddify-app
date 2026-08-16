@@ -9,7 +9,7 @@ class ChainTimelineArrow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 12,
-      margin: const EdgeInsetsDirectional.only(start: 8.5),
+      margin: const EdgeInsetsDirectional.only(start: 18),
       child: CustomPaint(
         painter: _ChainTimeLineArrowPainter(showArrow: showArrow, color: Theme.of(context).colorScheme.onSurface),
       ),

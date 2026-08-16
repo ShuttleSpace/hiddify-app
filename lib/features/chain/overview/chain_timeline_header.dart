@@ -28,7 +28,7 @@ class ChainTimelineHeader extends HookConsumerWidget {
       ),
       child: Row(
         children: [
-          const Gap(4),
+          const Gap(16),
           SizedBox(child: Icon(level.icon(), size: 20, color: theme.colorScheme.onSurfaceVariant)),
           const Gap(12),
           Expanded(
