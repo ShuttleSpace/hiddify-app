@@ -189,7 +189,10 @@ class LogsPage extends HookConsumerWidget with PresLogger {
                     },
                   ),
                   AsyncError(:final error) => SliverErrorBodyPlaceholder(t.presentShortError(error)),
-                  _ => const SliverLoadingBodyPlaceholder(),
+                  _ => const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
                 },
                 SliverOverlapInjector(handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
               ],
