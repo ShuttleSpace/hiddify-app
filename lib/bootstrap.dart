@@ -70,12 +70,12 @@ Future<void> lazyBootstrap(WidgetsBinding widgetsBinding, Environment env) async
   if (PlatformUtils.isDesktop) {
     await _init("window controller", () => container.read(windowNotifierProvider.future));
 
-    final silentStart = container.read(Preferences.silentStart);
-    Logger.bootstrap.debug("silent start [${silentStart ? "Enabled" : "Disabled"}]");
-    if (!silentStart) {
+    final openOnStartup = container.read(Preferences.openMainWindowOnStartup);
+    Logger.bootstrap.debug("open main window on startup [${openOnStartup ? "Enabled" : "Disabled"}]");
+    if (openOnStartup) {
       await container.read(windowNotifierProvider.notifier).show(focus: false);
     } else {
-      Logger.bootstrap.debug("silent start, remain hidden accessible via tray");
+      Logger.bootstrap.debug("startup window disabled, remain hidden accessible via tray");
     }
     await _init("auto start service", () => container.read(autoStartNotifierProvider.future));
   }

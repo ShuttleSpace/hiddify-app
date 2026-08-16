@@ -51,8 +51,8 @@ class WindowNotifier extends _$WindowNotifier with AppLogger {
     final position = ref.read(Preferences.windowPosition);
     final isWindowVisible = position != null && await checkWindowVisivility(position, size);
     loggy.debug("window state. position: ${isWindowVisible ? position : "centered"}");
-    final silentStart = ref.read(Preferences.silentStart);
-    loggy.debug("window state. silent start: ${silentStart ? "Enabled" : "Disabled"}");
+    final openOnStartup = ref.read(Preferences.openMainWindowOnStartup);
+    loggy.debug("window state. open on startup: ${openOnStartup ? "Enabled" : "Disabled"}");
 
     await windowManager.waitUntilReadyToShow(
       WindowOptions(size: size, center: !isWindowVisible, minimumSize: minimumWindowSize),
@@ -67,11 +67,11 @@ class WindowNotifier extends _$WindowNotifier with AppLogger {
       await windowManager.maximize();
       loggy.debug("restoring window to maximized state");
     }
-    if (!silentStart) {
+    if (openOnStartup) {
       await ref.read(windowNotifierProvider.notifier).show(focus: false);
       loggy.debug("showing app window on start");
     } else {
-      loggy.debug("silent start, remain hidden accessible via tray");
+      loggy.debug("startup window disabled, remain hidden accessible via tray");
     }
   }
 
