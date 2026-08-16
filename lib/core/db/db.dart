@@ -9,12 +9,12 @@ import 'package:hiddify/utils/custom_loggers.dart';
 
 part 'db.g.dart';
 
-@DriftDatabase(tables: [ProfileEntries, AppProxyEntries])
+@DriftDatabase(tables: [ProfileEntries, AppProxyEntries, DailyTrafficEntries])
 class Db extends _$Db with InfraLogger {
   Db([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   static QueryExecutor _openConnection() {
     return LazyDatabase(
@@ -62,15 +62,15 @@ class Db extends _$Db with InfraLogger {
 
           await m.createTable(schema.appProxyEntries);
         },
-       from5To6: (m, schema) async {
-          final profileOverrideExists = await _columnExists(
-            schema.profileEntries.actualTableName,
-            'profile_override',
-          );
+        from5To6: (m, schema) async {
+          final profileOverrideExists = await _columnExists(schema.profileEntries.actualTableName, 'profile_override');
           if (profileOverrideExists) {
             await m.dropColumn(schema.profileEntries, 'profile_override');
           }
-       },
+        },
+        from6To7: (m, schema) async {
+          await m.createTable(schema.dailyTrafficEntries);
+        },
       ),
     );
   }
@@ -111,4 +111,15 @@ class AppProxyEntries extends Table {
 
   @override
   Set<Column> get primaryKey => {mode, pkgName};
+}
+
+@DataClassName('DailyTrafficEntry')
+class DailyTrafficEntries extends Table {
+  TextColumn get day => text()();
+  IntColumn get upload => integer().withDefault(const Constant(0))();
+  IntColumn get download => integer().withDefault(const Constant(0))();
+  TextColumn get profileId => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {day, profileId};
 }
