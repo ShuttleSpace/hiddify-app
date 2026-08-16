@@ -87,6 +87,12 @@ class ProfileDetailsNotifier extends _$ProfileDetailsNotifier with AppLogger {
     }
   }
 
+  void updateProfile(ProfileEntity profile) {
+    if (state case AsyncData(value: final ProfileDetailsState data)) {
+      state = AsyncData(data.copyWith(profile: profile, isDetailsChanged: true));
+    }
+  }
+
   void setContent(String configContent) {
     if (state case AsyncData(value: final ProfileDetailsState data)) {
       state = AsyncData(data.copyWith(configContent: configContent, isDetailsChanged: true));

@@ -249,6 +249,12 @@ class ProfileActionsMenu extends HookConsumerWidget {
             ref.read(updateProfileNotifierProvider(profile.id).notifier).updateProfile(profile as RemoteProfileEntity);
           },
         ),
+      if (profile case RemoteProfileEntity(:final subInfo?) when subInfo.webPageUrl != null)
+        AdaptiveMenuItem(
+          title: t.pages.profileDetails.form.homePage,
+          leadingIcon: const Icon(Icons.open_in_browser_rounded),
+          onTap: () => launchUrl(Uri.parse(subInfo.webPageUrl!)),
+        ),
       AdaptiveMenuItem(
         title: t.common.share,
         leadingIcon: Icon(AdaptiveIcon(context).share),
