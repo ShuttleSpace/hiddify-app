@@ -28,14 +28,18 @@ class ChainQuickSettings extends HookConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Row(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Gap(4),
                       Icon(ChainConst.iconByPlatform(), size: 20, color: onSurfaceVariant),
                       const Gap(4),
-                      Text(
-                        t.pages.settings.chain.levels.app.title,
-                        style: theme.textTheme.labelSmall?.copyWith(color: onSurfaceVariant),
+                      Flexible(
+                        child: Text(
+                          t.pages.settings.chain.levels.app.title,
+                          style: theme.textTheme.labelSmall?.copyWith(color: onSurfaceVariant),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       const Gap(4),
                     ],
@@ -83,14 +87,18 @@ class ChainQuickSettings extends HookConsumerWidget {
                             context.goNamed('chainOptions');
                           },
                           child: Row(
-                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               const Gap(4),
                               Icon(Icons.webhook_rounded, size: 20, color: theme.colorScheme.primary),
                               const Gap(4),
-                              Text(
-                                t.pages.settings.chain.title,
-                                style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.primary),
+                              Flexible(
+                                child: Text(
+                                  t.pages.settings.chain.title,
+                                  style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.primary),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                               const Gap(4),
                             ],
@@ -153,14 +161,18 @@ class ChainQuickSettings extends HookConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Row(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Gap(4),
                       Icon(Icons.wifi_rounded, size: 20, color: onSurfaceVariant),
                       const Gap(4),
-                      Text(
-                        t.pages.settings.chain.levels.filtering.title,
-                        style: theme.textTheme.labelSmall?.copyWith(color: onSurfaceVariant),
+                      Flexible(
+                        child: Text(
+                          t.pages.settings.chain.levels.filtering.title,
+                          style: theme.textTheme.labelSmall?.copyWith(color: onSurfaceVariant),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       const Gap(4),
                     ],

@@ -45,8 +45,10 @@ class LanSharingPreferenceWidget extends HookConsumerWidget {
           ),
           if (ref.watch(ConfigOptions.allowConnectionFromLan)) ...[
             const Gap(12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 10,
+              runSpacing: 8,
               children: [
                 ElevatedButton.icon(
                   onPressed: () async {
@@ -64,7 +66,6 @@ class LanSharingPreferenceWidget extends HookConsumerWidget {
                     style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.primary),
                   ),
                 ),
-                const Gap(10),
                 ElevatedButton.icon(
                   onPressed: () async {
                     final link = await getSharingLink();

@@ -21,6 +21,7 @@ class QuickSettingsModal extends HookConsumerWidget {
               padding: const EdgeInsets.all(16),
               child: SegmentedButton(
                 showSelectedIcon: false,
+                expandedInsets: EdgeInsets.zero,
                 segments: ServiceMode.choices
                     .map(
                       (e) => ButtonSegment(
