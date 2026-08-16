@@ -8,6 +8,7 @@ import 'package:hiddify/core/preferences/actions_at_closing.dart';
 import 'package:hiddify/core/preferences/preferences_provider.dart';
 import 'package:hiddify/core/utils/preferences_utils.dart';
 import 'package:hiddify/features/per_app_proxy/model/per_app_proxy_mode.dart';
+import 'package:hiddify/features/system_tray/model/tray_speed_layout.dart';
 import 'package:hiddify/features/window/notifier/window_notifier.dart';
 import 'package:hiddify/utils/platform_utils.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -79,7 +80,7 @@ abstract class Preferences {
     mapTo: (value) => "${value.width},${value.height}",
   );
 
-  static final silentStart = PreferencesNotifier.create<bool, bool>("silent_start", false);
+  static final openMainWindowOnStartup = PreferencesNotifier.create<bool, bool>("open-main-window-on-startup", false);
 
   static final disableMemoryLimit = PreferencesNotifier.create<bool, bool>(
     "disable_memory_limit",
@@ -116,6 +117,46 @@ abstract class Preferences {
   static final psiphonConsentGiven = PreferencesNotifier.create<bool, bool>("psiphon-consent-given", false);
 
   static final showRouteGeneralOptions = PreferencesNotifier.create<bool, bool>("show-route-general-options", true);
+
+  static final recordTrafficHistory = PreferencesNotifier.create<bool, bool>("record-traffic-history", true);
+
+  static final trafficHistoryRetentionMonths = PreferencesNotifier.create<int, int>(
+    "traffic-history-retention-months",
+    12,
+    validator: (value) => value >= 1 && value <= 36,
+  );
+
+  static final showTraySpeedIndicator = PreferencesNotifier.create<bool, bool>("show-tray-speed-indicator", false);
+
+  static final traySpeedLayout = PreferencesNotifier.create<TraySpeedLayout, String>(
+    "tray-speed-layout",
+    TraySpeedLayout.horizontal,
+    mapFrom: TraySpeedLayout.values.byName,
+    mapTo: (value) => value.name,
+  );
+
+  static final enableGlobalHotkeys = PreferencesNotifier.create<bool, bool>("enable-global-hotkeys", false);
+
+  static final globalHotkeyToggleConnection = PreferencesNotifier.create<String?, String?>(
+    "global-hotkey-toggle-connection",
+    null,
+    mapFrom: (value) => value == null || value.isEmpty ? null : value,
+    mapTo: (value) => value ?? '',
+  );
+
+  static final globalHotkeyShowWindow = PreferencesNotifier.create<String?, String?>(
+    "global-hotkey-show-window",
+    null,
+    mapFrom: (value) => value == null || value.isEmpty ? null : value,
+    mapTo: (value) => value ?? '',
+  );
+
+  static final globalHotkeyCycleServiceMode = PreferencesNotifier.create<String?, String?>(
+    "global-hotkey-cycle-service-mode",
+    null,
+    mapFrom: (value) => value == null || value.isEmpty ? null : value,
+    mapTo: (value) => value ?? '',
+  );
 }
 
 @Riverpod(keepAlive: true)
