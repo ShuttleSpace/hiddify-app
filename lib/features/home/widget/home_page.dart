@@ -48,12 +48,15 @@ class HomePage extends HookConsumerWidget {
           ],
         ),
         actions: [
-          // IconButton(
-          //     onPressed: () => const QuickSettingsRoute().push(context),
-          //     icon: const Icon(FluentIcons.options_24_filled),
-          //     material: (context, platform) => MaterialIconButtonData(
-          //           tooltip: t.config.quickSettings,
-          //         )),
+          if (ref.watch(hasAnyProfileProvider).value ?? false)
+            Semantics(
+              key: const ValueKey("profile_quick_settings"),
+              label: t.pages.home.quickSettings,
+              child: IconButton(
+                icon: Icon(Icons.tune_rounded, color: theme.colorScheme.primary),
+                onPressed: () => ref.read(bottomSheetsNotifierProvider.notifier).showQuickSettings(),
+              ),
+            ),
           // IconButton(
           //     onPressed: () => const AddProfileRoute().push(context),
           //     icon: const Icon(FluentIcons.add_circle_24_filled),
@@ -139,43 +142,6 @@ class HomePage extends HookConsumerWidget {
                 ),
               ),
             ),
-            if (ref.watch(hasAnyProfileProvider).value ?? false)
-              Positioned(
-                right: 0,
-                left: 0,
-                bottom: 0,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Material(
-                      color: theme.colorScheme.primaryContainer,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(16),
-                      ),
-                      child: InkWell(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          topRight: Radius.circular(16),
-                        ),
-                        onTap: () => ref.read(bottomSheetsNotifierProvider.notifier).showQuickSettings(),
-                        child: Container(
-                          height: 32,
-                          padding: const EdgeInsetsDirectional.only(start: 16, end: 8),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(t.pages.home.quickSettings),
-                              const Gap(4),
-                              const Icon(Icons.arrow_drop_up_rounded, size: 16),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
           ],
         ),
       ),
