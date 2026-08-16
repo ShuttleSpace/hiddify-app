@@ -73,6 +73,16 @@ class SettingsPage extends HookConsumerWidget {
               decoration: InputDecoration(
                 hintText: t.common.filter,
                 prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: searchQuery.value.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: t.common.clear,
+                        icon: const Icon(Icons.clear_rounded),
+                        onPressed: () {
+                          searchController.clear();
+                          searchQuery.value = '';
+                        },
+                      ),
                 isDense: true,
               ),
             ),
