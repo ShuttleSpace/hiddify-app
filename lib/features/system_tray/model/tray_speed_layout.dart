@@ -1,0 +1,4 @@
+enum TraySpeedLayout {
+  horizontal,
+  vertical,
+}

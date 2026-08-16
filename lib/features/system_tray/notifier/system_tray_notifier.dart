@@ -3,10 +3,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/model/constants.dart';
+import 'package:hiddify/core/preferences/general_preferences.dart';
 import 'package:hiddify/features/connection/model/connection_status.dart';
 import 'package:hiddify/features/connection/notifier/connection_notifier.dart';
 import 'package:hiddify/features/proxy/active/active_proxy_notifier.dart';
 import 'package:hiddify/features/settings/data/config_option_repository.dart';
+import 'package:hiddify/features/stats/notifier/stats_notifier.dart';
+import 'package:hiddify/features/system_tray/model/tray_speed_layout.dart';
 import 'package:hiddify/features/window/notifier/window_notifier.dart';
 import 'package:hiddify/gen/assets.gen.dart';
 import 'package:hiddify/hiddifycore/generated/v2/hcore/hcore.pb.dart';
@@ -21,6 +24,11 @@ part 'system_tray_notifier.g.dart';
 @Riverpod(keepAlive: true)
 class SystemTrayNotifier extends _$SystemTrayNotifier with TrayListener, AppLogger {
   bool listenerAdded = false;
+  ConnectionStatus _connection = const ConnectionStatus.disconnected();
+  int _urlTestDelay = 0;
+  Translations? _translations;
+  SystemInfo _latestStats = SystemInfo.create();
+
   @override
   Future<void> build() async {
     assert(PlatformUtils.isDesktop);
@@ -29,6 +37,21 @@ class SystemTrayNotifier extends _$SystemTrayNotifier with TrayListener, AppLogg
       listenerAdded = true;
     }
     await _initializeTray();
+
+    ref.listen(Preferences.showTraySpeedIndicator, (previous, next) {
+      _refreshTraySpeedIndicator();
+    });
+    ref.listen(Preferences.traySpeedLayout, (previous, next) {
+      _refreshTraySpeedIndicator();
+    });
+    ref.listen(statsNotifierProvider, (previous, next) {
+      final stats = next.asData?.value;
+      if (stats == null) return;
+      _latestStats = stats;
+      if (ref.read(Preferences.showTraySpeedIndicator)) {
+        _refreshTraySpeedIndicator();
+      }
+    });
   }
 
   Future<void> _initializeTray() async {
@@ -47,11 +70,15 @@ class SystemTrayNotifier extends _$SystemTrayNotifier with TrayListener, AppLogg
           return const ConnectionStatus.disconnected();
         })
         .then((connection) => _modifyConnectionStatus(connection, urlTestDelay));
+    _connection = connection;
+    _urlTestDelay = urlTestDelay;
+    _translations = t;
     final serviceMode = ref.watch(ConfigOptions.serviceMode);
 
     await trayManager.setIcon(_trayIconPath(connection), isTemplate: PlatformUtils.isMacOS);
     if (!PlatformUtils.isLinux) await trayManager.setToolTip(_trayTooltip(connection, urlTestDelay, t));
     await trayManager.setContextMenu(_trayMenu(connection, serviceMode, t));
+    await _refreshTraySpeedIndicator();
   }
 
   Menu _trayMenu(ConnectionStatus connection, ServiceMode serviceMode, Translations t) => Menu(
@@ -108,10 +135,49 @@ class SystemTrayNotifier extends _$SystemTrayNotifier with TrayListener, AppLogg
     final r = "${Constants.appName} - ${connection.present(t)}";
     if (connection is Connected) {
       if (Platform.isMacOS) windowManager.setBadgeLabel("${urlTestDelay}ms");
-      return '$r : ${urlTestDelay}ms"';
+      if (ref.read(Preferences.showTraySpeedIndicator)) {
+        final uploadBytes = _latestStats.uplink.toInt();
+        final downloadBytes = _latestStats.downlink.toInt();
+        final upload = uploadBytes <= 0 ? '0' : uploadBytes.speedCompact();
+        final download = downloadBytes <= 0 ? '0' : downloadBytes.speedCompact();
+        final horizontalSpeed = '↑$upload  ↓$download';
+        final verticalSpeed = '↑$upload\n↓$download';
+        return switch (ref.read(Preferences.traySpeedLayout)) {
+          TraySpeedLayout.horizontal => '$r : ${urlTestDelay}ms  $horizontalSpeed',
+          TraySpeedLayout.vertical => '$r : ${urlTestDelay}ms\n$verticalSpeed',
+        };
+      }
+      return '$r : ${urlTestDelay}ms';
     } else {
       if (Platform.isMacOS) windowManager.setBadgeLabel("-ms");
       return r;
+    }
+  }
+
+  Future<void> _refreshTooltip() async {
+    if (PlatformUtils.isLinux || _translations == null) return;
+    await trayManager.setToolTip(_trayTooltip(_connection, _urlTestDelay, _translations!));
+  }
+
+  Future<void> _refreshTraySpeedIndicator() async {
+    final enabled = ref.read(Preferences.showTraySpeedIndicator);
+    final uploadBytes = _latestStats.uplink.toInt();
+    final downloadBytes = _latestStats.downlink.toInt();
+    final upload = uploadBytes <= 0 ? '0' : uploadBytes.speedCompact();
+    final download = downloadBytes <= 0 ? '0' : downloadBytes.speedCompact();
+    final horizontalSpeed = '↑$upload  ↓$download';
+    final verticalSpeed = '↑$upload\n↓$download';
+    final title = enabled
+        ? switch (ref.read(Preferences.traySpeedLayout)) {
+            TraySpeedLayout.horizontal => horizontalSpeed,
+            TraySpeedLayout.vertical => verticalSpeed,
+          }
+        : '';
+
+    if (Platform.isMacOS) {
+      await trayManager.setTitle(title);
+    } else if (!PlatformUtils.isLinux) {
+      await _refreshTooltip();
     }
   }
 

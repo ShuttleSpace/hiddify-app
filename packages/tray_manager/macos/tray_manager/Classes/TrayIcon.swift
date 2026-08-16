@@ -96,7 +96,11 @@ public class TrayIcon: NSView {
 
     public func setTitle(_ title: String) {
         titleText = title
+        let isMultiline = title.contains("\n")
         let font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .regular)
+        titleLabel.maximumNumberOfLines = isMultiline ? 2 : 1
+        titleLabel.lineBreakMode = isMultiline ? .byWordWrapping : .byClipping
+        titleLabel.cell?.wraps = isMultiline
         titleLabel.attributedStringValue = NSAttributedString(
             string: title,
             attributes: [
@@ -142,7 +146,9 @@ public class TrayIcon: NSView {
 
         let font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .regular)
         let isVertical = titleText.contains("\n")
-        let widthReference = isVertical ? "↑999.99G" : titleText
+        let widthReference = isVertical
+            ? "↑999.99K0"
+            : "↑999.99G  ↓999.99G"
         let widthReferenceText = NSAttributedString(
             string: widthReference,
             attributes: [NSAttributedString.Key.font: font]
