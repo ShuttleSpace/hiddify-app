@@ -7,7 +7,11 @@ import com.hiddify.core.libbox.Notification
 class ProxyService :
     Service(),
     PlatformInterfaceWrapper {
-    private val service = BoxService(this, this)
+    private val service = BoxService(this, PlatformInterfaceBridge)
+
+    init {
+        PlatformInterfaceBridge.delegate = this
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) = service.onStartCommand()
 

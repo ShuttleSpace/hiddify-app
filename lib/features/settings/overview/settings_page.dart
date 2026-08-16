@@ -241,6 +241,22 @@ class SettingsPage extends HookConsumerWidget {
         keywords: const ['主题', '颜色', '外观', 'theme', 'color'],
       ),
       _SettingsSearchEntry(
+        t.pages.settings.general.locale,
+        Icons.translate_rounded,
+        context.namedLocation('appearance'),
+        subtitle: t.pages.settings.appearance.title,
+        parentTitle: t.pages.settings.appearance.title,
+        keywords: const ['语言', '语言', 'locale', 'language'],
+      ),
+      _SettingsSearchEntry(
+        t.pages.settings.general.themeMode,
+        Icons.contrast_rounded,
+        context.namedLocation('appearance'),
+        subtitle: t.pages.settings.appearance.title,
+        parentTitle: t.pages.settings.appearance.title,
+        keywords: const ['主题模式', '深色', '浅色', 'theme mode', 'dark', 'light'],
+      ),
+      _SettingsSearchEntry(
         t.pages.settings.inbound.serviceMode,
         Icons.input_rounded,
         context.namedLocation('inboundOptions'),
@@ -292,13 +308,13 @@ class SettingsPage extends HookConsumerWidget {
         t.pages.settings.general.title,
         Icons.layers_rounded,
         context.namedLocation('general'),
-        keywords: const ['常规', '通用', 'general', '语言', '内存', '调试', '日志级别'],
+        keywords: const ['常规', '通用', 'general', '内存', '调试', '日志级别'],
       ),
       _SettingsSearchEntry(
         t.pages.settings.appearance.title,
         Icons.palette_rounded,
         context.namedLocation('appearance'),
-        keywords: const ['外观', '主题', '颜色', '文本', '缩放'],
+        keywords: const ['外观', '主题', '颜色', '文本', '缩放', '语言', 'locale'],
       ),
       _SettingsSearchEntry(
         t.pages.settings.traffic.title,

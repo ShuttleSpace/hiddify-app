@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "appTitle": "Hiddify",
     "start": "开始",
@@ -129,7 +129,31 @@
         "save": "保存",
         "enableRule": "启用规则",
         "disableRule": "禁用规则",
-        "nodeDisabled": "$name 已被禁用"
+        "nodeDisabled": "$name 已被禁用",
+        "matchModes": {
+          "any": "任一",
+          "all": "全部"
+        },
+        "fields": {
+          "countryCode": "国家代码",
+          "region": "地区",
+          "city": "城市",
+          "nodeName": "节点名称",
+          "ipCidr": "IP CIDR",
+          "asn": "ASN",
+          "organization": "组织"
+        },
+        "operators": {
+          "equals": "等于",
+          "contains": "包含",
+          "startsWith": "开头是",
+          "cidrMatch": "CIDR 匹配"
+        },
+        "policies": {
+          "useGlobal": "使用全局规则",
+          "customOnly": "仅自定义",
+          "globalPlusCustom": "全局 + 自定义"
+        }
       },
       "activeProxy": "当前代理",
       "unknownIp": "未知 IP",

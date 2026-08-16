@@ -19,6 +19,7 @@ class AppearancePage extends HookConsumerWidget {
       appBar: AppBar(title: Text(t.pages.settings.appearance.title)),
       body: ListView(
         children: [
+          const LocalePrefTile(),
           const ThemeModePrefTile(),
           ListTile(
             leading: const Icon(Icons.format_size_rounded),

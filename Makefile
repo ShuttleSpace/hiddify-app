@@ -515,6 +515,13 @@ build-android-libs:
 	make -C hiddify-core -f Makefile android 
 	mv $(BINDIR)/$(LIB_NAME).aar $(ANDROID_OUT)/
 
+build-android-debug-libs:
+	make -C hiddify-core -f Makefile android-debug
+	mv $(BINDIR)/$(LIB_NAME)-debug.aar $(ANDROID_OUT)/
+
+android-debug-apk: build-android-debug-libs
+	cd android && ./gradlew :app:assembleDebug -PhiddifyDebugCore=true --console=plain
+
 build-windows-libs:
 	make -C hiddify-core -f Makefile windows-amd64
 

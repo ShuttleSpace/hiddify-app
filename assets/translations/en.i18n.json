@@ -129,7 +129,31 @@
         "save": "Save",
         "enableRule": "Enable rule",
         "disableRule": "Disable rule",
-        "nodeDisabled": "$name has been disabled"
+        "nodeDisabled": "$name has been disabled",
+        "matchModes": {
+          "any": "Any",
+          "all": "All"
+        },
+        "fields": {
+          "countryCode": "Country code",
+          "region": "Region",
+          "city": "City",
+          "nodeName": "Node name",
+          "ipCidr": "IP CIDR",
+          "asn": "ASN",
+          "organization": "Organization"
+        },
+        "operators": {
+          "equals": "Equals",
+          "contains": "Contains",
+          "startsWith": "Starts with",
+          "cidrMatch": "CIDR match"
+        },
+        "policies": {
+          "useGlobal": "Use global",
+          "customOnly": "Custom only",
+          "globalPlusCustom": "Global + custom"
+        }
       },
       "activeProxy": "Active proxy",
       "unknownIp": "Unknown IP",

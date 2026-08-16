@@ -8,6 +8,34 @@ import 'package:hiddify/features/proxy/model/node_blacklist.dart';
 import 'package:hiddify/features/proxy/notifier/node_blacklist_controller.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+String _nodeBlacklistMatchModeLabel(NodeBlacklistMatchMode value, Translations t) => switch (value) {
+  NodeBlacklistMatchMode.any => t.pages.proxies.nodeBlacklist.matchModes.any,
+  NodeBlacklistMatchMode.all => t.pages.proxies.nodeBlacklist.matchModes.all,
+};
+
+String _nodeBlacklistFieldLabel(NodeBlacklistField value, Translations t) => switch (value) {
+  NodeBlacklistField.countryCode => t.pages.proxies.nodeBlacklist.fields.countryCode,
+  NodeBlacklistField.region => t.pages.proxies.nodeBlacklist.fields.region,
+  NodeBlacklistField.city => t.pages.proxies.nodeBlacklist.fields.city,
+  NodeBlacklistField.nodeName => t.pages.proxies.nodeBlacklist.fields.nodeName,
+  NodeBlacklistField.ipCidr => t.pages.proxies.nodeBlacklist.fields.ipCidr,
+  NodeBlacklistField.asn => t.pages.proxies.nodeBlacklist.fields.asn,
+  NodeBlacklistField.organization => t.pages.proxies.nodeBlacklist.fields.organization,
+};
+
+String _nodeBlacklistOperatorLabel(NodeBlacklistOperator value, Translations t) => switch (value) {
+  NodeBlacklistOperator.equals => t.pages.proxies.nodeBlacklist.operators.equals,
+  NodeBlacklistOperator.contains => t.pages.proxies.nodeBlacklist.operators.contains,
+  NodeBlacklistOperator.startsWith => t.pages.proxies.nodeBlacklist.operators.startsWith,
+  NodeBlacklistOperator.cidrMatch => t.pages.proxies.nodeBlacklist.operators.cidrMatch,
+};
+
+String _nodeBlacklistPolicyLabel(NodeBlacklistPolicy value, Translations t) => switch (value) {
+  NodeBlacklistPolicy.useGlobal => t.pages.proxies.nodeBlacklist.policies.useGlobal,
+  NodeBlacklistPolicy.customOnly => t.pages.proxies.nodeBlacklist.policies.customOnly,
+  NodeBlacklistPolicy.globalPlusCustom => t.pages.proxies.nodeBlacklist.policies.globalPlusCustom,
+};
+
 class NodeBlacklistManagementPage extends ConsumerWidget {
   const NodeBlacklistManagementPage({super.key, this.profileId});
 
@@ -46,7 +74,7 @@ class NodeBlacklistManagementPage extends ConsumerWidget {
             DropdownButton<NodeBlacklistPolicy>(
               value: provider?.policy ?? NodeBlacklistPolicy.useGlobal,
               items: NodeBlacklistPolicy.values
-                  .map((policy) => DropdownMenuItem(value: policy, child: Text(policy.name)))
+                  .map((policy) => DropdownMenuItem(value: policy, child: Text(_nodeBlacklistPolicyLabel(policy, t))))
                   .toList(),
               onChanged: (policy) {
                 if (policy != null) {
@@ -57,7 +85,7 @@ class NodeBlacklistManagementPage extends ConsumerWidget {
           for (var i = 0; i < rules.length; i++)
             ListTile(
               title: Text(rules[i].name),
-              subtitle: Text(rules[i].matchMode.name),
+              subtitle: Text(_nodeBlacklistMatchModeLabel(rules[i].matchMode, t)),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -170,7 +198,7 @@ class _AddNodeBlacklistRuleDialogState extends State<_AddNodeBlacklistRuleDialog
             initialValue: _matchMode,
             decoration: InputDecoration(labelText: labels.matchMode),
             items: NodeBlacklistMatchMode.values
-                .map((mode) => DropdownMenuItem(value: mode, child: Text(mode.name)))
+                .map((mode) => DropdownMenuItem(value: mode, child: Text(_nodeBlacklistMatchModeLabel(mode, widget.t))))
                 .toList(),
             onChanged: (value) => setState(() => _matchMode = value ?? NodeBlacklistMatchMode.any),
           ),
@@ -178,7 +206,7 @@ class _AddNodeBlacklistRuleDialogState extends State<_AddNodeBlacklistRuleDialog
             initialValue: _field,
             decoration: InputDecoration(labelText: labels.field),
             items: NodeBlacklistField.values
-                .map((field) => DropdownMenuItem(value: field, child: Text(field.name)))
+                .map((field) => DropdownMenuItem(value: field, child: Text(_nodeBlacklistFieldLabel(field, widget.t))))
                 .toList(),
             onChanged: (value) => setState(() => _field = value ?? NodeBlacklistField.countryCode),
           ),
@@ -186,7 +214,10 @@ class _AddNodeBlacklistRuleDialogState extends State<_AddNodeBlacklistRuleDialog
             initialValue: _operator,
             decoration: InputDecoration(labelText: labels.operator),
             items: NodeBlacklistOperator.values
-                .map((operator) => DropdownMenuItem(value: operator, child: Text(operator.name)))
+                .map(
+                  (operator) =>
+                      DropdownMenuItem(value: operator, child: Text(_nodeBlacklistOperatorLabel(operator, widget.t))),
+                )
                 .toList(),
             onChanged: (value) => setState(() => _operator = value ?? NodeBlacklistOperator.equals),
           ),
@@ -307,7 +338,10 @@ class _EditNodeBlacklistRuleDialogState extends State<_EditNodeBlacklistRuleDial
                 initialValue: _matchMode,
                 decoration: InputDecoration(labelText: labels.matchMode),
                 items: NodeBlacklistMatchMode.values
-                    .map((mode) => DropdownMenuItem(value: mode, child: Text(mode.name)))
+                    .map(
+                      (mode) =>
+                          DropdownMenuItem(value: mode, child: Text(_nodeBlacklistMatchModeLabel(mode, widget.t))),
+                    )
                     .toList(),
                 onChanged: (value) => setState(() => _matchMode = value ?? NodeBlacklistMatchMode.any),
               ),
@@ -315,7 +349,9 @@ class _EditNodeBlacklistRuleDialogState extends State<_EditNodeBlacklistRuleDial
                 initialValue: _field,
                 decoration: InputDecoration(labelText: labels.field),
                 items: NodeBlacklistField.values
-                    .map((field) => DropdownMenuItem(value: field, child: Text(field.name)))
+                    .map(
+                      (field) => DropdownMenuItem(value: field, child: Text(_nodeBlacklistFieldLabel(field, widget.t))),
+                    )
                     .toList(),
                 onChanged: (value) => setState(() => _field = value ?? NodeBlacklistField.countryCode),
               ),
@@ -323,7 +359,12 @@ class _EditNodeBlacklistRuleDialogState extends State<_EditNodeBlacklistRuleDial
                 initialValue: _operator,
                 decoration: InputDecoration(labelText: labels.operator),
                 items: NodeBlacklistOperator.values
-                    .map((operator) => DropdownMenuItem(value: operator, child: Text(operator.name)))
+                    .map(
+                      (operator) => DropdownMenuItem(
+                        value: operator,
+                        child: Text(_nodeBlacklistOperatorLabel(operator, widget.t)),
+                      ),
+                    )
                     .toList(),
                 onChanged: (value) => setState(() => _operator = value ?? NodeBlacklistOperator.equals),
               ),

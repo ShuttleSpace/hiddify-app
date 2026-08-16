@@ -133,8 +133,13 @@ flutter {
     source '../..'
 }
 
+def hiddifyCoreAar = project.hasProperty('hiddifyDebugCore') && project.hiddifyDebugCore == 'true'
+        ? 'hiddify-core-debug.aar'
+        : 'hiddify-core.aar'
+
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+    implementation files("libs/${hiddifyCoreAar}")
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation 'com.google.code.gson:gson:2.11.0'
     implementation 'androidx.core:core-ktx:1.16.0'

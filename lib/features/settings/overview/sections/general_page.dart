@@ -23,8 +23,6 @@ class GeneralPage extends HookConsumerWidget {
       appBar: AppBar(title: Text(t.pages.settings.general.title)),
       body: ListView(
         children: [
-          const LocalePrefTile(),
-          const ThemeModePrefTile(),
           const EnableAnalyticsPrefTile(),
           SwitchListTile.adaptive(
             title: Text(t.pages.settings.general.autoIpCheck),
@@ -76,10 +74,11 @@ class GeneralPage extends HookConsumerWidget {
             secondary: const Icon(Icons.bug_report_rounded),
             value: ref.watch(debugModeNotifierProvider),
             onChanged: (value) async {
-              if (value)
+              if (value) {
                 await ref
                     .read(dialogNotifierProvider.notifier)
                     .showOk(t.pages.settings.general.debugMode, t.pages.settings.general.debugModeMsg);
+              }
               await ref.read(debugModeNotifierProvider.notifier).update(value);
             },
           ),
