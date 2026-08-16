@@ -35,7 +35,7 @@ class SettingsPage extends HookConsumerWidget {
     final entries = _buildSearchEntries(context, ref, t);
     final searchResults = searchQuery.value.trim().isEmpty
         ? null
-        : entries.where((entry) => _matchesSearchEntry(searchQuery.value, entry)).toList();
+        : _groupSearchEntries(entries, entries.where((entry) => _matchesSearchEntry(searchQuery.value, entry)).toSet());
 
     useEffect(() => searchController.dispose, []);
     // final scrollController = useScrollController();
@@ -84,13 +84,38 @@ class SettingsPage extends HookConsumerWidget {
                 child: Center(child: Text(t.common.empty)),
               )
             else
-              for (final entry in searchResults)
-                ListTile(
-                  leading: Icon(entry.icon),
-                  title: Text(entry.title),
-                  subtitle: entry.subtitle == null ? null : Text(entry.subtitle!),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => context.go(entry.namedLocation),
+              for (final group in searchResults)
+                Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                        child: Row(
+                          children: [
+                            Icon(group.icon, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(child: Text(group.title, style: Theme.of(context).textTheme.titleMedium)),
+                          ],
+                        ),
+                      ),
+                      if (group.children.isEmpty)
+                        ListTile(
+                          title: _highlightedText(context, searchQuery.value, group.title),
+                          onTap: () => context.go(group.namedLocation),
+                        )
+                      else
+                        for (final child in group.children)
+                          ListTile(
+                            dense: true,
+                            leading: Icon(child.icon, size: 20),
+                            title: _highlightedText(context, searchQuery.value, child.title),
+                            subtitle: child.subtitle == null ? null : Text(child.subtitle!),
+                            onTap: () => context.go(child.namedLocation),
+                          ),
+                    ],
+                  ),
                 )
           else ...[
             // TipCard(message: t.settings.experimentalMsg),
@@ -186,6 +211,7 @@ class SettingsPage extends HookConsumerWidget {
         Icons.open_in_new_rounded,
         context.namedLocation('general'),
         subtitle: t.pages.settings.general.title,
+        parentTitle: t.pages.settings.general.title,
         keywords: const ['打开', '启动', '主界面', '窗口', 'open', 'start'],
       ),
       _SettingsSearchEntry(
@@ -193,6 +219,7 @@ class SettingsPage extends HookConsumerWidget {
         Icons.text_fields_rounded,
         context.namedLocation('appearance'),
         subtitle: t.pages.settings.appearance.title,
+        parentTitle: t.pages.settings.appearance.title,
         keywords: const ['文本', '大小', '缩放', 'text', 'size'],
       ),
       _SettingsSearchEntry(
@@ -200,6 +227,7 @@ class SettingsPage extends HookConsumerWidget {
         Icons.color_lens_rounded,
         context.namedLocation('appearance'),
         subtitle: t.pages.settings.appearance.title,
+        parentTitle: t.pages.settings.appearance.title,
         keywords: const ['主题', '颜色', '外观', 'theme', 'color'],
       ),
       _SettingsSearchEntry(
@@ -207,6 +235,7 @@ class SettingsPage extends HookConsumerWidget {
         Icons.input_rounded,
         context.namedLocation('inboundOptions'),
         subtitle: t.pages.settings.inbound.title,
+        parentTitle: t.pages.settings.inbound.title,
         keywords: const ['系统代理', 'TUN', '代理模式', 'service', 'mode'],
       ),
       _SettingsSearchEntry(
@@ -214,6 +243,7 @@ class SettingsPage extends HookConsumerWidget {
         Icons.numbers_rounded,
         context.namedLocation('inboundOptions'),
         subtitle: t.pages.settings.inbound.title,
+        parentTitle: t.pages.settings.inbound.title,
         keywords: const ['端口', '混合', 'port'],
       ),
       _SettingsSearchEntry(
@@ -221,6 +251,7 @@ class SettingsPage extends HookConsumerWidget {
         Icons.dns_rounded,
         context.namedLocation('dnsOptions'),
         subtitle: t.pages.settings.dns.title,
+        parentTitle: t.pages.settings.dns.title,
         keywords: const ['DNS', '远程', '域名'],
       ),
       _SettingsSearchEntry(
@@ -228,6 +259,7 @@ class SettingsPage extends HookConsumerWidget {
         Icons.dns_rounded,
         context.namedLocation('dnsOptions'),
         subtitle: t.pages.settings.dns.title,
+        parentTitle: t.pages.settings.dns.title,
         keywords: const ['DNS', 'Fake', '域名'],
       ),
       _SettingsSearchEntry(
@@ -235,6 +267,7 @@ class SettingsPage extends HookConsumerWidget {
         Icons.route_rounded,
         context.namedLocation('routingOptions'),
         subtitle: t.pages.settings.routing.title,
+        parentTitle: t.pages.settings.routing.title,
         keywords: const ['地区', '区域', '路由', 'region'],
       ),
       _SettingsSearchEntry(
@@ -242,6 +275,7 @@ class SettingsPage extends HookConsumerWidget {
         Icons.route_rounded,
         context.namedLocation('routingOptions'),
         subtitle: t.pages.settings.routing.title,
+        parentTitle: t.pages.settings.routing.title,
         keywords: const ['解析', '域名', '目的地', 'resolve'],
       ),
       _SettingsSearchEntry(
@@ -329,6 +363,89 @@ class SettingsPage extends HookConsumerWidget {
     ];
   }
 
+  List<_SettingsSearchGroup> _groupSearchEntries(
+    Iterable<_SettingsSearchEntry> allEntries,
+    Set<_SettingsSearchEntry> matchedEntries,
+  ) {
+    final entryList = allEntries.toList();
+    final parentEntries = <String, _SettingsSearchEntry>{};
+    final childEntriesByLocation = <String, List<_SettingsSearchEntry>>{};
+
+    for (final entry in entryList) {
+      if (entry.parentTitle == null) {
+        parentEntries[entry.namedLocation] = entry;
+      } else {
+        childEntriesByLocation.putIfAbsent(entry.namedLocation, () => []).add(entry);
+      }
+    }
+
+    final result = <_SettingsSearchGroup>[];
+    final locations = <String>{...parentEntries.keys, ...childEntriesByLocation.keys};
+    for (final location in locations) {
+      final parent = parentEntries[location];
+      final children = childEntriesByLocation[location] ?? const <_SettingsSearchEntry>[];
+      if (parent == null && children.isEmpty) continue;
+
+      final parentMatched = parent != null && matchedEntries.contains(parent);
+      final matchedChildren = parentMatched ? children : children.where(matchedEntries.contains).toList();
+      if (!parentMatched && matchedChildren.isEmpty) continue;
+
+      result.add(
+        _SettingsSearchGroup(
+          title: parent?.title ?? matchedChildren.first.title,
+          icon: parent?.icon ?? matchedChildren.first.icon,
+          namedLocation: location,
+          children: matchedChildren,
+        ),
+      );
+    }
+    return result;
+  }
+
+  Widget _highlightedText(BuildContext context, String query, String text) {
+    final highlightStyle = TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w700);
+    return Text.rich(TextSpan(children: _highlightSpans(query, text, highlightStyle)));
+  }
+
+  List<TextSpan> _highlightSpans(String query, String text, TextStyle highlightStyle) {
+    final tokens = query.trim().split(RegExp(r'\s+')).where((token) => token.isNotEmpty).toSet().toList();
+    if (tokens.isEmpty) return [TextSpan(text: text)];
+
+    final matches = <({int start, int end})>[];
+    for (final token in tokens) {
+      final pattern = RegExp(RegExp.escape(token), caseSensitive: false);
+      for (final match in pattern.allMatches(text)) {
+        matches.add((start: match.start, end: match.end));
+      }
+    }
+    if (matches.isEmpty) return [TextSpan(text: text)];
+
+    matches.sort((a, b) => a.start.compareTo(b.start));
+    final merged = <({int start, int end})>[];
+    for (final match in matches) {
+      if (merged.isEmpty || match.start > merged.last.end) {
+        merged.add(match);
+      } else {
+        final previous = merged.removeLast();
+        merged.add((start: previous.start, end: match.end > previous.end ? match.end : previous.end));
+      }
+    }
+
+    final spans = <TextSpan>[];
+    var cursor = 0;
+    for (final match in merged) {
+      if (match.start > cursor) {
+        spans.add(TextSpan(text: text.substring(cursor, match.start)));
+      }
+      spans.add(TextSpan(text: text.substring(match.start, match.end), style: highlightStyle));
+      cursor = match.end;
+    }
+    if (cursor < text.length) {
+      spans.add(TextSpan(text: text.substring(cursor)));
+    }
+    return spans;
+  }
+
   bool _matchesSearchEntry(String query, _SettingsSearchEntry entry) {
     if (_fuzzyMatch(query, entry.title)) return true;
     if (entry.subtitle != null && _fuzzyMatch(query, entry.subtitle!)) return true;
@@ -348,13 +465,35 @@ class SettingsPage extends HookConsumerWidget {
 }
 
 class _SettingsSearchEntry {
-  const _SettingsSearchEntry(this.title, this.icon, this.namedLocation, {this.subtitle, this.keywords = const []});
+  const _SettingsSearchEntry(
+    this.title,
+    this.icon,
+    this.namedLocation, {
+    this.subtitle,
+    this.parentTitle,
+    this.keywords = const [],
+  });
 
   final String title;
   final IconData icon;
   final String namedLocation;
   final String? subtitle;
+  final String? parentTitle;
   final List<String> keywords;
+}
+
+class _SettingsSearchGroup {
+  _SettingsSearchGroup({
+    required this.title,
+    required this.icon,
+    required this.namedLocation,
+    this.children = const [],
+  });
+
+  String title;
+  IconData icon;
+  final String namedLocation;
+  final List<_SettingsSearchEntry> children;
 }
 
 class SettingsSection extends HookConsumerWidget {
