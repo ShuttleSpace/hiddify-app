@@ -7,7 +7,6 @@ import 'package:hiddify/core/model/constants.dart';
 import 'package:hiddify/core/router/adaptive_layout/shell_route_action.dart';
 import 'package:hiddify/core/router/go_router/helper/active_breakpoint_notifier.dart';
 import 'package:hiddify/core/router/go_router/routing_config_notifier.dart';
-import 'package:hiddify/features/stats/widget/side_bar_stats_overview.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class MyAdaptiveLayout extends HookConsumerWidget {
@@ -66,14 +65,7 @@ class MyAdaptiveLayout extends HookConsumerWidget {
                       destinations: _navRailDests(_actions(t, showProfilesAction, isMobileBreakpoint)),
                       selectedIndex: navigationShell.currentIndex,
                       onDestinationSelected: (index) => _onTap(context, index),
-                      trailing: Breakpoint(context).isDesktop()
-                          ? const Expanded(
-                              child: Align(
-                                alignment: Alignment.bottomCenter,
-                                child: SizedBox(width: 220, child: SideBarStatsOverview()),
-                              ),
-                            )
-                          : null,
+                      trailing: null,
                     ),
                   ),
                   Expanded(child: navigationShell),
