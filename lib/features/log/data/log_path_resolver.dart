@@ -10,7 +10,7 @@ class LogPathResolver {
   Directory get directory => _workingDir;
 
   File coreFile() {
-    return File(p.join(directory.path, "box.log"));
+    return File(p.join(directory.path, "data", "box.log"));
   }
 
   File appFile() {

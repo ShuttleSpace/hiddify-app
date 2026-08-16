@@ -123,6 +123,18 @@ class LogsPage extends HookConsumerWidget with PresLogger {
                                 ...LogLevel.choices.map((e) => DropdownMenuItem(value: some(e), child: Text(e.name))),
                               ],
                             ),
+                            const Gap(12),
+                            SegmentedButton<LogSource>(
+                              segments: const [
+                                ButtonSegment(value: LogSource.core, label: Text('Core')),
+                                ButtonSegment(value: LogSource.app, label: Text('App')),
+                              ],
+                              selected: {ref.watch(logSourceProvider)},
+                              onSelectionChanged: (selection) {
+                                notifier.setSource(selection.single);
+                              },
+                              showSelectedIcon: false,
+                            ),
                           ],
                         ),
                       ),
