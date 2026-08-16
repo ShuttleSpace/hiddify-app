@@ -24,18 +24,26 @@ class _ActiveProxyFooterState extends ConsumerState<ActiveProxyFooter> with Infr
   @override
   void initState() {
     super.initState();
+    _connectionState = ref.read(connectionNotifierProvider).valueOrNull ?? const Disconnected();
+    _activeProxy = ref.read(activeProxyNotifierProvider).valueOrNull;
+    ref.listenManual(connectionNotifierProvider, (_, next) {
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _connectionState = next.valueOrNull ?? const Disconnected());
+      });
+    });
+    ref.listenManual(activeProxyNotifierProvider, (_, next) {
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _activeProxy = next.valueOrNull);
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(connectionNotifierProvider, (_, next) {
-      if (!mounted) return;
-      setState(() => _connectionState = next.valueOrNull ?? const Disconnected());
-    });
-    ref.listen(activeProxyNotifierProvider, (_, next) {
-      if (!mounted) return;
-      setState(() => _activeProxy = next.valueOrNull);
-    });
     final t = ref.watch(translationsProvider).requireValue;
 
     if (_connectionState != const Connected() || _activeProxy == null) {
@@ -60,10 +68,14 @@ class _ActiveProxyFooterState extends ConsumerState<ActiveProxyFooter> with Infr
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.background.withOpacity(1),
+        color: theme.colorScheme.surface.withValues(alpha: 1),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: theme.colorScheme.secondary.withOpacity(.21), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: theme.colorScheme.secondary.withValues(alpha: .21),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: InkWell(
@@ -121,9 +133,9 @@ class _ActiveProxyFooterState extends ConsumerState<ActiveProxyFooter> with Infr
                 ],
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Icon(Icons.arrow_forward_ios, color: Colors.blue),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Icon(Icons.arrow_forward_ios, color: theme.colorScheme.primary),
             ),
           ],
         ),
