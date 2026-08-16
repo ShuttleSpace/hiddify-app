@@ -246,7 +246,7 @@ class ActiveProxyGroupNotifier extends _$ActiveProxyGroupNotifier {
 }
 ```
 
-- [ ] **Step 4: Run codegen**
+- [ ] **Step 4: Generate provider (or use a manual `NotifierProvider` if codegen is unavailable)**
 
 Run:
 
@@ -254,7 +254,7 @@ Run:
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-Expected: generated `active_proxy_group_notifier.g.dart`.
+Expected: generated `active_proxy_group_notifier.g.dart`. If the repository's local build_runner/slang cache is incompatible, a manual `NotifierProvider` with a plain `Notifier<String?>` class is acceptable; commit no generated file in that fallback.
 
 - [ ] **Step 5: Run selection test**
 
