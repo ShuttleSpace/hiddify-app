@@ -112,6 +112,7 @@ build_macos() {
 
   echo "==> Building Flutter macOS app"
   "$PURO_BIN" flutter build macos --release \
+    --target lib/main_prod.dart \
     --tree-shake-icons \
     --split-debug-info="$ROOT_DIR/build/symbols/macos-$app_arch"
 
@@ -170,6 +171,7 @@ build_android() {
 
   echo "==> Building Flutter Android APK for $flutter_target"
   "$PURO_BIN" flutter build apk --release \
+    --target lib/main_prod.dart \
     --target-platform "$flutter_target" \
     --tree-shake-icons \
     --split-debug-info="$ROOT_DIR/build/symbols/android-$app_arch"
