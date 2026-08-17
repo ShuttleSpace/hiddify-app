@@ -317,6 +317,8 @@
         "retention": "Retention",
         "retentionMonths": "$n months",
         "showTraySpeed": "Show speed in tray",
+        "showTraySpeedWarning": "High CPU usage",
+        "showTraySpeedWarningMsg": "Enabling this may significantly increase system CPU usage.",
         "viewHistory": "View history calendar",
         "historyCalendarTitle": "Traffic history calendar",
         "previousMonth": "Previous month",

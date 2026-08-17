@@ -7,7 +7,7 @@
 
 import AppKit
 
-public class TrayIcon: NSView {
+public class TrayIcon: NSObject {
     public var onTrayIconMouseDown:(() -> Void)?
     public var onTrayIconMouseUp:(() -> Void)?
     public var onTrayIconRightMouseDown:(() -> Void)?
@@ -15,72 +15,21 @@ public class TrayIcon: NSView {
 
     var statusItem: NSStatusItem?
 
-    private let iconView = NSImageView()
-    private let titleLabel = NSTextField(labelWithString: "")
-    private var iconSize = NSSize(width: 18, height: 18)
-    private var titleText = ""
-    private let titlePadding: CGFloat = 4
-    private var labelWidthConstraint: NSLayoutConstraint?
-    private var labelHeightConstraint: NSLayoutConstraint?
-
-    public init() {
-        super.init(frame: NSRect.zero)
+    public override init() {
+        super.init()
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-
-        iconView.imageScaling = .scaleProportionallyDown
-        titleLabel.alignment = .center
-        titleLabel.maximumNumberOfLines = 2
-        titleLabel.usesSingleLineMode = false
-        titleLabel.lineBreakMode = .byWordWrapping
-        titleLabel.cell?.wraps = true
-        titleLabel.cell?.isScrollable = false
-        titleLabel.drawsBackground = false
-        titleLabel.isBezeled = false
-        titleLabel.isEditable = false
-        titleLabel.isSelectable = false
-
         guard let button = statusItem?.button else { return }
-        button.image = nil
-        button.title = ""
         button.imagePosition = .imageLeft
-
-        iconView.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        button.addSubview(iconView)
-        button.addSubview(titleLabel)
-        button.addSubview(self)
-
-        NSLayoutConstraint.activate([
-            iconView.leadingAnchor.constraint(equalTo: button.leadingAnchor),
-            iconView.centerYAnchor.constraint(equalTo: button.centerYAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: iconSize.width),
-            iconView.heightAnchor.constraint(equalToConstant: iconSize.height),
-            titleLabel.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: titlePadding),
-            titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: button.trailingAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: button.centerYAnchor),
-            titleLabel.topAnchor.constraint(greaterThanOrEqualTo: button.topAnchor),
-            titleLabel.bottomAnchor.constraint(lessThanOrEqualTo: button.bottomAnchor),
-        ])
-
-        labelWidthConstraint = titleLabel.widthAnchor.constraint(equalToConstant: 0)
-        labelHeightConstraint = titleLabel.heightAnchor.constraint(equalToConstant: 0)
-        labelWidthConstraint?.isActive = true
-        labelHeightConstraint?.isActive = true
-    }
-
-    override init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        button.cell?.wraps = true
+        button.cell?.lineBreakMode = .byWordWrapping
+        button.target = self
+        button.action = #selector(statusItemButtonClicked(_:))
+        button.sendAction(on: [.leftMouseDown, .leftMouseUp, .rightMouseDown, .rightMouseUp])
     }
 
     public func setImage(_ image: NSImage, _ imagePosition: String) {
-        iconView.image = image
-        iconSize = image.size
+        statusItem?.button?.image = image
         setImagePosition(imagePosition)
-        layoutContent()
     }
 
     public func setImagePosition(_ imagePosition: String) {
@@ -90,91 +39,58 @@ public class TrayIcon: NSView {
     }
 
     public func removeImage() {
-        iconView.image = nil
-        layoutContent()
+        statusItem?.button?.image = nil
     }
 
     public func setTitle(_ title: String) {
-        titleText = title
-        let isMultiline = title.contains("\n")
+        guard let button = statusItem?.button else { return }
+        if title.isEmpty {
+            button.title = ""
+            return
+        }
+
         let font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .regular)
-        titleLabel.maximumNumberOfLines = isMultiline ? 2 : 1
-        titleLabel.lineBreakMode = isMultiline ? .byWordWrapping : .byClipping
-        titleLabel.cell?.wraps = isMultiline
-        titleLabel.attributedStringValue = NSAttributedString(
-            string: title,
-            attributes: [
-                NSAttributedString.Key.font: font,
-                NSAttributedString.Key.foregroundColor: NSColor.labelColor,
-            ]
-        )
-        layoutContent()
+        if title.contains("\n") {
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.minimumLineHeight = 9
+            paragraphStyle.maximumLineHeight = 9
+            button.attributedTitle = NSAttributedString(
+                string: title,
+                attributes: [
+                    NSAttributedString.Key.font: font,
+                    NSAttributedString.Key.foregroundColor: NSColor.labelColor,
+                    NSAttributedString.Key.paragraphStyle: paragraphStyle,
+                    NSAttributedString.Key.baselineOffset: -5.0,
+                ]
+            )
+        } else {
+            button.attributedTitle = NSAttributedString(
+                string: title,
+                attributes: [
+                    NSAttributedString.Key.font: font,
+                    NSAttributedString.Key.foregroundColor: NSColor.labelColor,
+                ]
+            )
+        }
     }
 
     public func setToolTip(_ toolTip: String) {
         statusItem?.button?.toolTip = toolTip
     }
 
-    public override func mouseDown(with event: NSEvent) {
-        statusItem?.button?.highlight(true)
-        self.onTrayIconMouseDown!()
-    }
-
-    public override func mouseUp(with event: NSEvent) {
-        statusItem?.button?.highlight(false)
-        self.onTrayIconMouseUp!()
-    }
-
-    public override func rightMouseDown(with event: NSEvent) {
-        self.onTrayIconRightMouseDown!()
-    }
-
-    public override func rightMouseUp(with event: NSEvent) {
-        self.onTrayIconRightMouseUp!()
-    }
-
-    private func layoutContent() {
-        guard let button = statusItem?.button else { return }
-        titleLabel.isHidden = titleText.isEmpty
-        if titleText.isEmpty {
-            labelWidthConstraint?.constant = 0
-            labelHeightConstraint?.constant = 0
-            statusItem?.length = iconSize.width
-            self.frame = button.bounds
-            return
+    @objc func statusItemButtonClicked(_ sender: NSStatusBarButton) {
+        guard let event = NSApp.currentEvent else { return }
+        switch event.type {
+        case .leftMouseDown:
+            onTrayIconMouseDown?()
+        case .leftMouseUp:
+            onTrayIconMouseUp?()
+        case .rightMouseDown:
+            onTrayIconRightMouseDown?()
+        case .rightMouseUp:
+            onTrayIconRightMouseUp?()
+        default:
+            break
         }
-
-        let font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .regular)
-        let isVertical = titleText.contains("\n")
-        let widthReference = isVertical
-            ? "↑999.99K0"
-            : "↑999.99G  ↓999.99G"
-        let widthReferenceText = NSAttributedString(
-            string: widthReference,
-            attributes: [NSAttributedString.Key.font: font]
-        )
-        let maxWidth = ceil(
-            widthReferenceText.boundingRect(
-                with: NSSize(width: 236, height: 40),
-                options: [.usesLineFragmentOrigin, .usesFontLeading]
-            ).size.width
-        )
-        let labelWidth = max(ceil(maxWidth), 1)
-        let actualHeight = titleText.isEmpty
-            ? 0
-            : titleLabel.attributedStringValue.boundingRect(
-                with: NSSize(width: labelWidth, height: 40),
-                options: [.usesLineFragmentOrigin, .usesFontLeading]
-              ).size.height
-        let labelHeight = ceil(actualHeight)
-        labelWidthConstraint?.constant = labelWidth
-        labelHeightConstraint?.constant = labelHeight
-        statusItem?.length = iconSize.width + titlePadding + labelWidth
-        self.frame = button.bounds
-    }
-
-    public override func layout() {
-        super.layout()
-        layoutContent()
     }
 }

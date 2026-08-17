@@ -24,8 +24,8 @@ usage() {
 Usage:
   scripts/build_release.sh --platform <macos|android> [--arch <arch>]
 
-macOS arches:
-  auto | arm64 | x86_64 | amd64
+macOS:
+  builds a universal (x86_64 + arm64) app; --arch is ignored
 
 Android arches:
   auto | arm | arm64 | x86 | x86_64 | amd64 | 386
@@ -71,53 +71,26 @@ fi
 mkdir -p "$OUTPUT_DIR"
 
 build_macos() {
-  local requested_arch="$1"
-  local host_arch
-  host_arch="$(uname -m)"
+  echo "==> Building hiddify-core for macOS (arm64 + amd64)"
+  make -C "$CORE_DIR" macos-arm64 macos-amd64
 
-  case "$host_arch" in
-    arm64) host_arch="arm64" ;;
-    x86_64) host_arch="x86_64" ;;
-    amd64) host_arch="x86_64" ;;
-  esac
-
-  if [[ "$requested_arch" == "auto" ]]; then
-    requested_arch="$host_arch"
-  fi
-
-  local core_arch
-  local app_arch
-  case "$requested_arch" in
-    arm64)
-      core_arch="arm64"
-      app_arch="arm64"
-      ;;
-    x86_64|amd64)
-      core_arch="amd64"
-      app_arch="x86_64"
-      ;;
-    *)
-      echo "Unsupported macOS arch: $requested_arch" >&2
-      exit 1
-      ;;
-  esac
-
-  echo "==> Building hiddify-core for macOS/$app_arch"
-  make -C "$CORE_DIR" "macos-$core_arch"
-
-  local core_dylib="$CORE_DIR/bin/hiddify-core-$core_arch.dylib"
   local linked_dylib="$CORE_DIR/bin/hiddify-core.dylib"
-  echo "==> Linking core dylib: $core_dylib"
-  cp "$core_dylib" "$linked_dylib"
+  echo "==> Linking universal core dylib"
+  lipo -create \
+    "$CORE_DIR/bin/hiddify-core-amd64.dylib" \
+    "$CORE_DIR/bin/hiddify-core-arm64.dylib" \
+    -output "$linked_dylib"
 
-  echo "==> Building Flutter macOS app"
+  cp "$CORE_DIR/bin/hiddify-core-arm64.h" "$CORE_DIR/bin/desktop.h"
+
+  echo "==> Building Flutter macOS app (universal)"
   "$PURO_BIN" flutter build macos --release \
     --target lib/main_prod.dart \
     --tree-shake-icons \
-    --split-debug-info="$ROOT_DIR/build/symbols/macos-$app_arch"
+    --split-debug-info="$ROOT_DIR/build/symbols/macos"
 
   local app_src="$ROOT_DIR/build/macos/Build/Products/Release/Hiddify.app"
-  local app_dst="$OUTPUT_DIR/Hiddify-$app_arch.app"
+  local app_dst="$OUTPUT_DIR/Hiddify.app"
   echo "==> Exporting $app_dst"
   rm -rf "$app_dst"
   cp -R "$app_src" "$app_dst"
@@ -184,7 +157,7 @@ build_android() {
 
 case "$PLATFORM" in
   macos)
-    build_macos "$ARCH"
+    build_macos
     ;;
   android)
     build_android "$ARCH"

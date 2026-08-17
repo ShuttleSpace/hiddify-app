@@ -317,6 +317,8 @@
         "retention": "保留期限",
         "retentionMonths": "$n 个月",
         "showTraySpeed": "在托盘显示网速",
+        "showTraySpeedWarning": "高 CPU 占用",
+        "showTraySpeedWarningMsg": "此操作可能导致系统 CPU 占用过大。",
         "viewHistory": "查看历史日历",
         "historyCalendarTitle": "流量历史日历",
         "previousMonth": "上个月",

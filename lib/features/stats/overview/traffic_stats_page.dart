@@ -143,7 +143,19 @@ class TrafficStatsPage extends HookConsumerWidget {
                 SwitchListTile.adaptive(
                   title: Text(t.pages.settings.traffic.showTraySpeed),
                   value: ref.watch(Preferences.showTraySpeedIndicator),
-                  onChanged: ref.read(Preferences.showTraySpeedIndicator.notifier).update,
+                  onChanged: (value) async {
+                    if (!value) {
+                      await ref.read(Preferences.showTraySpeedIndicator.notifier).update(false);
+                      return;
+                    }
+                    final confirmed = await ref.read(dialogNotifierProvider.notifier).showConfirmation(
+                      title: t.pages.settings.traffic.showTraySpeedWarning,
+                      message: t.pages.settings.traffic.showTraySpeedWarningMsg,
+                    );
+                    if (confirmed) {
+                      await ref.read(Preferences.showTraySpeedIndicator.notifier).update(true);
+                    }
+                  },
                 ),
               if (ref.watch(platformCapabilitiesProvider).supportsTraySpeedIndicator &&
                   ref.watch(Preferences.showTraySpeedIndicator))
