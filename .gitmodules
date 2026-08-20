@@ -1,4 +1,4 @@
 [submodule "hiddify-core"]
 	path = hiddify-core
 	url = git@github.com:ShuttleSpace/hiddify-core.git
-	branch = v3
+	branch = dev
