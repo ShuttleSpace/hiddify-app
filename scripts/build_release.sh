@@ -25,7 +25,8 @@ Usage:
   scripts/build_release.sh --platform <macos|android> [--arch <arch>]
 
 macOS:
-  builds a universal (x86_64 + arm64) app; --arch is ignored
+  builds a universal (x86_64 + arm64) app, then packages per-arch zips:
+    Hiddify-macOS-arm64.zip / Hiddify-macOS-x86_64.zip  (--arch is optional)
 
 Android arches:
   auto | arm | arm64 | x86 | x86_64 | amd64 | 386
@@ -94,6 +95,9 @@ build_macos() {
   echo "==> Exporting $app_dst"
   rm -rf "$app_dst"
   cp -R "$app_src" "$app_dst"
+
+  echo "==> Packaging per-arch zips (arm64 / x86_64)"
+  "$ROOT_DIR/scripts/split_macos_arch.sh" "$app_src" "$OUTPUT_DIR"
 }
 
 build_android() {
