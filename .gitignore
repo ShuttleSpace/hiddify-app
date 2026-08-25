@@ -45,6 +45,9 @@ migrate_working_dir/
 **/*.dylib
 **/*.xcframework
 /dist/
+
+# simple_icons ships its generated icon tables (not rebuilt by build_runner)
+!simple_icons-10.1.3-fixed/lib/src/*.g.dart
 /dist_docker/
 
 /assets/core/*
