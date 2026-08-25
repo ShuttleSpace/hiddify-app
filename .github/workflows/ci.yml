@@ -1,5 +1,17 @@
 name: CI
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Artifact label / release tag (default "draft" publishes a draft prerelease)'
+        required: false
+        default: 'draft'
+        type: string
+      upload-artifact:
+        description: 'Upload artifacts to a draft prerelease'
+        required: true
+        default: true
+        type: boolean
   pull_request:
     paths-ignore:
       - '**.md'
@@ -30,5 +42,6 @@ jobs:
     permissions: write-all
     if: "${{!contains(github.event.head_commit.message, 'release: version')}}"
     with:
-      upload-artifact: ${{ github.event_name == 'push' }}
+      upload-artifact: ${{ github.event_name == 'workflow_dispatch' && inputs.upload-artifact || github.event_name == 'push' }}
+      tag-name: ${{ inputs.version }}
       
