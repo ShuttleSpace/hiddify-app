@@ -27,11 +27,8 @@ dependencies:
   # re_highlight: ^0.0.3
   # json_editor_flutter: ^1.4.2
 
-  # Pinned to 4.8.x: slang_build_runner 4.10+ uses the `build_to` key which
-  # requires build_runner >=2.7.0 / build 3.x, incompatible with the rest of
-  # this repo's build 2.x codegen toolchain (drift_dev 2.28, build_runner 2.4).
-  slang: 4.8.1
-  slang_flutter: 4.8.0
+  slang: ^4.19.0
+  slang_flutter: ^4.19.0
   fpdart: ^1.1.0
   freezed_annotation: ^2.4.1
   json_annotation: ^4.9.0
@@ -143,7 +140,7 @@ dev_dependencies:
   riverpod_generator: ^2.4.3
   drift_dev: 2.28.0
   ffigen: ^19.1.0
-  slang_build_runner: 4.8.1
+  slang_build_runner: 4.19.0
   flutter_gen_runner: 5.10.0
   dart_mappable_builder: ^4.2.1
   # protoc_builder: ^0.4.1
