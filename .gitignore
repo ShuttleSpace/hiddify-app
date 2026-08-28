@@ -74,3 +74,8 @@ windows/sign.cer
 .aider.input.history
 .aider.chat.history.md
 .aider.tags.cache.v4
+
+# ai agent and tools
+graphify-out
+.deepseek
+android/build/
