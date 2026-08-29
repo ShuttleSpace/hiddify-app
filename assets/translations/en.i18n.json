@@ -73,6 +73,13 @@
       "permission": {
         "denied": "Permission denied"
       },
+      "qrCode": {
+        "notFound": "No QR code found",
+        "save": {
+          "success": "QR code saved successfully",
+          "failure": "Failed to save QR code: $error"
+        }
+      },
       "export": {
         "clipboard": {
           "success": "Added to clipboard successfully",

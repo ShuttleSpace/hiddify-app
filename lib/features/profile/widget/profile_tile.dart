@@ -288,6 +288,25 @@ class ProfileActionsMenu extends HookConsumerWidget {
             title: t.pages.profiles.share.jsonToClipboard,
             onTap: () async => await ref.read(profilesNotifierProvider.notifier).exportConfigToClipboard(profile),
           ),
+          AdaptiveMenuItem(
+            title: '导出 JSON 到文件',
+            onTap: () async => await ref
+                .read(profilesNotifierProvider.notifier)
+                .exportProfileToFile(profile, ProfileExportFormat.json),
+          ),
+          AdaptiveMenuItem(
+            title: '导出 YAML 到文件',
+            onTap: () async => await ref
+                .read(profilesNotifierProvider.notifier)
+                .exportProfileToFile(profile, ProfileExportFormat.yaml),
+          ),
+          if (profile case RemoteProfileEntity())
+            AdaptiveMenuItem(
+              title: '导出 URL 到文件',
+              onTap: () async => await ref
+                  .read(profilesNotifierProvider.notifier)
+                  .exportProfileToFile(profile, ProfileExportFormat.url),
+            ),
         ],
       ),
       AdaptiveMenuItem(

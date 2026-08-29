@@ -14,6 +14,7 @@ import 'package:hiddify/features/profile/add/model/free_profiles_model.dart';
 import 'package:hiddify/features/profile/data/profile_data_providers.dart';
 import 'package:hiddify/features/profile/data/profile_repository.dart';
 import 'package:hiddify/features/profile/model/profile_entity.dart';
+import 'package:hiddify/features/profile/model/profile_export_bundle.dart';
 import 'package:hiddify/features/profile/model/profile_failure.dart';
 import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
 import 'package:hiddify/features/settings/data/config_option_repository.dart';
@@ -23,6 +24,20 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'profile_notifier.g.dart';
+
+const supportedProfileFileExtensions = ['json', 'yaml', 'yml', 'txt', 'url'];
+
+bool isSupportedProfileFileName(String fileName) {
+  final extension = fileName.split('.').last.toLowerCase();
+  return supportedProfileFileExtensions.contains(extension);
+}
+
+String? profileNameFromFileName(String? fileName) {
+  final trimmed = fileName?.trim();
+  if (trimmed == null || trimmed.isEmpty) return null;
+  final name = trimmed.replaceFirst(RegExp(r'\.(json|ya?ml|txt|url)$', caseSensitive: false), '').trim();
+  return name.isEmpty ? null : name;
+}
 
 @riverpod
 class AddProfileNotifier extends _$AddProfileNotifier with AppLogger {
@@ -60,23 +75,39 @@ class AddProfileNotifier extends _$AddProfileNotifier with AppLogger {
   ProfileRepository get _profilesRepo => ref.read(profileRepositoryProvider).requireValue;
   CancelToken? _cancelToken;
 
-  Future<void> addClipboard(String rawInput) async {
+  Future<void> addClipboard(String rawInput, {String? sourceFileName}) async {
     if (state.isLoading) return;
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       // final activeProfile = await ref.read(activeProfileProvider.future);
       // final markAsActive = activeProfile == null || ref.read(Preferences.markNewProfileActive);
       final TaskEither<ProfileFailure, Unit> task;
-      if (LinkParser.parse(rawInput) case (final rs)?) {
+      final importedName = profileNameFromFileName(sourceFileName);
+      final exportBundle = ProfileExportBundle.tryDecode(rawInput);
+      if (exportBundle case ProfileExportBundle(:final sourceUrl?) when sourceUrl.isNotEmpty) {
+        loggy.debug('adding exported remote profile');
+        task = _profilesRepo.upsertRemote(
+          sourceUrl,
+          userOverride: UserOverride(name: exportBundle.name),
+          cancelToken: _cancelToken = CancelToken(),
+        );
+      } else if (exportBundle case final bundle?) {
+        loggy.debug('adding exported local profile');
+        task = _profilesRepo.addLocal(bundle.configJson, userOverride: UserOverride(name: bundle.name));
+      } else if (LinkParser.parse(rawInput) case (final rs)?) {
         loggy.debug("adding profile, url: [${rs.url}]");
+        final profileName = rs.name.isNotEmpty ? rs.name : importedName;
         task = _profilesRepo.upsertRemote(
           rs.url,
-          userOverride: rs.name.isNotEmpty ? UserOverride(name: rs.name) : null,
+          userOverride: profileName != null ? UserOverride(name: profileName) : null,
           cancelToken: _cancelToken = CancelToken(),
         );
       } else {
         loggy.debug("adding profile, content");
-        task = _profilesRepo.addLocal(safeDecodeBase64(rawInput));
+        task = _profilesRepo.addLocal(
+          safeDecodeBase64(rawInput),
+          userOverride: importedName != null ? UserOverride(name: importedName) : null,
+        );
       }
       return await task
           .match(

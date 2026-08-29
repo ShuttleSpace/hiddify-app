@@ -122,19 +122,19 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
                   builder: (context, child) {
                     final theme = Theme.of(context);
                     final safeChild = child ?? const SizedBox();
-                    child = textScaleMode == AppTextScaleMode.system
+                    var wrapperChild = textScaleMode == AppTextScaleMode.system
                         ? safeChild
                         : MediaQuery(
                             data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScaleMode.scale)),
                             child: safeChild,
                           );
-                    child = UpgradeAlert(
+                    wrapperChild = UpgradeAlert(
                       upgrader: upgrader,
                       navigatorKey: router.routerDelegate.navigatorKey,
-                      child: child,
+                      child: wrapperChild,
                     );
                     if (kDebugMode && _debugAccessibility) {
-                      return AccessibilityTools(checkFontOverflows: true, child: child);
+                      return AccessibilityTools(checkFontOverflows: true, child: wrapperChild);
                     }
                     return AnnotatedRegion<SystemUiOverlayStyle>(
                       value: SystemUiOverlayStyle(
@@ -144,7 +144,7 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
                             ? Brightness.light
                             : Brightness.dark,
                       ),
-                      child: child,
+                      child: wrapperChild,
                     );
                   },
                 );

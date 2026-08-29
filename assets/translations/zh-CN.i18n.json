@@ -73,6 +73,13 @@
       "permission": {
         "denied": "权限被拒绝"
       },
+      "qrCode": {
+        "notFound": "未识别到二维码",
+        "save": {
+          "success": "二维码保存成功",
+          "failure": "二维码保存失败：$error"
+        }
+      },
       "export": {
         "clipboard": {
           "success": "已成功添加到剪贴板",
