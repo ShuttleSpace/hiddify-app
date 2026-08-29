@@ -16,13 +16,23 @@ default:
 # CI / build triggers (workflow_dispatch)
 # ---------------------------------------------------------------------------
 
-# Trigger a manual build and publish a draft prerelease
+# Trigger a manual build and publish a draft prerelease.
+# Both `just draft 4.1.3` and `just draft version=4.1.3` are accepted.
 draft version="draft":
-    gh workflow run manual-build.yml -R {{repo}} -f version={{version}} -f publish-prerelease=true
+    #!/usr/bin/env bash
+    set -euo pipefail
+    version='{{version}}'
+    version="${version#version=}"
+    gh workflow run manual-build.yml -R '{{repo}}' --ref dev -f "version=${version}" -f publish-prerelease=true
 
-# Trigger a manual build (compile + upload artifacts, no release)
+# Trigger a manual build (compile + upload artifacts, no release).
+# Both `just build 4.1.3` and `just build version=4.1.3` are accepted.
 build version="draft":
-    gh workflow run manual-build.yml -R {{repo}} -f version={{version}} -f publish-prerelease=false
+    #!/usr/bin/env bash
+    set -euo pipefail
+    version='{{version}}'
+    version="${version#version=}"
+    gh workflow run manual-build.yml -R '{{repo}}' --ref dev -f "version=${version}" -f publish-prerelease=false
 
 # Trigger the CI workflow on a branch (dev by default)
 ci branch="dev":
