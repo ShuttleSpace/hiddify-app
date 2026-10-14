@@ -1,15 +1,19 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:hiddify/core/haptic/haptic_service.dart';
 import 'package:hiddify/core/localization/translations.dart';
+import 'package:hiddify/core/notification/in_app_notification_controller.dart';
 import 'package:hiddify/core/preferences/general_preferences.dart';
 import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
 import 'package:hiddify/features/connection/data/connection_data_providers.dart';
 import 'package:hiddify/features/connection/data/connection_repository.dart';
 import 'package:hiddify/features/connection/model/connection_failure.dart';
 import 'package:hiddify/features/connection/model/connection_status.dart';
+import 'package:hiddify/features/platform_specific/shell_proxy_env.dart';
 import 'package:hiddify/features/profile/model/profile_entity.dart';
 import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
+import 'package:hiddify/features/settings/data/config_option_repository.dart';
 import 'package:hiddify/hiddifycore/init_signal.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -168,6 +172,27 @@ class ConnectionNotifier extends _$ConnectionNotifier with AppLogger {
       dialogNotifier.showCustomAlertFromErr(err.present(translations.requireValue));
       state = AsyncError(err, StackTrace.current);
     }).run();
+    unawaited(_warnAboutShellProxyEnv());
+  }
+
+  bool _warnedAboutShellProxyEnv = false;
+
+  /// Shells that exported HTTP_PROXY keep pointing at the mixed port after we
+  /// stop, and nothing we do can reach into a process we do not own. Say what to
+  /// run instead. Once per session is enough, and only when a profile shows the
+  /// user actually set one up.
+  Future<void> _warnAboutShellProxyEnv() async {
+    if (!Platform.isMacOS || _warnedAboutShellProxyEnv) return;
+    if (!await ShellProxyEnv.anyProfileExportsProxy()) return;
+    _warnedAboutShellProxyEnv = true;
+    final mixedPort = ref.read(ConfigOptions.mixedPort);
+    loggy.info("shell proxy env detected on disconnect, hinting cleanup for port $mixedPort");
+    ref
+        .read(inAppNotificationControllerProvider)
+        .showInfoToast(
+          ref.read(translationsProvider).requireValue.connection.shellProxyEnv(port: mixedPort),
+          duration: const Duration(seconds: 10),
+        );
   }
 }
 
