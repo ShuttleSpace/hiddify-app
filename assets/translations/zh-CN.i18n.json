@@ -879,7 +879,7 @@
     "disconnecting": "断开连接中...",
     "reconnect": "重新连接",
     "reconnectMsg": "正在重新连接以应用更改...",
-    "shellProxyEnv": "已导出 HTTP_PROXY=127.0.0.1:{port} 的终端现在指向已关闭的端口。请在这些终端执行 \"unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy\"，否则 curl、git 和 go 构建都会失败。"
+    "shellProxyEnv": "已导出 HTTP_PROXY=127.0.0.1:$port 的终端现在指向已关闭的端口。请在这些终端执行 \"unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy\"，否则 curl、git 和 go 构建都会失败。"
   },
   "errors": {
     "unexpected": "意外错误",
