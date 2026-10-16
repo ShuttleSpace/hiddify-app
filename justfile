@@ -104,16 +104,22 @@ core-windows:
 
 core: core-macos core-linux core-windows
 
+# Sentry's DSN is a compile-time define (`String.fromEnvironment` in
+# lib/core/model/environment.dart). Always passing it keeps a local build the
+# same shape as CI's; unset it becomes an empty string and Sentry stays off,
+# which is the right default for a local build with no release secrets.
+sentry := "--dart-define=sentry_dsn=" + env_var_or_default("SENTRY_DSN", "")
+
 # --- apps -----------------------------------------------------------------
 
 macos: core-macos
-    flutter build macos --release
+    flutter build macos --release {{sentry}}
 
 macos-debug: core-macos
     flutter build macos --debug
 
 android: core-android
-    flutter build apk --release
+    flutter build apk --release {{sentry}}
 
 apk: android
 
@@ -122,17 +128,17 @@ apk-debug: core-android
 
 # Google Play needs the bundle rather than the apk.
 aab: core-android
-    flutter build appbundle --release
+    flutter build appbundle --release {{sentry}}
 
 aab-debug: core-android
     flutter build appbundle --debug
 
 ios: core-ios
-    flutter build ios --release --no-codesign
+    flutter build ios --release --no-codesign {{sentry}}
 
 # Device builds need a provisioning profile and are therefore not wrapped here.
 ios-real: core-ios
-    flutter build ipa
+    flutter build ipa {{sentry}}
 
 # --- checks ---------------------------------------------------------------
 
