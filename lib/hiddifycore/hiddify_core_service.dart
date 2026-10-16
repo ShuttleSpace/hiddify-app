@@ -276,6 +276,27 @@ class HiddifyCoreService with InfraLogger {
     });
   }
 
+  /// Hands the macOS system proxy back without stopping the box. Nothing else
+  /// covers the case where the user leaves system-proxy mode while connected: the
+  /// tunnel carries on, so the inbound holding the proxy is never closed and its
+  /// own cleanup never runs.
+  TaskEither<String, Unit> releaseSystemProxy() {
+    return TaskEither(() async {
+      try {
+        final res = await core.bgClient.setSystemProxyEnabled(
+          SetSystemProxyEnabledRequest(isEnabled: false),
+        );
+        if (res.code != ResponseCode.OK) {
+          return left(res.message.isEmpty ? "failed to release the system proxy" : res.message);
+        }
+      } on GrpcError catch (e) {
+        loggy.error("failed to release system proxy: $e");
+        return left("${e.message}");
+      }
+      return right(unit);
+    });
+  }
+
   TaskEither<String, Unit> restart(String path, String name, bool disableMemoryLimit) {
     return TaskEither(() async {
       loggy.debug("restarting");

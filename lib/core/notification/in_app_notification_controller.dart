@@ -18,12 +18,15 @@ class InAppNotificationController with AppLogger {
     String message, {
     NotificationType type = NotificationType.info,
     Duration duration = const Duration(seconds: 3),
+    bool replaceExisting = true,
   }) {
     // Notifications raised during bootstrap (before runApp) have no overlay to
     // attach to, and toastification throws when it cannot find one. Swallow
     // that so a notification can never abort startup or crash the app.
     try {
-      toastification.dismissAll();
+      if (replaceExisting) {
+        toastification.dismissAll();
+      }
       return toastification.show(
         title: Text(message),
         type: type._toastificationType,
@@ -48,8 +51,13 @@ class InAppNotificationController with AppLogger {
 
   ToastificationItem? showSuccessToast(String message) => _show(message, type: NotificationType.success);
 
-  ToastificationItem? showInfoToast(String message, {Duration duration = const Duration(seconds: 3)}) =>
-      _show(message, duration: duration);
+  /// [replaceExisting] is false for toasts that belong to the same event and are
+  /// meant to stack: dismissing the first to show the second would hide the first.
+  ToastificationItem? showInfoToast(
+    String message, {
+    Duration duration = const Duration(seconds: 3),
+    bool replaceExisting = true,
+  }) => _show(message, duration: duration, replaceExisting: replaceExisting);
 }
 
 extension NotificationTypeX on NotificationType {

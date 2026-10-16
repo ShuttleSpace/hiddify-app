@@ -15,6 +15,7 @@ import 'package:hiddify/features/profile/model/profile_entity.dart';
 import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
 import 'package:hiddify/features/settings/data/config_option_repository.dart';
 import 'package:hiddify/hiddifycore/init_signal.dart';
+import 'package:hiddify/singbox/model/singbox_config_enum.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:in_app_review/in_app_review.dart';
@@ -57,6 +58,12 @@ class ConnectionNotifier extends _$ConnectionNotifier with AppLogger {
         await reconnect(next);
       }
     });
+
+    ref.listen(ConfigOptions.serviceMode, (previous, next) {
+      if (previous != ServiceMode.systemProxy || next == ServiceMode.systemProxy) return;
+      unawaited(_releaseSystemProxyForModeChange());
+    });
+
     ref.watch(coreRestartSignalProvider);
 
     yield* _connectionRepo.watchConnectionStatus().doOnData((event) {
@@ -172,7 +179,39 @@ class ConnectionNotifier extends _$ConnectionNotifier with AppLogger {
       dialogNotifier.showCustomAlertFromErr(err.present(translations.requireValue));
       state = AsyncError(err, StackTrace.current);
     }).run();
-    unawaited(_warnAboutShellProxyEnv());
+    unawaited(_announceDisconnect(translations));
+  }
+
+  /// Leaving system-proxy mode while connected has to reach the OS by hand. The
+  /// tunnel stays up, so nothing is closed and the inbound that owns the proxy
+  /// never gets to clean up after itself, yet the mode the user just picked says
+  /// the OS should not be proxied. Nothing to do when we were never proxying.
+  Future<void> _releaseSystemProxyForModeChange() async {
+    if (state case AsyncData(:final value) when !value.isConnected) return;
+    loggy.info("leaving system proxy mode while connected, releasing the os proxy");
+    await _connectionRepo.releaseSystemProxy().mapLeft((err) {
+      loggy.warning("failed to release the system proxy after a mode change", err);
+    }).run();
+  }
+
+  /// Releasing the macOS system proxy changes nothing the user can see: no window
+  /// closes, no tray badge clears, the toggle they flipped just goes back. Say it
+  /// happened instead of leaving them to check System Settings for it.
+  ///
+  /// Nothing here dismisses what is already on screen. The shell hint is a second
+  /// thing to say about the same event, and replacing the first with it would hide
+  /// the first.
+  Future<void> _announceDisconnect(AsyncValue<Translations> translations) async {
+    if (!Platform.isMacOS) return;
+    // The core has already stopped by now. A toast that cannot be worded is not
+    // worth failing the disconnect over, and requiring here would do exactly that.
+    final t = translations.valueOrNull;
+    if (t == null) return;
+    final notifications = ref.read(inAppNotificationControllerProvider);
+    if (ref.read(ConfigOptions.serviceMode) == ServiceMode.systemProxy) {
+      notifications.showInfoToast(t.connection.systemProxyReleased, replaceExisting: false);
+    }
+    await _warnAboutShellProxyEnv(t);
   }
 
   bool _warnedAboutShellProxyEnv = false;
@@ -181,8 +220,8 @@ class ConnectionNotifier extends _$ConnectionNotifier with AppLogger {
   /// stop, and nothing we do can reach into a process we do not own. Say what to
   /// run instead. Once per session is enough, and only when a profile shows the
   /// user actually set one up.
-  Future<void> _warnAboutShellProxyEnv() async {
-    if (!Platform.isMacOS || _warnedAboutShellProxyEnv) return;
+  Future<void> _warnAboutShellProxyEnv(Translations translations) async {
+    if (_warnedAboutShellProxyEnv) return;
     if (!await ShellProxyEnv.anyProfileExportsProxy()) return;
     _warnedAboutShellProxyEnv = true;
     final mixedPort = ref.read(ConfigOptions.mixedPort);
@@ -190,8 +229,9 @@ class ConnectionNotifier extends _$ConnectionNotifier with AppLogger {
     ref
         .read(inAppNotificationControllerProvider)
         .showInfoToast(
-          ref.read(translationsProvider).requireValue.connection.shellProxyEnv(port: mixedPort),
+          translations.connection.shellProxyEnv(port: mixedPort),
           duration: const Duration(seconds: 10),
+          replaceExisting: false,
         );
   }
 }

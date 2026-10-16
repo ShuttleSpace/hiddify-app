@@ -23,6 +23,10 @@ abstract interface class ConnectionRepository {
   TaskEither<ConnectionFailure, Unit> connect(ProfileEntity activeProfile, bool disableMemoryLimit);
   TaskEither<ConnectionFailure, Unit> disconnect();
   TaskEither<ConnectionFailure, Unit> reconnect(ProfileEntity activeProfile, bool disableMemoryLimit);
+
+  /// Hands the OS proxy back while the tunnel keeps running. Closing the core would
+  /// do it too, but that is not what a service mode change should cost.
+  TaskEither<ConnectionFailure, Unit> releaseSystemProxy();
 }
 
 class ConnectionRepositoryImpl with ExceptionHandler, InfraLogger implements ConnectionRepository {
@@ -87,6 +91,10 @@ class ConnectionRepositoryImpl with ExceptionHandler, InfraLogger implements Con
 
   @override
   TaskEither<ConnectionFailure, Unit> disconnect() => singbox.stop().mapLeft(UnexpectedConnectionFailure.new);
+
+@override
+TaskEither<ConnectionFailure, Unit> releaseSystemProxy() =>
+singbox.releaseSystemProxy().mapLeft(UnexpectedConnectionFailure.new);
 
   @override
   TaskEither<ConnectionFailure, Unit> reconnect(ProfileEntity activeProfile, bool disableMemoryLimit) =>

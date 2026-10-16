@@ -879,7 +879,8 @@
     "disconnecting": "Disconnecting...",
     "reconnect": "Reconnect",
     "reconnectMsg": "Reconnecting for taking into account the changes...",
-    "shellProxyEnv": "Terminals that export HTTP_PROXY=127.0.0.1:$port now point at a closed port. Run \"unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy\" in them, otherwise curl, git and go builds will fail."
+    "shellProxyEnv": "Terminals that export HTTP_PROXY=127.0.0.1:$port now point at a closed port. Run \"unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy\" in them, otherwise curl, git and go builds will fail.",
+    "systemProxyReleased": "System proxy turned off. Your macOS network settings are back the way you had them."
   },
   "errors": {
     "unexpected": "Unexpected error",
