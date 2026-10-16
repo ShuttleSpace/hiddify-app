@@ -39,6 +39,132 @@ ci branch="dev":
     gh workflow run ci.yml -R {{repo}} --ref {{branch}}
 
 # ---------------------------------------------------------------------------
+# Local builds
+#
+# `make *-libs` pulls a prebuilt core from a GitHub release, which is wrong for
+# local work: the submodules are checked out, so a core change would not be in
+# the artifact at all and every local build would test yesterday's core. These
+# build it here and drop it where each platform's build already looks.
+#
+# The core Makefile cross-compiles, so every recipe runs on any host; the one
+# thing that is host-specific is signing, which is why the Apple targets are
+# kept separate rather than folded into a generic `ios`.
+# ---------------------------------------------------------------------------
+
+core := "hiddify-core"
+android-libs := "android/app/libs"
+ios-frameworks := "ios/Frameworks"
+
+# Go + Flutter toolchain the core Makefile drives through. gomobile is installed
+# by its `lib_install` prerequisite, which wants network on first run only.
+#
+# ANDROID_NDK_HOME must be exported: the core Makefile derives the NDK from it
+# and cannot guess. The default SDK location is used when the shell has neither
+# variable set, which is the common case on macOS.
+export ANDROID_NDK_HOME := `ls -d "${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}"/ndk/* 2>/dev/null | sort -V | tail -1`
+
+# Fail early and legibly rather than deep inside a gomobile error.
+_require-android:
+    #!/usr/bin/env bash
+    if [ -z "$ANDROID_NDK_HOME" ]; then
+      echo "no NDK found under ${ANDROID_HOME:-$HOME/Library/Android/sdk}; install one via the Android SDK manager" >&2
+      exit 1
+    fi
+
+# --- core libraries -------------------------------------------------------
+
+# Universal macOS dylib, picked up straight from hiddify-core/bin by Xcode.
+core-macos:
+    make -C {{core}} -f Makefile macos
+
+# One aar carrying every Android ABI, which is the single file gradle consumes.
+core-android: _require-android
+    make -C {{core}} -f Makefile android
+    mkdir -p {{android-libs}}
+    cp {{core}}/bin/hiddify-core.aar {{android-libs}}/hiddify-core.aar
+
+# Device and simulator xcframeworks; ios-full adds tvOS and macOS.
+core-ios:
+    make -C {{core}} -f Makefile ios
+    mkdir -p {{ios-frameworks}}
+    rm -rf {{ios-frameworks}}/HiddifyCore.xcframework
+    cp -R {{core}}/bin/hiddify-core.xcframework {{ios-frameworks}}/HiddifyCore.xcframework
+
+core-ios-full:
+    make -C {{core}} -f Makefile ios-full
+    mkdir -p {{ios-frameworks}}
+    rm -rf {{ios-frameworks}}/HiddifyCore.xcframework
+    cp -R {{core}}/bin/hiddify-core.xcframework {{ios-frameworks}}/HiddifyCore.xcframework
+
+core-linux:
+    make -C {{core}} -f Makefile linux-archs
+
+core-windows:
+    make -C {{core}} -f Makefile windows-archs
+
+core: core-macos core-linux core-windows
+
+# --- apps -----------------------------------------------------------------
+
+macos: core-macos
+    flutter build macos --release
+
+macos-debug: core-macos
+    flutter build macos --debug
+
+android: core-android
+    flutter build apk --release
+
+apk: android
+
+apk-debug: core-android
+    flutter build apk --debug
+
+# Google Play needs the bundle rather than the apk.
+aab: core-android
+    flutter build appbundle --release
+
+aab-debug: core-android
+    flutter build appbundle --debug
+
+ios: core-ios
+    flutter build ios --release --no-codesign
+
+# Device builds need a provisioning profile and are therefore not wrapped here.
+ios-real: core-ios
+    flutter build ipa
+
+# --- checks ---------------------------------------------------------------
+
+# The Go unit tests cover the system proxy, which is the part of the core that
+# is easy to break and hard to notice from the UI.
+test-core:
+    cd {{core}}/hiddify-sing-box && go test -race ./common/settings/
+
+test:
+    flutter test
+    @just test-core
+
+# Codegen, which is gitignored and absent from a fresh clone.
+gen:
+    flutter pub run build_runner build --delete-conflicting-outputs
+    flutter pub run slang
+
+fmt:
+    cd {{core}}/hiddify-sing-box && gofmt -w common/settings/
+    dart format --line-length 120 lib/
+
+check:
+    flutter analyze lib/
+    @just test
+
+clean-core:
+    make -C {{core}} -f Makefile clean
+
+clean: clean-core
+    flutter clean
+
+# ---------------------------------------------------------------------------
 # Release / publish
 # ---------------------------------------------------------------------------
 
