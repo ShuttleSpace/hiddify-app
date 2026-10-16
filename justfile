@@ -71,6 +71,22 @@ _require-android:
       exit 1
     fi
 
+# AGP 8.11 rejects a Gradle that is not on JDK 17. The JDK is intentionally not
+# pinned in gradle.properties — see the note there — so it comes from JAVA_HOME,
+# and this says so in a sentence instead of leaving Gradle to reject a path.
+_require-jdk-17:
+    #!/usr/bin/env bash
+    if [ -z "$JAVA_HOME" ] || [ ! -x "$JAVA_HOME/bin/java" ]; then
+      echo "JAVA_HOME is unset or is not a JDK; AGP 8.11 needs JDK 17" >&2
+      exit 1
+    fi
+    version="$("$JAVA_HOME/bin/java" -version 2>&1 | head -1 | sed -E 's/.*"([0-9]+).*/\1/')"
+    if [ "$version" != "17" ]; then
+      echo "JAVA_HOME is JDK $version; AGP 8.11 needs JDK 17" >&2
+      echo "  current: $JAVA_HOME" >&2
+      exit 1
+    fi
+
 # --- core libraries -------------------------------------------------------
 
 # Universal macOS dylib, picked up straight from hiddify-core/bin by Xcode.
@@ -118,19 +134,19 @@ macos: core-macos
 macos-debug: core-macos
     flutter build macos --debug
 
-android: core-android
+android: _require-jdk-17 core-android
     flutter build apk --release {{sentry}}
 
 apk: android
 
-apk-debug: core-android
+apk-debug: _require-jdk-17 core-android
     flutter build apk --debug
 
 # Google Play needs the bundle rather than the apk.
-aab: core-android
+aab: _require-jdk-17 core-android
     flutter build appbundle --release {{sentry}}
 
-aab-debug: core-android
+aab-debug: _require-jdk-17 core-android
     flutter build appbundle --debug
 
 ios: core-ios
