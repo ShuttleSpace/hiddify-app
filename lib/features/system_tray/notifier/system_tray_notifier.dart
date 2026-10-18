@@ -3,11 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/model/constants.dart';
+import 'package:hiddify/core/preferences/general_preferences.dart';
 import 'package:hiddify/features/connection/model/connection_status.dart';
 import 'package:hiddify/features/connection/notifier/connection_notifier.dart';
 import 'package:hiddify/features/proxy/active/active_proxy_notifier.dart';
 import 'package:hiddify/features/settings/data/config_option_repository.dart';
+import 'package:hiddify/features/stats/notifier/stats_notifier.dart';
 import 'package:hiddify/features/system_tray/desktop_status_badge.dart';
+import 'package:hiddify/features/system_tray/model/tray_speed_layout.dart';
 import 'package:hiddify/features/window/notifier/window_notifier.dart';
 import 'package:hiddify/gen/assets.gen.dart';
 import 'package:hiddify/singbox/model/singbox_config_enum.dart';
@@ -21,6 +24,11 @@ part 'system_tray_notifier.g.dart';
 @Riverpod(keepAlive: true)
 class SystemTrayNotifier extends _$SystemTrayNotifier with TrayListener, AppLogger {
   bool listenerAdded = false;
+  ConnectionStatus _connection = const ConnectionStatus.disconnected();
+  int _urlTestDelay = 0;
+  Translations? _translations;
+  SystemInfo _latestStats = SystemInfo.create();
+
   @override
   Future<void> build() async {
     assert(PlatformUtils.isDesktop);
@@ -29,6 +37,21 @@ class SystemTrayNotifier extends _$SystemTrayNotifier with TrayListener, AppLogg
       listenerAdded = true;
     }
     await _initializeTray();
+
+    ref.listen(Preferences.showTraySpeedIndicator, (previous, next) {
+      _refreshTraySpeedIndicator();
+    });
+    ref.listen(Preferences.traySpeedLayout, (previous, next) {
+      _refreshTraySpeedIndicator();
+    });
+    ref.listen(statsNotifierProvider, (previous, next) {
+      final stats = next.asData?.value;
+      if (stats == null) return;
+      _latestStats = stats;
+      if (ref.read(Preferences.showTraySpeedIndicator)) {
+        _refreshTraySpeedIndicator();
+      }
+    });
   }
 
   // What the tray shows now, or was last asked to show. The active proxy changes many times a
@@ -111,6 +134,7 @@ class SystemTrayNotifier extends _$SystemTrayNotifier with TrayListener, AppLogg
         rethrow;
       }
     }
+    await _refreshTraySpeedIndicator();
   }
 
   /// The labels, checks and disabled states of [menu], submenus too, as one string.
@@ -194,10 +218,56 @@ class SystemTrayNotifier extends _$SystemTrayNotifier with TrayListener, AppLogg
     required DesktopBadgeStatus badge,
   }) {
     final r = "${Constants.appName} - ${connection.present(t)}";
-    if (badge == DesktopBadgeStatus.ok) {
-      return '$r : ${urlTestDelay}ms';
+    if (badge != DesktopBadgeStatus.ok) {
+      // macOS shows the ping in the menu bar next to the icon; "-ms" says it is waiting for one
+      if (Platform.isMacOS) windowManager.setBadgeLabel("-ms");
+      return r;
     }
-    return r;
+    if (Platform.isMacOS) windowManager.setBadgeLabel("${urlTestDelay}ms");
+    final ping = '$r : ${urlTestDelay}ms';
+    if (!ref.read(Preferences.showTraySpeedIndicator)) return ping;
+    final uploadBytes = _latestStats.uplink.toInt();
+    final downloadBytes = _latestStats.downlink.toInt();
+    final upload = uploadBytes <= 0 ? '0' : uploadBytes.speedCompact();
+    final download = downloadBytes <= 0 ? '0' : downloadBytes.speedCompact();
+    return switch (ref.read(Preferences.traySpeedLayout)) {
+      TraySpeedLayout.horizontal => '$ping  ↑$upload  ↓$download',
+      TraySpeedLayout.vertical => '$ping\n↑$upload\n↓$download',
+    };
+  }
+
+  Future<void> _refreshTooltip() async {
+    if (PlatformUtils.isLinux || _translations == null) return;
+    final tooltip = _trayTooltip(_connection, _urlTestDelay, _translations!, badge: _shownBadge ?? DesktopBadgeStatus.none);
+    if (tooltip == _shownTooltip) return;
+    _shownTooltip = tooltip;
+    try {
+      await trayManager.setToolTip(tooltip);
+    } catch (_) {
+      _shownTooltip = null;
+      rethrow;
+    }
+  }
+
+  /// The speed under the icon itself: a menu bar title on macOS, else the tooltip.
+  Future<void> _refreshTraySpeedIndicator() async {
+    final enabled = ref.read(Preferences.showTraySpeedIndicator);
+    final uploadBytes = _latestStats.uplink.toInt();
+    final downloadBytes = _latestStats.downlink.toInt();
+    final upload = uploadBytes <= 0 ? '0' : uploadBytes.speedCompact();
+    final download = downloadBytes <= 0 ? '0' : downloadBytes.speedCompact();
+    final title = enabled
+        ? switch (ref.read(Preferences.traySpeedLayout)) {
+            TraySpeedLayout.horizontal => '↑$upload  ↓$download',
+            TraySpeedLayout.vertical => '↑$upload\n↓$download',
+          }
+        : '';
+
+    if (Platform.isMacOS) {
+      await trayManager.setTitle(title);
+    } else if (!PlatformUtils.isLinux) {
+      await _refreshTooltip();
+    }
   }
 
   @override

@@ -29,6 +29,12 @@ import 'package:hiddify/features/settings/overview/sections/routing_options_page
 import 'package:hiddify/features/settings/overview/sections/tls_tricks_page.dart';
 import 'package:hiddify/features/settings/overview/settings_page.dart';
 import 'package:hiddify/utils/utils.dart';
+import 'package:hiddify/features/stats/overview/traffic_stats_page.dart';
+import 'package:hiddify/features/shortcut/overview/shortcuts_page.dart';
+import 'package:hiddify/features/settings/overview/sections/network_identity_page.dart';
+import 'package:hiddify/features/settings/overview/sections/appearance_page.dart';
+import 'package:hiddify/features/proxy/overview/node_blacklist_management_page.dart';
+import 'package:hiddify/features/backup/overview/backup_page.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'routing_config_notifier.g.dart';
@@ -133,6 +139,26 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
                       path: 'proxies',
                       pageBuilder: (_, state) =>
                           customTransition(TransitionType.fade, state.pageKey, const ProxiesOverviewPage()),
+                      routes: <GoRoute>[
+                        GoRoute(
+                          name: 'nodeBlacklist',
+                          path: 'node-blacklist',
+                          pageBuilder: (_, state) => customTransition(
+                            TransitionType.slide,
+                            state.pageKey,
+                            const NodeBlacklistManagementPage(),
+                          ),
+                        ),
+                        GoRoute(
+                          name: 'providerNodeBlacklist',
+                          path: 'provider-node-blacklist/:id',
+                          pageBuilder: (_, state) => customTransition(
+                            TransitionType.slide,
+                            state.pageKey,
+                            NodeBlacklistManagementPage(profileId: state.pathParameters['id']),
+                          ),
+                        ),
+                      ],
                     ),
                     if (isMobileBreakpoint)
                       GoRoute(
@@ -181,6 +207,36 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
                       path: 'general',
                       pageBuilder: (_, state) =>
                           customTransition(TransitionType.slide, state.pageKey, const GeneralPage()),
+                    ),
+                    GoRoute(
+                      name: 'appearance',
+                      path: 'appearance',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const AppearancePage()),
+                    ),
+                    GoRoute(
+                      name: 'trafficStats',
+                      path: 'traffic-stats',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const TrafficStatsPage()),
+                    ),
+                    GoRoute(
+                      name: 'networkIdentity',
+                      path: 'network-identity',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const NetworkIdentityPage()),
+                    ),
+                    GoRoute(
+                      name: 'backup',
+                      path: 'backup',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const BackupPage()),
+                    ),
+                    GoRoute(
+                      name: 'shortcuts',
+                      path: 'shortcuts',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const ShortcutsPage()),
                     ),
                     GoRoute(
                       name: 'routingOptions',
