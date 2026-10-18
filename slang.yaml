@@ -1,0 +1,12 @@
+# slang CLI config (used by `dart run slang` / `make translate`).
+# Note: kept separate from build.yaml so the slang codegen does not require
+# slang_build_runner / build_runner (whose build.yaml uses `build_to`, which
+# needs build_config >=1.2.0 and forces a whole toolchain upgrade).
+base_locale: en
+fallback_strategy: base_locale
+input_directory: assets/translations
+input_file_pattern: .i18n.json
+output_directory: lib/gen
+output_file_name: translations.g.dart
+translation_class_visibility: public
+locale_handling: false

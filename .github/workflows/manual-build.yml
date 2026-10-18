@@ -1,0 +1,29 @@
+name: Manual Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version or artifact label (for example, v4.1.2-alpha1)
+        required: true
+        default: draft
+        type: string
+      publish-prerelease:
+        description: Sign packages and publish a GitHub prerelease
+        required: true
+        default: false
+        type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
+    permissions: write-all
+    with:
+      upload-artifact: ${{ inputs.publish-prerelease }}
+      tag-name: ${{ inputs.version }}
+      channel: dev
