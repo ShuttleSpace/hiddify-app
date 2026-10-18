@@ -9,6 +9,7 @@ import 'package:hiddify/features/connection/notifier/connection_notifier.dart';
 import 'package:hiddify/features/proxy/data/proxy_data_providers.dart';
 import 'package:hiddify/features/proxy/data/proxy_repository.dart';
 import 'package:hiddify/features/proxy/model/proxy_failure.dart';
+import 'package:toastification/toastification.dart';
 import 'package:hiddify/features/proxy/overview/proxies_overview_notifier.dart';
 import 'package:hiddify/hiddifycore/generated/google/protobuf/timestamp.pb.dart';
 import 'package:hiddify/hiddifycore/generated/v2/hcore/hcore.pb.dart';
@@ -38,7 +39,10 @@ class _Notifications extends InAppNotificationController {
   final errors = <String>[];
 
   @override
-  void showErrorToast(String message) => errors.add(message);
+  ToastificationItem? showErrorToast(String message) {
+    errors.add(message);
+    return null;
+  }
 }
 
 /// A proxy as the core reports it; [testedAt] is the second its ping was measured.
