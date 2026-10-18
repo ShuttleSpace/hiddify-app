@@ -478,6 +478,23 @@ class HiddifyCoreService with InfraLogger {
     // yield* core.bgClient.outboundsInfo(Empty()).throttleTime(const Duration(seconds: 4), leading: false, trailing: true).map((event) => event.items.isEmpty ? null : event.items.first);
   }
 
+  /// Every group, also the ones no profile selects; the node list needs them.
+  Stream<List<OutboundGroup>> watchAllGroups() async* {
+    loggy.info("watching all proxy groups");
+
+    if (!core.isInitialized()) {
+      loggy.debug("core is not initialized, returning empty all-groups stream");
+      return;
+    }
+
+    try {
+      yield* core.bgClient.outboundsInfo(Empty()).map((event) => event.items.toList());
+    } catch (e) {
+      loggy.error("error watching all proxy groups: $e");
+      rethrow;
+    }
+  }
+
   Stream<OutboundGroupList> watchActiveGroups() async* {
     loggy.info("watching active groups");
 

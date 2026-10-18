@@ -151,6 +151,9 @@ class ConnectionNotifier extends _$ConnectionNotifier with AppLogger {
       if (failure == null) return;
       if (!isLast) loggy.warning("startup connect attempt $attempt failed, retrying", failure);
     }
+    loggy.info("restoring previous connection on startup");
+    await ref.read(Preferences.startedByUser.notifier).update(true);
+    await _connect();
   }
 
   Future<void> toggleConnection() async {
