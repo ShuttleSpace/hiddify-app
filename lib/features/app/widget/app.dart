@@ -22,6 +22,8 @@ import 'package:hiddify/features/shortcut/shortcut_wrapper.dart';
 import 'package:hiddify/features/system_tray/notifier/system_tray_notifier.dart';
 import 'package:hiddify/features/window/widget/window_wrapper.dart';
 import 'package:hiddify/hiddifycore/hiddify_core_service_provider.dart';
+import 'package:hiddify/features/proxy/notifier/active_proxy_blacklist_guard.dart';
+import 'package:hiddify/features/stats/notifier/traffic_history_recorder.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:upgrader/upgrader.dart';
@@ -61,6 +63,14 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
     ref.listen(foregroundProfilesUpdateNotifierProvider, (_, _) {});
     if (PlatformUtils.isAndroid) ref.listen(appBasedRoutingProvider, (_, _) {});
     if (PlatformUtils.isDesktop) ref.listen(systemTrayNotifierProvider, (_, _) {});
+
+    // Editing the blacklist can strand the node that is currently selected, so
+    // it has to say so rather than leave the tunnel on a node it just banned.
+    ref.listen(activeProxyBlacklistGuardProvider, (_, _) {});
+
+    // Daily upload and download totals for the traffic history page. Nothing
+    // reads the result, so the provider is started and left to run.
+    ref.listen(trafficHistoryRecorderProvider, (_, _) {});
 
     // updating ActiveBreakpointNotifier value
     useEffect(() {
