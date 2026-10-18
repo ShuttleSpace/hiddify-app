@@ -102,7 +102,8 @@ class PlatformSettingsHandler : FlutterPlugin, MethodChannel.MethodCallHandler, 
     data class AppItem(
         @SerializedName("package-name") val packageName: String,
         @SerializedName("name") val name: String,
-        @SerializedName("is-system-app") val isSystemApp: Boolean
+        @SerializedName("is-system-app") val isSystemApp: Boolean,
+        @SerializedName("has-internet-permission") val hasInternetPermission: Boolean
     )
 
     @SuppressLint("BatteryLife")
@@ -161,15 +162,16 @@ class PlatformSettingsHandler : FlutterPlugin, MethodChannel.MethodCallHandler, 
                             }
                         val list = mutableListOf<AppItem>()
                         installedPackages.forEach {
-                            if (it.packageName != Application.application.packageName &&
-                                (it.requestedPermissions?.contains(Manifest.permission.INTERNET) == true
-                                        || it.packageName == "android")
-                            ) {
+                            // Everything but this app is reported, including the ones with no
+                            // internet permission: the app list filters on that, and a filter
+                            // that cannot show what it hides is not much of a filter.
+                            if (it.packageName != Application.application.packageName) {
                                 list.add(
                                     AppItem(
                                         it.packageName,
                                         it.applicationInfo?.loadLabel(packageManager).toString(),
-                                        (it.applicationInfo?.flags?.and(ApplicationInfo.FLAG_SYSTEM) == 1)
+                                        (it.applicationInfo?.flags?.and(ApplicationInfo.FLAG_SYSTEM) == 1),
+                                        it.requestedPermissions?.contains(Manifest.permission.INTERNET) == true
                                     )
                                 )
                             }
