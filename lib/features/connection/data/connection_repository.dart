@@ -20,6 +20,9 @@ abstract interface class ConnectionRepository {
 
   TaskEither<ConnectionFailure, Unit> setup();
   Stream<ConnectionStatus> watchConnectionStatus();
+
+  /// Whether the core is swapping its config without dropping the tunnel.
+  Stream<bool> watchHotReloading();
   TaskEither<ConnectionFailure, Unit> connect(ProfileEntity activeProfile, bool disableMemoryLimit);
   TaskEither<ConnectionFailure, Unit> disconnect();
   TaskEither<ConnectionFailure, Unit> reconnect(ProfileEntity activeProfile, bool disableMemoryLimit);
@@ -81,6 +84,9 @@ class ConnectionRepositoryImpl with ExceptionHandler, InfraLogger implements Con
       },
     );
   }
+
+  @override
+  Stream<bool> watchHotReloading() => singbox.watchStatus().map((event) => event is CoreHotReloading).distinct();
 
   @override
   TaskEither<ConnectionFailure, Unit> connect(ProfileEntity activeProfile, bool disableMemoryLimit) => setup().flatMap(
