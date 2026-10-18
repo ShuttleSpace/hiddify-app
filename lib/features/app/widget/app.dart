@@ -35,6 +35,7 @@ import 'package:hiddify/hiddifycore/hiddify_core_service_provider.dart';
 import 'package:hiddify/features/proxy/notifier/active_proxy_blacklist_guard.dart';
 import 'package:hiddify/features/stats/notifier/traffic_history_recorder.dart';
 import 'package:hiddify/utils/utils.dart';
+import 'package:hiddify/core/theme/appearance_options.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:upgrader/upgrader.dart';
 
@@ -70,7 +71,13 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
     final router = ref.watch(goRouterNotiferProvider);
     final locale = ref.watch(localePreferencesProvider);
     final themeMode = ref.watch(themePreferencesProvider);
-    final theme = AppTheme(themeMode, locale.preferredFontFamily);
+    // The appearance page offers the wallpaper's colours, a colour of the user's
+    // picking, and the built-in one. Each has to reach the scheme: reading the
+    // preference and then building the theme from the hardcoded seed alone left
+    // the swatches in the settings page changing nothing on screen.
+    final colorSource = ref.watch(AppearanceOptions.colorSource);
+    final seedColor = Color(ref.watch(AppearanceOptions.seedColorValue));
+    final theme = AppTheme(themeMode, locale.preferredFontFamily, seedColor: seedColor);
     final upgrader = ref.watch(upgraderProvider);
     final activeBreakpoint = Breakpoint(context).activeBreakpoint;
 
@@ -173,6 +180,18 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
           ConnectionWrapper(
             DynamicColorBuilder(
               builder: (ColorScheme? lightColorScheme, ColorScheme? darkColorScheme) {
+                // A null from the builder means the platform gave us nothing, so
+                // dynamic color is off. The other two sources name their scheme.
+                final effectiveLight = switch (colorSource) {
+                  AppColorSource.dynamicColor => lightColorScheme,
+                  AppColorSource.seed => ColorScheme.fromSeed(seedColor: seedColor),
+                  AppColorSource.brand => null,
+                };
+                final effectiveDark = switch (colorSource) {
+                  AppColorSource.dynamicColor => darkColorScheme,
+                  AppColorSource.seed => ColorScheme.fromSeed(seedColor: seedColor, brightness: Brightness.dark),
+                  AppColorSource.brand => null,
+                };
                 return MaterialApp.router(
                   routerConfig: router,
                   scaffoldMessengerKey: appScaffoldMessengerKey,
@@ -181,8 +200,8 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
                   localizationsDelegates: appLocalizationsDelegates,
                   debugShowCheckedModeBanner: false,
                   themeMode: themeMode.flutterThemeMode,
-                  theme: theme.lightTheme(lightColorScheme),
-                  darkTheme: theme.darkTheme(darkColorScheme),
+                  theme: theme.lightTheme(effectiveLight),
+                  darkTheme: theme.darkTheme(effectiveDark),
                   title: Constants.appName,
                   builder: (context, child) {
                     final theme = Theme.of(context);
@@ -253,8 +272,8 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
   //                         localizationsDelegates: appLocalizationsDelegates,
   //                         debugShowCheckedModeBanner: false,
   //                         material: (context, platform) => MaterialAppRouterData(
-  //                           theme: theme.lightTheme(lightColorScheme),
-  //                           darkTheme: theme.darkTheme(darkColorScheme),
+  //                           theme: theme.lightTheme(effectiveLight),
+  //                           darkTheme: theme.darkTheme(effectiveDark),
   //                           themeMode: themeMode.flutterThemeMode,
   //                         ),
   //                         cupertino: (context, platform) {

@@ -15,6 +15,7 @@ import 'package:hiddify/features/backup/data/backup_service.dart';
 import 'package:hiddify/features/backup/data/webdav_backup_repository.dart';
 import 'package:hiddify/features/backup/model/backup_target.dart';
 import 'package:hiddify/features/settings/notifier/config_option/config_option_notifier.dart';
+import 'package:hiddify/utils/custom_loggers.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class BackupPage extends HookConsumerWidget {
@@ -386,11 +387,14 @@ Future<void> _createLocalBackup(WidgetRef ref) async {
       if (!await directory.exists()) await directory.create(recursive: true);
       await File('${directory.path}/$name').writeAsBytes(bytes, flush: true);
     } else {
+      // file_picker's `bytes` writes the file itself, and it refuses to on macOS:
+      // the call throws UnsupportedError, which the catch below would have turned
+      // into a failed toast with nothing wrong except the save. Leaving it to the
+      // save panel and writing the returned path ourselves works on every platform.
       final path = await FilePicker.platform.saveFile(
         fileName: name,
         type: FileType.custom,
         allowedExtensions: ['json', 'hiddifybackup'],
-        bytes: bytes,
       );
       if (path == null) return;
       final file = File(path);
@@ -398,8 +402,14 @@ Future<void> _createLocalBackup(WidgetRef ref) async {
       await file.writeAsBytes(bytes, flush: true);
     }
     ref.read(inAppNotificationControllerProvider).showSuccessToast(t.pages.settings.backup.created);
-  } catch (_) {
+  } catch (error, stackTrace) {
+    // The toast is the whole point, so say what went wrong beside it.
     ref.read(inAppNotificationControllerProvider).showErrorToast(t.pages.settings.backup.createFailed);
+    try {
+      throw error;
+    } on Exception catch (e, st) {
+      appLogger('backup').warning('creating a local backup failed', e, st);
+    }
   }
 }
 
