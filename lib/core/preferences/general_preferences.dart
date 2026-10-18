@@ -145,6 +145,31 @@ abstract class Preferences {
     mapTo: (value) => value.name,
   );
 
+  static final enableGlobalHotkeys = PreferencesNotifier.create<bool, bool>("enable-global-hotkeys", false);
+
+  /// Null means unbound rather than empty, so a key the user cleared stops
+  /// firing instead of matching every keypress.
+  static final globalHotkeyToggleConnection = PreferencesNotifier.create<String?, String?>(
+    "global-hotkey-toggle-connection",
+    null,
+    mapFrom: (value) => value == null || value.isEmpty ? null : value,
+    mapTo: (value) => value ?? '',
+  );
+
+  static final globalHotkeyShowWindow = PreferencesNotifier.create<String?, String?>(
+    "global-hotkey-show-window",
+    null,
+    mapFrom: (value) => value == null || value.isEmpty ? null : value,
+    mapTo: (value) => value ?? '',
+  );
+
+  static final globalHotkeyCycleServiceMode = PreferencesNotifier.create<String?, String?>(
+    "global-hotkey-cycle-service-mode",
+    null,
+    mapFrom: (value) => value == null || value.isEmpty ? null : value,
+    mapTo: (value) => value ?? '',
+  );
+
   /// How many records the in-memory log ring keeps. Saved, so a size picked
   /// once while chasing a bug is still there on the next run.
   static final logBufferSize = PreferencesNotifier.create<int, int>("log-buffer-size", 1000);
