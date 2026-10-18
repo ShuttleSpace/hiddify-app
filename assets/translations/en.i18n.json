@@ -901,7 +901,6 @@
       "openLinkTitle": "Open this link?",
       "openLinkAction": "Open",
       "remainingTime": "Remaining time",
-      "remainingDuration": "${duration} days remaining",
       "remainingDurationNew": "${duration} days",
       "remainingUsage": "Remaining",
       "profileSite": "Provider",

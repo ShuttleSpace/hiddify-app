@@ -8,6 +8,8 @@ class ProfileExportBundle {
     required this.config,
     required this.lastUpdate,
     this.sourceUrl,
+    this.webPageUrl,
+    this.supportUrl,
     this.subscriptionInfo,
   });
 
@@ -18,6 +20,11 @@ class ProfileExportBundle {
   final Object? config;
   final DateTime lastUpdate;
   final String? sourceUrl;
+
+  // These come from their own response headers rather than from the traffic
+  // header, so they stay beside subInfo instead of inside it.
+  final String? webPageUrl;
+  final String? supportUrl;
   final SubscriptionInfo? subscriptionInfo;
 
   String encode() => const JsonEncoder.withIndent('  ').convert({
@@ -26,6 +33,8 @@ class ProfileExportBundle {
     'profile': {
       'name': name,
       'sourceUrl': sourceUrl,
+      'webPageUrl': webPageUrl,
+      'supportUrl': supportUrl,
       'lastUpdate': lastUpdate.toIso8601String(),
       if (subscriptionInfo case final info?)
         'subscriptionInfo': {
@@ -33,8 +42,6 @@ class ProfileExportBundle {
           'download': info.download,
           'total': info.total,
           'expire': info.expire.toIso8601String(),
-          'webPageUrl': info.webPageUrl,
-          'supportUrl': info.supportUrl,
         },
     },
     'config': config,
@@ -54,13 +61,13 @@ class ProfileExportBundle {
           download: subscription['download'] as int,
           total: subscription['total'] as int,
           expire: DateTime.parse(subscription['expire'] as String),
-          webPageUrl: subscription['webPageUrl'] as String?,
-          supportUrl: subscription['supportUrl'] as String?,
         );
       }
       return ProfileExportBundle(
         name: profile['name'] as String,
         sourceUrl: profile['sourceUrl'] as String?,
+        webPageUrl: profile['webPageUrl'] as String?,
+        supportUrl: profile['supportUrl'] as String?,
         lastUpdate: DateTime.parse(profile['lastUpdate'] as String),
         subscriptionInfo: subscriptionInfo,
         config: root['config'],

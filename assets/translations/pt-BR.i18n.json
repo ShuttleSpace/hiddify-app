@@ -724,7 +724,6 @@
       "openLinkTitle": "Abrir este link?",
       "openLinkAction": "Abrir",
       "remainingTime": "Tempo restante",
-      "remainingDuration": "${duration} dias restantes",
       "remainingDurationNew": "${duration} dias",
       "remainingUsage": "Restante",
       "profileSite": "Provedor",

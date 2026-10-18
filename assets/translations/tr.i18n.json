@@ -722,7 +722,6 @@
       "openLinkTitle": "Bu bağlantı açılsın mı?",
       "openLinkAction": "Aç",
       "remainingTime": "Kalan süre",
-      "remainingDuration": "kalan ${duration} gün",
       "remainingDurationNew": "${duration} gün",
       "remainingUsage": "Kalan",
       "profileSite": "Sağlayıcı",

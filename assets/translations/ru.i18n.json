@@ -746,7 +746,6 @@
       "openLinkTitle": "Открыть эту ссылку?",
       "openLinkAction": "Открыть",
       "remainingTime": "Оставшееся время",
-      "remainingDuration": "осталось ${duration} дней",
       "remainingDurationNew": "${duration} дней",
       "remainingUsage": "Осталось",
       "profileSite": "Провайдер",

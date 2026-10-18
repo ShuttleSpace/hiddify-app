@@ -724,7 +724,6 @@
       "openLinkTitle": "این لینک باز شود؟",
       "openLinkAction": "باز کردن",
       "remainingTime": "زمان باقی‌مانده",
-      "remainingDuration": "${duration} روز باقی‌مانده",
       "remainingDurationNew": "${duration} روز",
       "remainingUsage": "باقی‌مانده",
       "profileSite": "سرویس‌دهنده",

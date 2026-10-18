@@ -899,7 +899,6 @@
       "openLinkTitle": "打开此链接？",
       "openLinkAction": "打开",
       "remainingTime": "剩余时间",
-      "remainingDuration": "剩余 ${duration} 天",
       "remainingDurationNew": "${duration} 天",
       "remainingUsage": "剩余",
       "profileSite": "提供商",

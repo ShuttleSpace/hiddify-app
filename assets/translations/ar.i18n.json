@@ -759,7 +759,6 @@
       "openLinkTitle": "فتح هذا الرابط؟",
       "openLinkAction": "فتح",
       "remainingTime": "الوقت المتبقي",
-      "remainingDuration": "متبقٍ ${duration} يوم",
       "remainingDurationNew": "${duration} يوم",
       "remainingUsage": "المتبقي",
       "profileSite": "المزوّد",

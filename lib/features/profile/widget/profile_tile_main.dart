@@ -56,6 +56,14 @@ class ProfileTileMain extends HookConsumerWidget {
       _ => null,
     };
 
+    // The vendor's web-page and support links arrive in their own headers, so
+    // they are on the profile rather than on subInfo — a profile with no traffic
+    // numbers still has them, and one with traffic may have neither.
+    final (webPageUrl, supportUrl) = switch (profile) {
+      RemoteProfileEntity(:final webPageUrl, :final supportUrl) => (webPageUrl, supportUrl),
+      _ => (null, null),
+    };
+
     if (!isMain) return const Card();
 
     return Material(
@@ -95,70 +103,65 @@ class ProfileTileMain extends HookConsumerWidget {
           if (subInfo != null)
             Container(
               width: 350,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IntrinsicHeight(
-                    // Add this to ensure equal height
-                    child: Row(
-                      children: [
-                        if (subInfo.total > 0) _BandwithUsageRow(subInfo),
+              child: IntrinsicHeight(
+                // Add this to ensure equal height
+                child: Row(
+                  children: [
+                    if (subInfo.total > 0) _BandwithUsageRow(subInfo),
 
-                        // if (subInfo.total > 0 && subInfo.remaining.inDays > 0)
-                        //   const VerticalDivider(
-                        //     // Add divider between items
-                        //     width: 1,
-                        //     thickness: 1,
-                        //     indent: 12,
-                        //     endIndent: 12,
-                        //   ),
-                        if (subInfo.remaining.inDays > 0)
-                          // Add Expanded
-                          _UsageRow(
-                            icon: null, //FluentIcons.timer_24_regular,
-                            title: subInfo.remaining.inDays > 365
-                                ? "∞ days remaining"
-                                : "${subInfo.remaining.inDays}/30 days remaining",
-                            progress: subInfo.remaining.inDays > 365 ? 0 : subInfo.remaining.inDays / 30,
-                            color: _getProgressColor(1 - (subInfo.remaining.inDays / 30)),
-                          ),
-                      ],
-                    ),
-                  ),
-                  if ((subInfo.webPageUrl != null || subInfo.supportUrl != null))
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: Row(
-                        children: [
-                          if (subInfo.webPageUrl != null)
-                            Expanded(
-                              child: InkWell(
-                                onTap: () => _launchUrlWithCheck(context, ref, subInfo.webPageUrl!),
-                                borderRadius: BorderRadius.circular(8),
-                                child: _InfoItem(
-                                  icon: _getLinkIcon(subInfo.webPageUrl!, FluentIcons.building_shop_24_regular),
-                                  label: t.components.subscriptionInfo.profileSite,
-                                  value: _formatSupportLink(subInfo.webPageUrl!),
-                                ),
-                              ),
-                            ),
-                          if (subInfo.supportUrl != null) ...[
-                            const Gap(12),
-                            Expanded(
-                              child: InkWell(
-                                onTap: () => _launchUrlWithCheck(context, ref, subInfo.supportUrl!),
-                                borderRadius: BorderRadius.circular(8),
-                                child: _InfoItem(
-                                  icon: _getLinkIcon(subInfo.supportUrl!, FontAwesomeIcons.headset.data),
-                                  label: t.components.subscriptionInfo.profileSupport,
-                                  value: _formatSupportLink(subInfo.supportUrl!),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
+                    // if (subInfo.total > 0 && subInfo.remaining.inDays > 0)
+                    //   const VerticalDivider(
+                    //     // Add divider between items
+                    //     width: 1,
+                    //     thickness: 1,
+                    //     indent: 12,
+                    //     endIndent: 12,
+                    //   ),
+                    if (subInfo.remaining.inDays > 0)
+                      // Add Expanded
+                      _UsageRow(
+                        icon: null, //FluentIcons.timer_24_regular,
+                        title: subInfo.remaining.inDays > 365
+                            ? "∞ days remaining"
+                            : "${subInfo.remaining.inDays}/30 days remaining",
+                        progress: subInfo.remaining.inDays > 365 ? 0 : subInfo.remaining.inDays / 30,
+                        color: _getProgressColor(1 - (subInfo.remaining.inDays / 30)),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          if ((webPageUrl != null || supportUrl != null))
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  if (webPageUrl != null)
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _launchUrlWithCheck(context, ref, webPageUrl),
+                        borderRadius: BorderRadius.circular(8),
+                        child: _InfoItem(
+                          icon: _getLinkIcon(webPageUrl, FluentIcons.building_shop_24_regular),
+                          label: t.components.subscriptionInfo.profileSite,
+                          value: _formatSupportLink(webPageUrl),
+                        ),
                       ),
                     ),
+                  if (supportUrl != null) ...[
+                    const Gap(12),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _launchUrlWithCheck(context, ref, supportUrl),
+                        borderRadius: BorderRadius.circular(8),
+                        child: _InfoItem(
+                          icon: _getLinkIcon(supportUrl, FontAwesomeIcons.headset.data),
+                          label: t.components.subscriptionInfo.profileSupport,
+                          value: _formatSupportLink(supportUrl),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

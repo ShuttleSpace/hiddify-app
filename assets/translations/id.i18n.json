@@ -722,7 +722,6 @@
       "openLinkTitle": "Buka tautan ini?",
       "openLinkAction": "Buka",
       "remainingTime": "Sisa waktu",
-      "remainingDuration": "tersisa ${duration} hari",
       "remainingDurationNew": "${duration} hari",
       "remainingUsage": "Sisa",
       "profileSite": "Penyedia",

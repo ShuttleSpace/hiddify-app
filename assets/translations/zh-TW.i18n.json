@@ -722,7 +722,6 @@
       "openLinkTitle": "開啟此連結？",
       "openLinkAction": "開啟",
       "remainingTime": "剩餘時間",
-      "remainingDuration": "剩餘 ${duration} 天",
       "remainingDurationNew": "${duration} 天",
       "remainingUsage": "剩餘",
       "profileSite": "提供商",
