@@ -76,7 +76,6 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
             builder: (ColorScheme? lightColorScheme, ColorScheme? darkColorScheme) {
               return MaterialApp.router(
                 routerConfig: router,
-                scaffoldMessengerKey: appScaffoldMessengerKey,
                 locale: locale.flutterLocale,
                 supportedLocales: AppLocaleUtils.supportedLocales,
                 localizationsDelegates: GlobalMaterialLocalizations.delegates,
@@ -87,12 +86,10 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
                 title: Constants.appName,
                 builder: (context, child) {
                   final theme = Theme.of(context);
-                  child = SnackBarHost(
-                    child: UpgradeAlert(
-                      upgrader: upgrader,
-                      navigatorKey: router.routerDelegate.navigatorKey,
-                      child: child ?? const SizedBox(),
-                    ),
+                  child = UpgradeAlert(
+                    upgrader: upgrader,
+                    navigatorKey: router.routerDelegate.navigatorKey,
+                    child: child ?? const SizedBox(),
                   );
                   if (kDebugMode && _debugAccessibility) {
                     return AccessibilityTools(checkFontOverflows: true, child: child);

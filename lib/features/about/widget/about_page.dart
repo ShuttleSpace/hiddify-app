@@ -33,9 +33,11 @@ class AboutPage extends HookConsumerWidget {
               .read(dialogNotifierProvider.notifier)
               .showNewVersion(currentVersion: appInfo.presentVersion, newVersion: versionInfo, canIgnore: false);
         case AppUpdateStateError(:final error):
-          return ref.read(inAppNotificationControllerProvider).showErrorToast(t.presentShortError(error));
+          ref.read(inAppNotificationControllerProvider).showErrorToast(t.presentShortError(error));
+          return;
         case AppUpdateStateNotAvailable():
-          return ref.read(inAppNotificationControllerProvider).showSuccessToast(t.pages.about.notAvailableMsg);
+          ref.read(inAppNotificationControllerProvider).showSuccessToast(t.pages.about.notAvailableMsg);
+          return;
       }
     });
 
