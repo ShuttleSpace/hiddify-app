@@ -8,13 +8,13 @@ import 'package:hiddify/core/notification/in_app_notification_controller.dart';
 import 'package:hiddify/core/preferences/general_preferences.dart';
 import 'package:hiddify/core/router/bottom_sheets/bottom_sheets_notifier.dart';
 import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
+import 'package:hiddify/features/app_based_routing/data/app_package_metadata_provider.dart';
 import 'package:hiddify/features/app_based_routing/data/selected_data_provider.dart';
 import 'package:hiddify/features/app_based_routing/model/app_package_info.dart';
 import 'package:hiddify/features/app_based_routing/model/pkg_flag.dart';
 import 'package:hiddify/features/app_based_routing/overview/app_list_notifier.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:installed_apps/index.dart';
 
 class AppListPage extends HookConsumerWidget with PresLogger {
   const AppListPage({super.key});
@@ -31,12 +31,25 @@ class AppListPage extends HookConsumerWidget with PresLogger {
     }
   }
 
-  Future<Set<AppPackageInfo>> getApps(bool hideSystem) async {
-    if (!PlatformUtils.isAndroid) return {};
-    return (await InstalledApps.getInstalledApps(
-      hideSystem,
-      true,
-    )).map((e) => AppPackageInfo(packageName: e.packageName, name: e.name, icon: e.icon)).toSet();
+  /// One fetch for every app; hiding system apps is a filter over this rather
+/// than a second query, so the platform channel is asked once.
+Future<List<AppPackageInfo>> getApps(WidgetRef ref) async {
+    if (!PlatformUtils.isAndroid) return const [];
+    final repo = ref.read(appPackageMetadataRepositoryProvider);
+    final apps = await repo.getInstalledApps();
+    // Each icon is its own round trip, so ask for them together rather than
+    // waiting on one before starting the next.
+    final icons = await Future.wait(apps.map((a) => repo.getIcon(a.packageName)));
+    return [
+      for (var i = 0; i < apps.length; i++)
+        AppPackageInfo(
+          packageName: apps[i].packageName,
+          name: apps[i].name,
+          icon: icons[i],
+          isSystemApp: apps[i].isSystemApp,
+          hasInternetPermission: apps[i].hasInternetPermission,
+        ),
+    ];
   }
 
   @override
@@ -53,20 +66,19 @@ class AppListPage extends HookConsumerWidget with PresLogger {
     final searchQuery = useState("");
     final sortListener = useState(false);
 
-    final asyncApps = useFuture(useMemoized(() => getApps(false)));
-    final asyncAppsHideSys = useFuture(useMemoized(() => getApps(true)));
-
-    final asyncFilteredApps = hideSystemApps.value ? asyncAppsHideSys : asyncApps;
+    final asyncApps = useFuture(useMemoized(() => getApps(ref)));
 
     final displayedApps = useMemoized<AsyncValue<List<AppPackageInfo>>>(
       () {
         if (!(selectedApps.hasValue &&
             selectedApps is AsyncData &&
-            asyncFilteredApps.hasData &&
-            asyncFilteredApps.connectionState == ConnectionState.done)) {
+            asyncApps.hasData &&
+            asyncApps.connectionState == ConnectionState.done)) {
           return const AsyncValue.loading();
         }
-        final appsList = asyncFilteredApps.requireData.toList();
+        final appsList = asyncApps.requireData
+            .where((a) => !hideSystemApps.value || !a.isSystemApp)
+            .toList();
         if (searchQuery.value.isBlank) {
           appsList.sort((a, b) {
             final priorityA = _getPriority(a, selectedApps.requireValue);
@@ -82,7 +94,7 @@ class AppListPage extends HookConsumerWidget with PresLogger {
         return AsyncValue.data(filteredAppsList);
       },
       [
-        asyncFilteredApps.connectionState == ConnectionState.done,
+        asyncApps.connectionState == ConnectionState.done,
         hideSystemApps.value,
         selectedApps.hasValue,
         searchQuery.value,
