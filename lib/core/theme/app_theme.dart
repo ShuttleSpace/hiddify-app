@@ -4,12 +4,16 @@ import 'package:hiddify/core/theme/app_theme_mode.dart';
 import 'package:hiddify/core/theme/theme_extensions.dart';
 
 class AppTheme {
-  AppTheme(this.mode, this.fontFamily);
+  AppTheme(this.mode, this.fontFamily, {this.seedColor});
   final AppThemeMode mode;
   final String fontFamily;
 
+  /// The user's colour from the appearance page. Falls back to the built-in brand
+  /// colour when none was picked, which is what the ?: in the builders below do.
+  final Color? seedColor;
+
   ThemeData lightTheme(ColorScheme? lightColorScheme) {
-    final ColorScheme scheme = lightColorScheme ?? ColorScheme.fromSeed(seedColor: const Color(0xFF293CA0));
+    final ColorScheme scheme = lightColorScheme ?? ColorScheme.fromSeed(seedColor: seedColor ?? const Color(0xFF293CA0));
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
@@ -20,7 +24,8 @@ class AppTheme {
 
   ThemeData darkTheme(ColorScheme? darkColorScheme) {
     final ColorScheme scheme =
-        darkColorScheme ?? ColorScheme.fromSeed(seedColor: const Color(0xFF293CA0), brightness: Brightness.dark);
+        darkColorScheme ??
+        ColorScheme.fromSeed(seedColor: seedColor ?? const Color(0xFF293CA0), brightness: Brightness.dark);
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,

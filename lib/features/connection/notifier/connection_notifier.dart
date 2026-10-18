@@ -190,11 +190,29 @@ Future<void> restoreConnectionOnStartup() async {
   Future<void> _disconnect() async {
     final dialogNotifier = ref.read(dialogNotifierProvider.notifier);
     final translations = ref.read(translationsProvider);
+    final wasSystemProxy = ref.read(ConfigOptions.serviceMode) == ServiceMode.systemProxy;
     await _connectionRepo.disconnect().mapLeft((err) {
       dialogNotifier.showCustomAlertFromErr(err.present(translations.requireValue));
       state = AsyncError(err, StackTrace.current);
     }).run();
     unawaited(_announceDisconnect(translations));
+    if (wasSystemProxy) unawaited(_releaseSystemProxy());
+  }
+
+  /// Hands the OS proxy back without waiting for the inbound's own cleanup.
+  ///
+  /// Closing the core is supposed to unwind into the listener's Disable, but that
+  /// path only runs when the listener is still holding a proxy it believes it
+  /// enabled, and on macOS the setting outlives it. Going through the release RPC
+  /// also covers being turned off from the outside: System Settings switching the
+  /// service mode to VPN-only does not come through this app at all, and the
+  /// inbound that owned the proxy is gone with the old core process.
+  Future<void> _releaseSystemProxy() async {
+    if (!Platform.isMacOS) return;
+    loggy.info("releasing the system proxy on disconnect");
+    await _connectionRepo.releaseSystemProxy().mapLeft((err) {
+      loggy.warning("failed to release the system proxy on disconnect", err);
+    }).run();
   }
 
   /// Leaving system-proxy mode while connected has to reach the OS by hand. The
