@@ -372,4 +372,3 @@ class SingleCall {
   }
 }
 
-/// Whether the core is hot reloading; only the connection button shows it.

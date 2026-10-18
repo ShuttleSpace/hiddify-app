@@ -34,8 +34,6 @@ abstract interface class ConnectionRepository {
   TaskEither<ConnectionFailure, Unit> setup();
   Stream<ConnectionStatus> watchConnectionStatus();
 
-  /// Whether the core is applying a new config without a restart; the connection stays up
-  /// (watchConnectionStatus keeps reporting it as connected).
   TaskEither<ConnectionFailure, Unit> connect(ProfileEntity activeProfile, bool disableMemoryLimit);
   TaskEither<ConnectionFailure, Unit> disconnect();
   TaskEither<ConnectionFailure, Unit> reconnect(ProfileEntity activeProfile, bool disableMemoryLimit);
