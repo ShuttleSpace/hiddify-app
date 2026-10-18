@@ -1,0 +1,72 @@
+# Branch and release model
+
+`dev` is the working branch for this fork. Changes are made and reviewed here and are
+never merged into `main` by default, so fork-specific work does not leak back into the
+upstream project.
+
+## Branches
+
+| Branch | Role |
+|---|---|
+| `dev` | Core working branch. All fork-specific changes land here and CI runs on every push. |
+| `main` | Kept close to upstream `hiddify-app:main` so upstream changes can be pulled in. |
+
+## Pulling upstream updates into `dev`
+
+`dev` is not a descendant of `main` on the remote in a way that keeps re-merging free, so
+sync upstream deliberately rather than merging `main` into `dev` on a schedule:
+
+```bash
+git remote add upstream git@github.com:veto9292/hiddify-app.git   # once
+git fetch upstream
+
+git checkout dev
+git merge upstream/main        # resolve, test, then push to origin/dev
+```
+
+The same shape applies to the two submodule repositories, which are separate forks:
+
+| Repository | Upstream |
+|---|---|
+| `hiddify-core` | `git@github.com:hiddify/hiddify-core.git` (configured as `upstream`) |
+| `hiddify-sing-box` (inside `hiddify-core`) | `git@github.com:hiddify/hiddify-sing-box.git` |
+
+Keep the fork-specific commits on top so that upstream merges stay resolvable; do not
+rebase the fork branches onto upstream.
+
+## Why tag pushes are used to trigger builds
+
+`manual-build.yml` exists only on `dev`, and `gh workflow run` resolves
+`workflow_dispatch` against the **default branch** (`main`). Calling it from the justfile
+therefore fails with:
+
+```
+HTTP 404: workflow manual-build.yml not found on the default branch
+```
+
+Since `main` is intentionally not carrying fork changes, builds are triggered by pushing a
+tag instead. `release.yml` is present on `main`, listens for `v*` tags, and picks the
+channel from the tag name:
+
+- a tag ending in `dev` (for example `v4.1.4.dev`) routes to the `dev` channel, which
+  downloads the prebuilt core from the `draft` release of `hiddify-core`
+- any other tag routes to the `prod` channel, which downloads from a numbered release
+  (`v<core.version>`) of `hiddify-core`
+
+Use a `.dev` tag for trial runs. A plain `v4.1.4` tag only works once `hiddify-core` has a
+matching numbered release.
+
+## Core release dependency
+
+The app does not build `hiddify-core` from source. `actions/checkout` does not fetch
+submodules, and `make macos-prepare` downloads `hiddify-lib-*.tar.gz` from a
+`hiddify-core` release. A change under `hiddify-core/` or `hiddify-sing-box/` therefore has
+no effect on the app build until:
+
+1. the change is pushed to the `dev` branch of the respective fork,
+2. that repository's `Release` workflow runs (push a `.dev` tag),
+3. the run republishes the `draft` release assets.
+
+`hiddify-core`'s build has a step that fetches tags for `git describe`. It must not recurse
+into the `replace/*` submodules, because their nested pins are not all present on the
+`ShuttleSpace` forks and the fetch fails before version detection runs.

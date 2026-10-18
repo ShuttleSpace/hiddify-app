@@ -1,0 +1,78 @@
+import 'package:hiddify/features/per_app_proxy/model/app_package_info.dart';
+import 'package:hiddify/features/per_app_proxy/model/pkg_flag.dart';
+
+enum AppPackageFilter { all, system, nonSystem, internet, noInternet }
+
+bool matchesAppPackageFilter(AppPackageInfo app, AppPackageFilter filter) {
+  return switch (filter) {
+    AppPackageFilter.all => true,
+    AppPackageFilter.system => app.isSystemApp,
+    AppPackageFilter.nonSystem => !app.isSystemApp,
+    AppPackageFilter.internet => app.hasInternetPermission,
+    AppPackageFilter.noInternet => !app.hasInternetPermission,
+  };
+}
+
+List<AppPackageInfo> filterAndSearchApps(
+  List<AppPackageInfo> apps,
+  AppPackageFilter filter,
+  String query,
+) {
+  final normalizedQuery = query.trim().toLowerCase();
+  return apps.where((app) {
+    return matchesAppPackageFilter(app, filter) &&
+        (normalizedQuery.isEmpty ||
+            app.name.toLowerCase().contains(normalizedQuery));
+  }).toList();
+}
+
+Set<String> packagesToToggle(
+  List<AppPackageInfo> visibleApps,
+  Map<String, int> flags,
+  bool select,
+) {
+  final result = <String>{};
+  for (final app in visibleApps) {
+    final flag = flags[app.packageName];
+    if (select) {
+      if (PkgFlag.checkboxValue(flag ?? 0) != true) {
+        result.add(app.packageName);
+      }
+    } else if (flag != null &&
+        flag != 0 &&
+        PkgFlag.checkboxValue(flag) != false) {
+      result.add(app.packageName);
+    }
+  }
+  return result;
+}
+
+bool needsSecondSelectUpdate(int? flag) => flag != null && PkgFlag.forceDeselection.check(flag);
+
+bool needsSecondDeselectUpdate(int? flag) =>
+    flag != null &&
+    PkgFlag.autoSelection.check(flag) &&
+    !PkgFlag.forceDeselection.check(flag) &&
+    !PkgFlag.userSelection.check(flag);
+
+Future<List<String>> runVisibleAppBatch({
+  required List<String> toggles,
+  required Map<String, int> flags,
+  required bool select,
+  required Future<void> Function(String packageName) updatePkg,
+}) async {
+  final failed = <String>[];
+  for (final packageName in toggles) {
+    try {
+      await updatePkg(packageName);
+      if (select && needsSecondSelectUpdate(flags[packageName])) {
+        await updatePkg(packageName);
+      } else if (!select && needsSecondDeselectUpdate(flags[packageName])) {
+        await updatePkg(packageName);
+      }
+    } catch (_) {
+      failed.add(packageName);
+    }
+  }
+  return failed;
+}
