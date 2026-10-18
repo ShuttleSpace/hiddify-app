@@ -179,7 +179,18 @@
         "urlHint": "完整的設定 URL",
         "disableAutoUpdate": "停用自動更新",
         "autoUpdateInterval": "自動更新間隔",
-        "loading": "正在新增設定檔..."
+        "loading": "正在新增設定檔...",
+        "customProxy": "自訂代理",
+        "server": "伺服器",
+        "serverHint": "proxy.example.com",
+        "port": "連接埠",
+        "protocol": "協定",
+        "credentialsOptional": "僅當代理需要時填寫",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {

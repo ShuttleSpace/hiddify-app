@@ -237,7 +237,18 @@
         "autoUpdateInterval": "Auto update interval",
         "loading": "Adding profile...",
         "homePage": "Provider home page",
-        "homePageHint": "https://provider.example"
+        "homePageHint": "https://provider.example",
+        "customProxy": "Custom proxy",
+        "server": "Server",
+        "serverHint": "proxy.example.com",
+        "port": "Port",
+        "protocol": "Protocol",
+        "credentialsOptional": "Only if the proxy asks for them",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {

@@ -118,6 +118,30 @@ class AddProfileNotifier extends _$AddProfileNotifier with AppLogger {
     });
   }
 
+  /// Saves a proxy the user typed in, as a generated local config.
+  ///
+  /// Local rather than remote: the credentials are in the config, not a URL that
+  /// would carry them in the clear and end up in logs and history.
+  Future<void> addCustomProxy(String configJson, String name) async {
+    if (state.isLoading) return;
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      return await _profilesRepo
+          .addLocal(configJson, userOverride: UserOverride(name: name))
+          .match(
+            (err) {
+              loggy.warning("failed to add the custom proxy", err);
+              throw err;
+            },
+            (r) {
+              loggy.info("successfully added the custom proxy");
+              return r;
+            },
+          )
+          .run();
+    });
+  }
+
   Future<void> addManual({required String url, required UserOverride userOverride}) async {
     if (state.isLoading) return;
     state = const AsyncLoading();
@@ -214,9 +238,10 @@ class AddProfilePageNotifier extends _$AddProfilePageNotifier {
 
   void goOptions() => state = AddProfilePages.options;
   void goManual() => state = AddProfilePages.manual;
+  void goCustomProxy() => state = AddProfilePages.customProxy;
 }
 
-enum AddProfilePages { options, manual }
+enum AddProfilePages { options, manual, customProxy }
 
 @riverpod
 class FreeProfilesNotifier extends _$FreeProfilesNotifier {

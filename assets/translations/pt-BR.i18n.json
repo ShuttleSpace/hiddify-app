@@ -180,7 +180,18 @@
         "urlHint": "URL de configuração completa",
         "disableAutoUpdate": "Desativar atualização automática",
         "autoUpdateInterval": "Intervalo de atualização automática",
-        "loading": "Adicionando perfil..."
+        "loading": "Adicionando perfil...",
+        "customProxy": "Custom proxy",
+        "server": "Server",
+        "serverHint": "proxy.example.com",
+        "port": "Port",
+        "protocol": "Protocol",
+        "credentialsOptional": "Only if the proxy asks for them",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {

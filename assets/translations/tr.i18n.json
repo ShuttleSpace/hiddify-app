@@ -179,7 +179,18 @@
         "urlHint": "Tam yapılandırma URL'si",
         "disableAutoUpdate": "Otomatik güncellemeyi devre dışı bırak",
         "autoUpdateInterval": "Otomatik güncelleme aralığı",
-        "loading": "Profil ekleniyor..."
+        "loading": "Profil ekleniyor...",
+        "customProxy": "Custom proxy",
+        "server": "Server",
+        "serverHint": "proxy.example.com",
+        "port": "Port",
+        "protocol": "Protocol",
+        "credentialsOptional": "Only if the proxy asks for them",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {

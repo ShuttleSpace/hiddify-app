@@ -180,7 +180,18 @@
         "urlHint": "URL کامل کانفیگ",
         "disableAutoUpdate": "غیرفعال کردن به‌روزرسانی خودکار",
         "autoUpdateInterval": "فاصله زمانی به‌روزرسانی خودکار",
-        "loading": "در حال افزودن پروفایل..."
+        "loading": "در حال افزودن پروفایل...",
+        "customProxy": "پروکسی سفارشی",
+        "server": "سرور",
+        "serverHint": "proxy.example.com",
+        "port": "درگاه",
+        "protocol": "پروتکل",
+        "credentialsOptional": "فقط در صورتی که پروکسی بخواهد",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {

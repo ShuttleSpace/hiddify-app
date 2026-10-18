@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/model/constants.dart';
+import 'package:hiddify/features/profile/add/widgets/add_profile_custom_proxy.dart';
 import 'package:hiddify/features/profile/add/widgets/free_btns.dart';
 import 'package:hiddify/features/profile/add/widgets/widgets.dart';
 import 'package:hiddify/features/profile/model/profile_entity.dart';
@@ -43,6 +44,7 @@ class AddProfileModal extends HookConsumerWidget {
           : switch (currentWidget) {
               AddProfilePages.options => const AddProfileOptions(),
               AddProfilePages.manual => const AddProfileManual(),
+              AddProfilePages.customProxy => const AddProfileCustomProxy(),
             },
     );
   }
@@ -138,6 +140,18 @@ class AddProfileManual extends HookConsumerWidget {
                   onPressed: () => ref.read(addProfilePageNotifierProvider.notifier).goOptions(),
                 ),
               ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                onPressed: () =>
+                    ref.read(addProfilePageNotifierProvider.notifier).goCustomProxy(),
+                icon: const Icon(Icons.dns_rounded, size: 18),
+                label: Text(t.pages.profileDetails.form.customProxy),
+              ),
             ),
           ),
           Padding(

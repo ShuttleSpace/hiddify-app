@@ -236,7 +236,18 @@
         "autoUpdateInterval": "自动更新间隔",
         "loading": "正在添加配置文件...",
         "homePage": "提供商主页（管理页）",
-        "homePageHint": "https://provider.example"
+        "homePageHint": "https://provider.example",
+        "customProxy": "自定义代理",
+        "server": "服务器",
+        "serverHint": "proxy.example.com",
+        "port": "端口",
+        "protocol": "协议",
+        "credentialsOptional": "仅当代理会要求时填写",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {

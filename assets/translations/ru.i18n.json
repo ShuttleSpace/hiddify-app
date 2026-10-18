@@ -186,7 +186,18 @@
         "urlHint": "Полный URL конфигурации",
         "disableAutoUpdate": "Отключить автообновление",
         "autoUpdateInterval": "Интервал автообновления",
-        "loading": "Добавление профиля..."
+        "loading": "Добавление профиля...",
+        "customProxy": "Свой прокси",
+        "server": "Сервер",
+        "serverHint": "proxy.example.com",
+        "port": "Порт",
+        "protocol": "Протокол",
+        "credentialsOptional": "Только если прокси требует",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {
