@@ -10,9 +10,13 @@ import 'package:hiddify/core/router/bottom_sheets/bottom_sheets_notifier.dart';
 import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
 import 'package:hiddify/features/app_based_routing/data/app_package_metadata_provider.dart';
 import 'package:hiddify/features/app_based_routing/data/selected_data_provider.dart';
+import 'package:hiddify/features/app_based_routing/domain/app_package_filter.dart';
+import 'package:hiddify/features/app_based_routing/domain/per_app_proxy_summary.dart';
 import 'package:hiddify/features/app_based_routing/model/app_package_info.dart';
+import 'package:hiddify/features/app_based_routing/model/per_app_proxy_mode.dart';
 import 'package:hiddify/features/app_based_routing/model/pkg_flag.dart';
 import 'package:hiddify/features/app_based_routing/overview/app_list_notifier.dart';
+import 'package:hiddify/features/app_based_routing/widget/per_app_proxy_summary_view.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -61,7 +65,7 @@ Future<List<AppPackageInfo>> getApps(WidgetRef ref) async {
     final mode = ref.watch(Preferences.perAppProxyModeInUse);
     final selectedApps = ref.watch(AppListProvider(mode));
 
-    final hideSystemApps = useState(false);
+    final appFilter = useState(AppPackageFilter.all);
     final isSearching = useState(false);
     final searchQuery = useState("");
     final sortListener = useState(false);
@@ -76,26 +80,17 @@ Future<List<AppPackageInfo>> getApps(WidgetRef ref) async {
             asyncApps.connectionState == ConnectionState.done)) {
           return const AsyncValue.loading();
         }
-        final appsList = asyncApps.requireData
-            .where((a) => !hideSystemApps.value || !a.isSystemApp)
-            .toList();
-        if (searchQuery.value.isBlank) {
-          appsList.sort((a, b) {
-            final priorityA = _getPriority(a, selectedApps.requireValue);
-            final priorityB = _getPriority(b, selectedApps.requireValue);
-            return priorityA.compareTo(priorityB);
-          });
-          return AsyncValue.data(appsList);
-        }
-        final query = searchQuery.value.toLowerCase();
-        final filteredAppsList = appsList
-            .filter((e) => e.name.toLowerCase().contains(query) || e.packageName.toLowerCase().contains(query))
-            .toList();
-        return AsyncValue.data(filteredAppsList);
+        final appsList = filterAndSearchApps(asyncApps.requireData, appFilter.value, searchQuery.value);
+        appsList.sort((a, b) {
+          final priorityA = _getPriority(a, selectedApps.requireValue);
+          final priorityB = _getPriority(b, selectedApps.requireValue);
+          return priorityA.compareTo(priorityB);
+        });
+        return AsyncValue.data(appsList);
       },
       [
         asyncApps.connectionState == ConnectionState.done,
-        hideSystemApps.value,
+        appFilter.value,
         selectedApps.hasValue,
         searchQuery.value,
         sortListener.value,
@@ -131,6 +126,35 @@ Future<List<AppPackageInfo>> getApps(WidgetRef ref) async {
     }, [displayedApps]);
 
     final appBasedRouting = t.pages.settings.routing.appBasedRouting;
+    final forkPerAppProxy = t.pages.settings.routing.generalOptions.perAppProxy;
+
+    /// Select-all acts on what is on screen, so whatever filter or search is
+    /// narrowing the list decides the scope. Apps auto selection already ticked,
+    /// or explicitly held back, are left as they are.
+    Future<void> _selectVisible(
+      WidgetRef ref,
+      AppProxyMode? mode,
+      AsyncValue<List<AppPackageInfo>> displayed,
+      bool select,
+    ) async {
+      if (mode == null) return;
+      final visible = displayed.valueOrNull ?? const <AppPackageInfo>[];
+      if (visible.isEmpty) return;
+      final flags = ref.read(AppListProvider(mode)).valueOrNull ?? const <String, int>{};
+      final notifier = ref.read(AppListProvider(mode).notifier);
+      final toggles = packagesToToggle(visible, flags, select);
+      final failed = await runVisibleAppBatch(
+        toggles: toggles.toList(),
+        flags: flags,
+        select: select,
+        updatePkg: notifier.updatePkg,
+      );
+      if (failed.isNotEmpty) {
+        ref
+            .read(inAppNotificationControllerProvider)
+            .showErrorToast('Failed to update ${failed.length} apps: ${failed.join(', ')}');
+      }
+    }
     // the auto picks you removed: the chip brings them back, and the toast can take that back
     final removed = [
       for (final entry in (selectedApps.valueOrNull ?? const <String, int>{}).entries)
@@ -166,14 +190,17 @@ Future<List<AppPackageInfo>> getApps(WidgetRef ref) async {
           // centered rather than stretched to the row: a chip squeezed or stretched draws its label off center;
           // 6 dp above and below the label makes the 32 dp chip of M3, where Flutter's 8 dp gives about 37
           children: [
-            Center(
-              child: ChoiceChip(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                label: Text(appBasedRouting.hideSysApps),
-                selected: hideSystemApps.value,
-                onSelected: (value) => hideSystemApps.value = value,
+            for (final filter in AppPackageFilter.values) ...[
+              Center(
+                child: ChoiceChip(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  label: Text(filter.present(t)),
+                  selected: appFilter.value == filter,
+                  onSelected: (_) => appFilter.value = filter,
+                ),
               ),
-            ),
+              const Gap(8),
+            ],
             if (removed.isNotEmpty) ...[
               const Gap(8),
               Center(
@@ -300,6 +327,15 @@ Future<List<AppPackageInfo>> getApps(WidgetRef ref) async {
                     ),
                     const PopupMenuDivider(),
                     MenuItemButton(
+                      child: Text(forkPerAppProxy.selectAll),
+                      onPressed: () => _selectVisible(ref, mode, displayedApps, true),
+                    ),
+                    MenuItemButton(
+                      child: Text(forkPerAppProxy.deselectAll),
+                      onPressed: () => _selectVisible(ref, mode, displayedApps, false),
+                    ),
+                    const PopupMenuDivider(),
+                    MenuItemButton(
                       child: Text(t.pages.settings.routing.appBasedRouting.options.clearAllSelections),
                       onPressed: () => ref.read(AppListProvider(mode).notifier).clearAll(),
                     ),
@@ -325,7 +361,20 @@ Future<List<AppPackageInfo>> getApps(WidgetRef ref) async {
               child: const Icon(Icons.keyboard_arrow_up_rounded),
             )
           : null,
-      body: displayedApps.when(
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: PerAppProxySummaryView(
+                summary: computePerAppProxySummary(selectedApps.valueOrNull ?? const {}),
+                t: t,
+              ),
+            ),
+          ),
+          Expanded(
+            child: displayedApps.when(
         data: (packages) => ListView.builder(
           padding: const EdgeInsets.only(bottom: 88),
           controller: scrollController,
@@ -363,6 +412,9 @@ Future<List<AppPackageInfo>> getApps(WidgetRef ref) async {
         ),
         error: (error, _) => SliverErrorBodyPlaceholder(error.toString()),
         loading: () => const Center(child: CircularProgressIndicator()),
+            ),
+          ),
+        ],
       ),
     );
   }
