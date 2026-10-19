@@ -328,28 +328,51 @@ run [39213089723](https://github.com/ShuttleSpace/hiddify-app/actions/runs/39213
 
 **这就是要的「能从 GitHub 下载」**：`Actions → 该次 run → Artifacts`。
 
-### Releases 那条为什么坏（`update-draft`）
+### Releases 那条为什么坏（`update-draft`）—— 根因**不是**权限
 
-上游这套发布机制**本来就是给上游仓库用的**。第二个 `Create or Update Draft Release`
-步骤里的 token 是注释掉的，写的是
+现象：`update-draft` 报
+`Resource not accessible by integration - .../releases#update-a-release`。
+
+| 被排除的假设 | 反证 | |
+|---|---|---|
+| token 权限不够 | 该 job 的 `GITHUB_TOKEN Permissions` 块里明确列着 **`Contents: write`** | ✗ |
+| release 是别的集成建的 | `author` = `github-actions[bot]` | ✗ |
+| tag / release 找不到 | 日志有 `Found release draft (with id=417007524)`；`refs/tags/draft` = `276a7eff` | ✗ |
+| 仓库默认权限是 `read` | 改成 `write` 重跑**报错完全一样** | ✗ |
+
+**真因**：`softprops/action-gh-release` 在 release **已存在**时会走去**更新**它的路径
+（`releases#update-a-release`），而它日志里报的 tag 是 `refs/heads/dev` 而不是 `draft` ——
+上游这段代码的状态已经和这个 6 月就存在的 `draft` release 对不上了。
+第一轮能过、之后**确定性失败**（单独重跑那个 job 也失败），正对应「release 被改过一次之后」。
+
+⚠️ **上游还有个危险顺序**：`Delete Current Release Assets` 排在 `Create or Update Draft Release`
+**之前**。于是它先删掉上一轮的好资产、**再**创建失败 —— 第二轮就是这样把第一轮建好的
+`draft` prerelease **掏空**的。
+
+另外这套发布机制**本来就是给上游仓库用的**：第二个 `Create or Update Draft Release`
+步骤里 token 是注释掉的，写的是
 
 ```
 # GITHUB_TOKEN: ${{ secrets.TOKEN_FOR_HIDDIFY_APP_REPO }}
 #          GITHUB_REPOSITORY: hiddify/hiddify-app
 ```
 
-——靠**上游专属凭据**往 `hiddify/hiddify-app` 的 Release 推。**fork 拿不到这个凭据**，
-和签名密钥是同一类问题（见下一节）。
+——靠**上游专属凭据**往 `hiddify/hiddify-app` 的 Release 推，和签名密钥是同一类问题。
 
-叠加：`ShuttleSpace/hiddify-app` 是 **fork + public**，仓库的 Actions 默认权限是 **read**，
-于是 `update-draft` 报 `Resource not accessible by integration`。
+**处置**（`8d606031`）：把两个 `action-gh-release` 步骤连同那个删除步骤一起换成一段
+`gh` CLI，**只走 create / 上传 asset 两个端点，绕开出问题的 update-a-release**：
 
-⚠️ **危险的是步骤顺序**：`Delete Current Release Assets` 排在 `Create or Update Draft Release`
-**之前**。所以它先删掉上一轮的好资产、再创建失败 —— 第一轮建好的 `draft` prerelease 就这样被**掏空**。
-（第一轮成功、第二轮失败的原因没查清；从第二**轮**起是确定性失败，单独重跑那个 job 也失败。）
+```bash
+notes=(--generate-notes); [ -s release.md ] && notes=(--notes-file release.md)
+if gh release view draft >/dev/null 2>&1; then
+  gh release upload draft out/* --clobber && exit 0     # 先就地覆盖，不删任何东西
+fi
+gh release delete draft --yes --cleanup-tag || true     # 兜底才重建
+gh release create draft --prerelease --title draft "${notes[@]}" out/*
+```
 
-处置：把仓库设置 `default_workflow_permissions` 从 `read` 改为 `write`（**可随时改回**），
-再整轮重跑验证。
+关键点：**不再「先删后建」**，失败时上一轮的资产还在。
+仓库的 `default_workflow_permissions` 已改回 `read`。
 
 ### 签名：**不能**用上游的签名文件
 
@@ -453,9 +476,9 @@ GitHub → Releases → draft                   ← 依赖 update-draft，见上
 6. **Issue 6**「连接显示已连接但提示超时」——根因未确认，仍缺复现信息。
 7. `lib/bootstrap.dart` 的 core 初始化没有超时（只有 `preferences` 那步会 rethrow）；
    想要更硬的启动保障可以加个 timeout。
-8. **仓库设置被改过**：`ShuttleSpace/hiddify-app` 的 `default_workflow_permissions`
-   从 `read` 改成了 `write`（为了让 `update-draft` 能写 Release）。要收紧就改回 `read`，
-   但那样 `update-draft` 会重新报 403。
+8. **`upload-release` job 没动**：给正式 tag 发布时它仍然用 `softprops/action-gh-release@v2`，
+   也就是 `update-draft` 出问题的同一条 update 路径。等哪天真要打 tag 发正式版，这里很可能报同一个
+   403，届时照 `8d606031` 的办法换成 `gh` CLI。
 
 ---
 
