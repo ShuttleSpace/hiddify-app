@@ -238,10 +238,9 @@ class AddProfilePageNotifier extends _$AddProfilePageNotifier {
 
   void goOptions() => state = AddProfilePages.options;
   void goManual() => state = AddProfilePages.manual;
-  void goCustomProxy() => state = AddProfilePages.customProxy;
 }
 
-enum AddProfilePages { options, manual, customProxy }
+enum AddProfilePages { options, manual }
 
 @riverpod
 class FreeProfilesNotifier extends _$FreeProfilesNotifier {
