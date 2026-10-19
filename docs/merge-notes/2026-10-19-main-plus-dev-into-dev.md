@@ -284,6 +284,28 @@ version solving failed.
 | 四个签名步骤加 `env.HAS_*` 守卫 | 缺密钥时**跳过**而不是让 job 在 setup 阶段就死 |
 | `retention-days: 1` → `30` | 让产物放得久一点，能下载 |
 
+### 修完之后第一次跑通的结果
+
+run [39213089723](https://github.com/ShuttleSpace/hiddify-app/actions/runs/39213089723)（`b7ba44d6`）：
+
+| job | 结果 | 说明 |
+|---|---|---|
+| `test` | ✅ 4m15s | **fork 史上第一次通过**（之前都是 38s 挂在版本求解） |
+| `build (android-apk)` | ✅ 15m22s | artifact `android-apk` **298MB** |
+| `build (macos)` | ✅ | artifact `macos` **204MB** |
+| `build (linux)` | ❌ | `hotkey_manager` 需要 `keybinder-3.0`，runner 没装 |
+| `build (windows)` | ❌ | 卡在 `windows-msix-release`（缺 `windows/sign.pfx`） |
+| `update-draft` | ✅ | 已把产物写进 `draft` prerelease |
+
+两条失败的**都跟签名密钥无关**，且 `build` job 带 `continue-on-error: true`，
+所以整次 run 判为**成功**，Android/macOS 产物可下载。随后 `f5f59e59` 补掉这两条：
+
+- **linux**：`linux_deps.list` 加 `libkeybinder-3.0-dev`（照着已有的 `tray_manager` 条目放）。
+  `hotkey_manager` 是 fork 新加的全局快捷键功能引入的，上游没有。
+- **windows**：`make windows-release` 原本固定跑 zip/exe/msix，msix 需要 `windows/sign.pfx`。
+  现在 `WINDOWS_SIGNING=false`（CI 里由 `HAS_WINDOWS_SIGNING` 传入）会**丢掉 msix 目标**，
+  只出便携 zip 和安装器；**不设置时行为不变**，所以本地 `make windows-release` 照旧。
+
 ### 签名：**不能**用上游的签名文件
 
 结论：**用不了，也不该用。**
@@ -377,7 +399,9 @@ GitHub → Releases → draft                        （prerelease 附件，自�
    按 skill 的模型 `main` 应该只快进上游镜像，建议下次开工前先把它 fast-forward 到上游。
    这也解释了为什么「合并基线」看着对不上：真正被并入的上游是 `f26aadb3`，不是 `276a7eff`。
 2. **fork 没有任何 CI secrets**（见 §10），macOS/Windows 目前是「跳过签名」状态。
-3. **Windows msix 腿仍会失败**（缺 `windows/sign.pfx`）。要绿的话需要自签证书（`make_config.yaml` 里有注释示例：`publisher: CN=Hiddify-Test`）。
+3. **Windows 现在只出 zip/exe，没有 msix**（无签名证书，`f5f59e59` 里主动跳过）。
+   想要 msix 就得自签证书（`make_config.yaml` 里有注释示例：`publisher: CN=Hiddify-Test`），
+   但自签的包只有装了那张证书的机器能装。
 4. **`hiddify-core` 的 `dev` / `main-plus-dev` 两条分叉线**没合，见 §9。
 5. **`pubspec.yaml` 的 `environment` 是骗人的**：写着 `sdk: ^3.10.4` / `flutter: ^3.38.5`，
    但 `pubspec.lock` 实际要求 `>=3.12.0` / `>=3.44.0`。本次没改（只改了 CI 的 `FLUTTER_VERSION`），
