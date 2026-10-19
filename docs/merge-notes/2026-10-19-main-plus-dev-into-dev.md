@@ -374,6 +374,10 @@ gh release create draft --prerelease --title draft "${notes[@]}" out/*
 关键点：**不再「先删后建」**，失败时上一轮的资产还在。
 仓库的 `default_workflow_permissions` 已改回 `read`。
 
+**验证**（run `39220457941`，`8d606031`）：`test` + 四条 build 腿 + `update-draft` **全绿**，
+`draft` release 拿到 **11 个资产**；匿名 `curl -I` 资产地址直接 **HTTP 200** ——
+也就是**不需要登录 GitHub 就能下载**。
+
 ### 签名：**不能**用上游的签名文件
 
 结论：**用不了，也不该用。**
@@ -416,12 +420,18 @@ zip/exe 会先产出但不会进 `out/`）。Windows 只是噪声，Android / Li
 
 ### 产物从哪下载
 
-**首选 Actions artifact**：`build` job 用 `actions/upload-artifact@v6` 传 `retention-days: 30` 的产物。
+两条路都通：
 
 ```
-GitHub → Actions → 该次 run → Artifacts     ← 可靠，四个平台都在
-GitHub → Releases → draft                   ← 依赖 update-draft，见上节，目前不稳
+GitHub → Releases → draft                      ← 一个链接，且无需登录
+  https://github.com/ShuttleSpace/hiddify-app/releases/tag/draft
+
+GitHub → Actions → 该次 run → Artifacts        ← 保留 30 天（retention-days: 30）
 ```
+
+`Releases` 那份是 `update-draft` 把四个 artifact 解包合并后重新发布的，共 **11 个文件**：
+Android 四个 ABI 的 apk、Debian deb、Linux AppImage（`.AppImage` + `.tar.gz`）、
+macOS dmg + pkg、Windows 便携 zip + 安装器 exe。
 
 `build` job 带 `continue-on-error: true` + `fail-fast: false`，所以单条 matrix 腿失败不会把整次 run 判红；
 会判红的是 `test` job 和 `update-draft`。
