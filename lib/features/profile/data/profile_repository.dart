@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
@@ -5,6 +7,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hiddify/core/db/db.dart';
 
 import 'package:hiddify/core/utils/exception_handler.dart';
+import 'package:hiddify/features/profile/data/config_tag_normalizer.dart';
 import 'package:hiddify/features/profile/data/profile_data_mapper.dart';
 import 'package:hiddify/features/profile/data/profile_data_source.dart';
 import 'package:hiddify/features/profile/data/profile_parser.dart';
@@ -282,9 +285,26 @@ class ProfileRepositoryImpl with ExceptionHandler, InfraLogger implements Profil
                 .changeOptions(overridedOptions)
                 .mapLeft(ProfileFailure.invalidConfig)
                 .flatMap(
-                  (_) => _singbox.validateConfigByPath(path, tempPath, debug).mapLeft(ProfileFailure.invalidConfig),
+                  (_) => TaskEither.tryCatch(
+                    () => normalizeConfigTags(File(tempPath)),
+                    ProfileFailure.unexpected,
+                  ).flatMap(
+                    (_) => _singbox.validateConfigByPath(path, tempPath, debug).mapLeft(ProfileFailure.invalidConfig),
+                  ),
                 ),
           );
+
+  /// Gives every outbound and endpoint in the config a tag of its own.
+  ///
+  /// sing-box refuses a config that has two of them with the same tag, and the
+  /// core rejects the whole config when it sees one, so a config with a
+  /// repeated tag never becomes a profile. The file the core writes is the one
+  /// it parsed, so fixing the tags here is what ends up in the profile.
+  Future<void> normalizeConfigTags(File tempFile) async {
+    final content = await tempFile.readAsString();
+    final normalized = ConfigTagNormalizer.normalize(content);
+    if (normalized != content) await tempFile.writeAsString(normalized);
+  }
 
   @override
   TaskEither<ProfileFailure, String> generateConfig(String id) => TaskEither.fromEither(

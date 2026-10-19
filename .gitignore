@@ -42,6 +42,9 @@ migrate_working_dir/
 **/*.mapper.dart
 **/*.gen.dart
 
+# the knowledge graph is rebuilt from the sources, it is not part of them
+graphify-out/
+
 # slang analysis reports (dart run slang analyze)
 _missing_translations*.json
 _unused_translations*.json

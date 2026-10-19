@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -16,8 +17,12 @@ import 'package:hiddify/hiddifycore/hiddify_core_service.dart';
 
 /// Writes the temp file inside the task, like the real download does.
 class _FakeParser implements ProfileParser {
+  _FakeParser([this.content = '{}']);
+
+  final String content;
+
   TaskEither<ProfileFailure, ProfileEntriesCompanion> _download(String tempFilePath) => TaskEither(() async {
-    await File(tempFilePath).writeAsString('{}');
+    await File(tempFilePath).writeAsString(content);
     return right(const ProfileEntriesCompanion());
   });
 
@@ -80,22 +85,25 @@ class _UnusedOptions implements ConfigOptionRepository {
 
 /// Stands in for the core check: it records whether the temp file still exists when the config is validated.
 class _Repo extends ProfileRepositoryImpl {
-  _Repo(ProfileDataSource dataSource, ProfilePathResolver paths, {this.valid = true})
+  _Repo(ProfileDataSource dataSource, ProfilePathResolver paths, {this.valid = true, String parserContent = '{}'})
     : super(
         profileDataSource: dataSource,
         profilePathResolver: paths,
         singbox: _UnusedCore(),
         configOptionRepository: _UnusedOptions(),
-        profileParser: _FakeParser(),
+        profileParser: _FakeParser(parserContent),
       );
 
   final bool valid;
   bool? tempFileSeen;
+  String? tempFileContent;
 
   @override
   TaskEither<ProfileFailure, Unit> validateConfig(String path, String tempPath, String? profileOverride, bool debug) =>
       TaskEither(() async {
+        await normalizeConfigTags(File(tempPath));
         tempFileSeen = File(tempPath).existsSync();
+        tempFileContent = File(tempPath).readAsStringSync();
         return valid ? right(unit) : left(const ProfileFailure.invalidConfig());
       });
 }
@@ -157,6 +165,36 @@ void main() {
       expect(result.isRight(), true);
       expect(repo.tempFileSeen, true);
       expect(leftTempFiles(), isEmpty);
+    });
+  });
+
+  group("the config the core sees has tags of its own", () {
+    /// sing-box refuses a config with two outbounds of the same name, so the
+    /// second one has to be renamed before the config is handed over.
+    const twoProxies = '''
+{
+  "outbounds": [
+    {"type": "http", "tag": "proxy", "server": "a.example.com"},
+    {"type": "http", "tag": "proxy", "server": "b.example.com"}
+  ]
+}''';
+
+    test("an imported config with two nodes of the same name is fixed", () async {
+      final repo = _Repo(_FakeDataSource(), paths, parserContent: twoProxies);
+      final result = await repo.upsertRemote('https://example.com/sub').run();
+
+      expect(result.isRight(), true);
+      final decoded = jsonDecode(repo.tempFileContent!) as Map<String, dynamic>;
+      final tags = (decoded['outbounds'] as List).map((o) => (o as Map)['tag']);
+      expect(tags, ['proxy', 'proxy 2']);
+    });
+
+    test("a config with tags of its own is left alone", () async {
+      final repo = _Repo(_FakeDataSource(), paths, parserContent: '{"outbounds": [{"tag": "proxy"}]}');
+      final result = await repo.upsertRemote('https://example.com/sub').run();
+
+      expect(result.isRight(), true);
+      expect(repo.tempFileContent, '{"outbounds": [{"tag": "proxy"}]}');
     });
   });
 }

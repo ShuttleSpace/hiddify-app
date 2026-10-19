@@ -77,9 +77,18 @@ class HiddifyCoreService with InfraLogger {
         final response = await core.fgClient.parse(ParseRequest(tempPath: tempPath, configPath: path, debug: false));
         if (response.responseCode != ResponseCode.OK) return left("${response.responseCode} ${response.message}");
       } catch (e) {
+        // The core may not be set up yet: set it up and try once more.
         await setup().run();
-        final response = await core.fgClient.parse(ParseRequest(tempPath: tempPath, configPath: path, debug: false));
-        if (response.responseCode != ResponseCode.OK) return left("${response.responseCode} ${response.message}");
+        try {
+          final response = await core.fgClient.parse(ParseRequest(tempPath: tempPath, configPath: path, debug: false));
+          if (response.responseCode != ResponseCode.OK) return left("${response.responseCode} ${response.message}");
+        } catch (e) {
+          // The second attempt failed too. Reporting it as a failure keeps the
+          // error in the flow that asked for the config, instead of letting it
+          // escape as an unhandled platform error with nothing on screen.
+          loggy.error('failed to validate config', e);
+          return left(e.toString());
+        }
       }
       return right(unit);
     });
