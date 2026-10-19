@@ -306,6 +306,51 @@ run [39213089723](https://github.com/ShuttleSpace/hiddify-app/actions/runs/39213
   现在 `WINDOWS_SIGNING=false`（CI 里由 `HAS_WINDOWS_SIGNING` 传入）会**丢掉 msix 目标**，
   只出便携 zip 和安装器；**不设置时行为不变**，所以本地 `make windows-release` 照旧。
 
+### 第二次跑通（`f5f59e59`）—— 四条腿全绿，四个产物齐了
+
+| job | 结果 |
+|---|---|
+| `test` | ✅ 2m48s |
+| `build (android-apk)` | ✅ 5m54s |
+| `build (linux)` | ✅ 9m02s ← `libkeybinder-3.0-dev` 生效 |
+| `build (windows)` | ✅ 10m21s ← msix 已跳过 |
+| `build (macos)` | ✅ 9m51s |
+| `update-draft` | ❌ `Resource not accessible by integration` |
+
+四个 artifact（`expired=false`，保留 30 天）：
+
+| artifact | 大小 |
+|---|---|
+| `android-apk` | 298MB |
+| `macos` | 204MB |
+| `linux` | 176MB |
+| `windows` | 98MB |
+
+**这就是要的「能从 GitHub 下载」**：`Actions → 该次 run → Artifacts`。
+
+### Releases 那条为什么坏（`update-draft`）
+
+上游这套发布机制**本来就是给上游仓库用的**。第二个 `Create or Update Draft Release`
+步骤里的 token 是注释掉的，写的是
+
+```
+# GITHUB_TOKEN: ${{ secrets.TOKEN_FOR_HIDDIFY_APP_REPO }}
+#          GITHUB_REPOSITORY: hiddify/hiddify-app
+```
+
+——靠**上游专属凭据**往 `hiddify/hiddify-app` 的 Release 推。**fork 拿不到这个凭据**，
+和签名密钥是同一类问题（见下一节）。
+
+叠加：`ShuttleSpace/hiddify-app` 是 **fork + public**，仓库的 Actions 默认权限是 **read**，
+于是 `update-draft` 报 `Resource not accessible by integration`。
+
+⚠️ **危险的是步骤顺序**：`Delete Current Release Assets` 排在 `Create or Update Draft Release`
+**之前**。所以它先删掉上一轮的好资产、再创建失败 —— 第一轮建好的 `draft` prerelease 就这样被**掏空**。
+（第一轮成功、第二轮失败的原因没查清；从第二**轮**起是确定性失败，单独重跑那个 job 也失败。）
+
+处置：把仓库设置 `default_workflow_permissions` 从 `read` 改为 `write`（**可随时改回**），
+再整轮重跑验证。
+
 ### 签名：**不能**用上游的签名文件
 
 结论：**用不了，也不该用。**
@@ -348,16 +393,15 @@ zip/exe 会先产出但不会进 `out/`）。Windows 只是噪声，Android / Li
 
 ### 产物从哪下载
 
-`build` job 用 `actions/upload-artifact@v6` 传 `retention-days: 30` 的 artifact；
-`update-draft` job 再把所有 artifact 合并、写进名为 **`draft` 的 prerelease**：
+**首选 Actions artifact**：`build` job 用 `actions/upload-artifact@v6` 传 `retention-days: 30` 的产物。
 
 ```
-GitHub → Actions → 该次 run → Artifacts          （artifact 下载）
-GitHub → Releases → draft                        （prerelease 附件，自动被下一次构建覆盖）
+GitHub → Actions → 该次 run → Artifacts     ← 可靠，四个平台都在
+GitHub → Releases → draft                   ← 依赖 update-draft，见上节，目前不稳
 ```
 
 `build` job 带 `continue-on-error: true` + `fail-fast: false`，所以单条 matrix 腿失败不会把整次 run 判红；
-真正会判红的是 `test` job 和 `update-draft`。
+会判红的是 `test` job 和 `update-draft`。
 
 ---
 
@@ -409,6 +453,9 @@ GitHub → Releases → draft                        （prerelease 附件，自�
 6. **Issue 6**「连接显示已连接但提示超时」——根因未确认，仍缺复现信息。
 7. `lib/bootstrap.dart` 的 core 初始化没有超时（只有 `preferences` 那步会 rethrow）；
    想要更硬的启动保障可以加个 timeout。
+8. **仓库设置被改过**：`ShuttleSpace/hiddify-app` 的 `default_workflow_permissions`
+   从 `read` 改成了 `write`（为了让 `update-draft` 能写 Release）。要收紧就改回 `read`，
+   但那样 `update-draft` 会重新报 403。
 
 ---
 
