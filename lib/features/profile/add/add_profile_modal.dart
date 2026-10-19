@@ -116,8 +116,10 @@ class AddProfileManual extends HookConsumerWidget {
     final isAutoUpdateDisable = useState<bool>(false);
     final updateInterval = useState(.0);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    // A fixed height keeps the Expanded below bounded, so the form opens at
+    // about the height the URL form always had instead of stretching to
+    // fullscreen. A taller tab scrolls inside its own view.
+    final form = Column(
       children: [
         Padding(
           padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 12),
@@ -164,6 +166,13 @@ class AddProfileManual extends HookConsumerWidget {
           ),
         ),
       ],
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final available = constraints.maxHeight.isFinite ? constraints.maxHeight : MediaQuery.sizeOf(context).height;
+        return SizedBox(height: available * 0.6, child: form);
+      },
     );
   }
 }

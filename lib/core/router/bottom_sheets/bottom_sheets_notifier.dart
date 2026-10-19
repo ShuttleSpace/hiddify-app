@@ -20,7 +20,15 @@ class BottomSheetsNotifier extends _$BottomSheetsNotifier {
   @override
   void build() {}
 
-  Future<T?> _show<T>({required Widget child, required bool isScrollControlled}) async {
+  Future<T?> _show<T>({
+    required Widget child,
+    required bool isScrollControlled,
+    // Off by default: most sheets size to their content and sit low enough that
+    // the status bar is not in play. A sheet that can grow to near fullscreen
+    // needs this on, otherwise the top inset is removed and its header ends up
+    // under the status bar.
+    bool useSafeArea = false,
+  }) async {
     final context = rootNavKey.currentContext;
     if (context == null) return null;
     // ref.read(popupCountNotifierProvider.notifier).increase();
@@ -28,6 +36,7 @@ class BottomSheetsNotifier extends _$BottomSheetsNotifier {
     return await showModalBottomSheet<T>(
       context: context,
       useRootNavigator: true,
+      useSafeArea: useSafeArea,
       constraints: BottomSheetConst.boxConstraints,
       isScrollControlled: isScrollControlled,
       builder: (context) => ClipRRect(
@@ -65,10 +74,10 @@ class BottomSheetsNotifier extends _$BottomSheetsNotifier {
             message: t.dialogs.confirmation.addProfileByDeepLinkWarning.message(host: _deepLinkHost(url)),
           );
       if (isConfirmed) {
-        await _show(isScrollControlled: true, child: AddProfileModal(url: url));
+        await _show(isScrollControlled: true, useSafeArea: true, child: AddProfileModal(url: url));
       }
     } else {
-      await _show(isScrollControlled: true, child: AddProfileModal(url: url));
+      await _show(isScrollControlled: true, useSafeArea: true, child: AddProfileModal(url: url));
     }
   }
 
