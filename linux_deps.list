@@ -22,6 +22,9 @@ locate
 # tray_manager https://pub.dev/packages/tray_manager
 libayatana-appindicator3-dev
 
+# hotkey_manager https://github.com/leanflutter/hotkey_manager#linux-requirements
+libkeybinder-3.0-dev
+
 # for running .appimage
 fuse
 

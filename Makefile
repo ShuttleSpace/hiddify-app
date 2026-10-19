@@ -284,7 +284,16 @@ android-aab-release:
 	  --build-dart-define=sentry_dsn=$(SENTRY_DSN) \
 	  --build-dart-define=release=google-play
 
-windows-release: windows-zip-release windows-exe-release windows-msix-release
+# msix needs windows/sign.pfx. When WINDOWS_SIGNING=false (the fork's CI has no
+# Windows signing secret) skip it, so the portable zip and the installer still
+# get built instead of the whole target dying at this step. Unset = unchanged.
+ifeq ($(WINDOWS_SIGNING),false)
+WINDOWS_MSIX_TARGET :=
+else
+WINDOWS_MSIX_TARGET := windows-msix-release
+endif
+
+windows-release: windows-zip-release windows-exe-release $(WINDOWS_MSIX_TARGET)
 
 windows-zip-release:
 	fastforge package \

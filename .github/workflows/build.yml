@@ -266,6 +266,7 @@ jobs:
       - name: Build ${{ matrix.platform }}
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          WINDOWS_SIGNING: ${{ env.HAS_WINDOWS_SIGNING }}
         run: |
           make ${{ matrix.platform }}-release
 
