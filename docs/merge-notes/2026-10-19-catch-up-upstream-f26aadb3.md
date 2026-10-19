@@ -169,8 +169,27 @@ flutter analyze  →  0 error（69 issues，全是 info/warning）
 flutter test     →  All tests passed!  (269)
 ```
 
-CI run `39268331724`（`dev`，`a49120ac`）四个平台的 build 腿 + `update-draft` 全绿，
+CI run `39268331724`（`dev`，`a49120ac`）：`test` + 四个平台的 build 腿 + `update-draft` 全绿，
 `draft` release 拿回 11 个包。
+
+本地 `just macos` 出 release 包并启动一次：
+
+```
+---- run started 2026-10-19T22:47:03  ·  Hiddify v5.0.0 (50000) [dev]
+```
+
+- 版本号生效（`5.0.0 (50000)`）
+- 首页完整渲染，隧道**已连接**（87 ms）—— 合并后的 core service 正常
+- 日志里**没有** `app.uncaught`。旧构建有 `PlatformDispatcherError: Null check operator used on a null value`
+  （drift schema 撞车），这次没有了
+- 日志里剩下的 ERROR 都**是既有问题**：旧日志里同样的 `startListeningStatus` 有 121 处、
+  `system tray` 有 5 处，这次分别是 7 处和 1 处
+
+> `app.log` 只记 error 是上游的设计（`5acc1f35 feat(logging): keep only errors in the app log file`，
+> 早于本轮）。旧日志里那些 INFO 行是更早的构建用旧 logger 写的。
+
+**仍需用户复验**：通知系统换了实现（toastification → SnackBar），外观和交互有变化，
+这是本轮唯一用户可见的行为改变。
 
 ---
 
