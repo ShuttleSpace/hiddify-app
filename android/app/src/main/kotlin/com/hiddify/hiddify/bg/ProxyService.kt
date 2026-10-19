@@ -7,11 +7,7 @@ import com.hiddify.core.libbox.Notification
 class ProxyService :
     Service(),
     PlatformInterfaceWrapper {
-    private val service = BoxService(this, PlatformInterfaceBridge)
-
-    init {
-        PlatformInterfaceBridge.delegate = this
-    }
+    private val service = BoxService(this, this)
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) = service.onStartCommand()
 
@@ -20,4 +16,6 @@ class ProxyService :
     override fun onDestroy() = service.onDestroy()
 
     override fun sendNotification(notification: Notification) = service.sendNotification(notification)
+
+    override fun cancelNotification(identifier: String, typeID: Int) = service.cancelNotification(identifier, typeID)
 }

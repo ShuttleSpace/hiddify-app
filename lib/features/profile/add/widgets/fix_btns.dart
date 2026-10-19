@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -7,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/model/constants.dart';
-import 'package:hiddify/core/notification/in_app_notification_controller.dart';
 import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
 import 'package:hiddify/features/profile/add/widgets/widgets.dart';
 import 'package:hiddify/features/profile/notifier/profile_notifier.dart';
@@ -44,22 +42,25 @@ class FixBtns extends ConsumerWidget {
           icon: Icons.insert_drive_file,
           onTap: () async {
             final result = await FilePicker.platform.pickFiles(
-              // Android SAF filters by MIME type. YAML and URL extensions do
-              // not have reliable MIME mappings on every document provider,
-              // so filter them in the app after selection instead.
-              type: PlatformUtils.isAndroid ? FileType.any : FileType.custom,
-              allowedExtensions: PlatformUtils.isAndroid ? null : supportedProfileFileExtensions,
-              withData: PlatformUtils.isAndroid,
+              type: FileType.custom,
+              allowedExtensions: ['txt', 'json', 'yaml', 'yml', 'conf', 'ovpn', 'zip'],
             );
             if (result == null) return;
-            final selectedFile = result.files.single;
-            if (!isSupportedProfileFileName(selectedFile.name)) {
-              ref.read(inAppNotificationControllerProvider).showErrorToast(t.pages.profiles.msg.add.failure);
-              return;
+            final picked = result.files.single;
+            var bytes = picked.bytes;
+            if (bytes == null) {
+              final path = picked.path;
+              if (path == null) return;
+              final file = File(path);
+              if (!await file.exists()) return;
+              bytes = await file.readAsBytes();
             }
-            final bytes = selectedFile.bytes ?? await File(selectedFile.path!).readAsBytes();
-            final content = utf8.decode(bytes);
-            ref.read(addProfileNotifierProvider.notifier).addClipboard(content, sourceFileName: selectedFile.name);
+            final notifier = ref.read(addProfileNotifierProvider.notifier);
+            if (picked.extension?.toLowerCase() == 'zip') {
+              notifier.addArchive(bytes, name: picked.name.replaceFirst(RegExp(r'\.zip$', caseSensitive: false), ''));
+            } else {
+              notifier.addClipboard(decodeTextBytes(bytes));
+            }
           },
         ),
         if (!isDesktop) ...[

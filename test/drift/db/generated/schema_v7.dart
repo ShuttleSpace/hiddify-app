@@ -118,6 +118,17 @@ class ProfileEntries extends Table
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  late final GeneratedColumn<bool> pinned = GeneratedColumn<bool>(
+    'pinned',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("pinned" IN (0, 1))',
+    ),
+    defaultValue: const CustomExpression('0'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -135,6 +146,7 @@ class ProfileEntries extends Table
     supportUrl,
     populatedHeaders,
     userOverride,
+    pinned,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -207,6 +219,10 @@ class ProfileEntries extends Table
         DriftSqlType.string,
         data['${effectivePrefix}user_override'],
       ),
+      pinned: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}pinned'],
+      )!,
     );
   }
 
@@ -233,6 +249,7 @@ class ProfileEntriesData extends DataClass
   final String? supportUrl;
   final String? populatedHeaders;
   final String? userOverride;
+  final bool pinned;
   const ProfileEntriesData({
     required this.id,
     required this.type,
@@ -249,6 +266,7 @@ class ProfileEntriesData extends DataClass
     this.supportUrl,
     this.populatedHeaders,
     this.userOverride,
+    required this.pinned,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -288,6 +306,7 @@ class ProfileEntriesData extends DataClass
     if (!nullToAbsent || userOverride != null) {
       map['user_override'] = Variable<String>(userOverride);
     }
+    map['pinned'] = Variable<bool>(pinned);
     return map;
   }
 
@@ -326,6 +345,7 @@ class ProfileEntriesData extends DataClass
       userOverride: userOverride == null && nullToAbsent
           ? const Value.absent()
           : Value(userOverride),
+      pinned: Value(pinned),
     );
   }
 
@@ -350,6 +370,7 @@ class ProfileEntriesData extends DataClass
       supportUrl: serializer.fromJson<String?>(json['supportUrl']),
       populatedHeaders: serializer.fromJson<String?>(json['populatedHeaders']),
       userOverride: serializer.fromJson<String?>(json['userOverride']),
+      pinned: serializer.fromJson<bool>(json['pinned']),
     );
   }
   @override
@@ -371,6 +392,7 @@ class ProfileEntriesData extends DataClass
       'supportUrl': serializer.toJson<String?>(supportUrl),
       'populatedHeaders': serializer.toJson<String?>(populatedHeaders),
       'userOverride': serializer.toJson<String?>(userOverride),
+      'pinned': serializer.toJson<bool>(pinned),
     };
   }
 
@@ -390,6 +412,7 @@ class ProfileEntriesData extends DataClass
     Value<String?> supportUrl = const Value.absent(),
     Value<String?> populatedHeaders = const Value.absent(),
     Value<String?> userOverride = const Value.absent(),
+    bool? pinned,
   }) => ProfileEntriesData(
     id: id ?? this.id,
     type: type ?? this.type,
@@ -410,6 +433,7 @@ class ProfileEntriesData extends DataClass
         ? populatedHeaders.value
         : this.populatedHeaders,
     userOverride: userOverride.present ? userOverride.value : this.userOverride,
+    pinned: pinned ?? this.pinned,
   );
   ProfileEntriesData copyWithCompanion(ProfileEntriesCompanion data) {
     return ProfileEntriesData(
@@ -440,6 +464,7 @@ class ProfileEntriesData extends DataClass
       userOverride: data.userOverride.present
           ? data.userOverride.value
           : this.userOverride,
+      pinned: data.pinned.present ? data.pinned.value : this.pinned,
     );
   }
 
@@ -460,7 +485,8 @@ class ProfileEntriesData extends DataClass
           ..write('webPageUrl: $webPageUrl, ')
           ..write('supportUrl: $supportUrl, ')
           ..write('populatedHeaders: $populatedHeaders, ')
-          ..write('userOverride: $userOverride')
+          ..write('userOverride: $userOverride, ')
+          ..write('pinned: $pinned')
           ..write(')'))
         .toString();
   }
@@ -482,6 +508,7 @@ class ProfileEntriesData extends DataClass
     supportUrl,
     populatedHeaders,
     userOverride,
+    pinned,
   );
   @override
   bool operator ==(Object other) =>
@@ -501,7 +528,8 @@ class ProfileEntriesData extends DataClass
           other.webPageUrl == this.webPageUrl &&
           other.supportUrl == this.supportUrl &&
           other.populatedHeaders == this.populatedHeaders &&
-          other.userOverride == this.userOverride);
+          other.userOverride == this.userOverride &&
+          other.pinned == this.pinned);
 }
 
 class ProfileEntriesCompanion extends UpdateCompanion<ProfileEntriesData> {
@@ -520,6 +548,7 @@ class ProfileEntriesCompanion extends UpdateCompanion<ProfileEntriesData> {
   final Value<String?> supportUrl;
   final Value<String?> populatedHeaders;
   final Value<String?> userOverride;
+  final Value<bool> pinned;
   final Value<int> rowid;
   const ProfileEntriesCompanion({
     this.id = const Value.absent(),
@@ -537,6 +566,7 @@ class ProfileEntriesCompanion extends UpdateCompanion<ProfileEntriesData> {
     this.supportUrl = const Value.absent(),
     this.populatedHeaders = const Value.absent(),
     this.userOverride = const Value.absent(),
+    this.pinned = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ProfileEntriesCompanion.insert({
@@ -555,6 +585,7 @@ class ProfileEntriesCompanion extends UpdateCompanion<ProfileEntriesData> {
     this.supportUrl = const Value.absent(),
     this.populatedHeaders = const Value.absent(),
     this.userOverride = const Value.absent(),
+    this.pinned = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        type = Value(type),
@@ -577,6 +608,7 @@ class ProfileEntriesCompanion extends UpdateCompanion<ProfileEntriesData> {
     Expression<String>? supportUrl,
     Expression<String>? populatedHeaders,
     Expression<String>? userOverride,
+    Expression<bool>? pinned,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -595,6 +627,7 @@ class ProfileEntriesCompanion extends UpdateCompanion<ProfileEntriesData> {
       if (supportUrl != null) 'support_url': supportUrl,
       if (populatedHeaders != null) 'populated_headers': populatedHeaders,
       if (userOverride != null) 'user_override': userOverride,
+      if (pinned != null) 'pinned': pinned,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -615,6 +648,7 @@ class ProfileEntriesCompanion extends UpdateCompanion<ProfileEntriesData> {
     Value<String?>? supportUrl,
     Value<String?>? populatedHeaders,
     Value<String?>? userOverride,
+    Value<bool>? pinned,
     Value<int>? rowid,
   }) {
     return ProfileEntriesCompanion(
@@ -633,6 +667,7 @@ class ProfileEntriesCompanion extends UpdateCompanion<ProfileEntriesData> {
       supportUrl: supportUrl ?? this.supportUrl,
       populatedHeaders: populatedHeaders ?? this.populatedHeaders,
       userOverride: userOverride ?? this.userOverride,
+      pinned: pinned ?? this.pinned,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -685,6 +720,9 @@ class ProfileEntriesCompanion extends UpdateCompanion<ProfileEntriesData> {
     if (userOverride.present) {
       map['user_override'] = Variable<String>(userOverride.value);
     }
+    if (pinned.present) {
+      map['pinned'] = Variable<bool>(pinned.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -709,6 +747,7 @@ class ProfileEntriesCompanion extends UpdateCompanion<ProfileEntriesData> {
           ..write('supportUrl: $supportUrl, ')
           ..write('populatedHeaders: $populatedHeaders, ')
           ..write('userOverride: $userOverride, ')
+          ..write('pinned: $pinned, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -936,278 +975,10 @@ class AppProxyEntriesCompanion extends UpdateCompanion<AppProxyEntriesData> {
   }
 }
 
-class DailyTrafficEntries extends Table
-    with TableInfo<DailyTrafficEntries, DailyTrafficEntriesData> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  DailyTrafficEntries(this.attachedDatabase, [this._alias]);
-  late final GeneratedColumn<String> day = GeneratedColumn<String>(
-    'day',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  late final GeneratedColumn<int> upload = GeneratedColumn<int>(
-    'upload',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const CustomExpression('0'),
-  );
-  late final GeneratedColumn<int> download = GeneratedColumn<int>(
-    'download',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const CustomExpression('0'),
-  );
-  late final GeneratedColumn<String> profileId = GeneratedColumn<String>(
-    'profile_id',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [day, upload, download, profileId];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'daily_traffic_entries';
-  @override
-  Set<GeneratedColumn> get $primaryKey => {day, profileId};
-  @override
-  DailyTrafficEntriesData map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return DailyTrafficEntriesData(
-      day: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}day'],
-      )!,
-      upload: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}upload'],
-      )!,
-      download: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}download'],
-      )!,
-      profileId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}profile_id'],
-      ),
-    );
-  }
-
-  @override
-  DailyTrafficEntries createAlias(String alias) {
-    return DailyTrafficEntries(attachedDatabase, alias);
-  }
-}
-
-class DailyTrafficEntriesData extends DataClass
-    implements Insertable<DailyTrafficEntriesData> {
-  final String day;
-  final int upload;
-  final int download;
-  final String? profileId;
-  const DailyTrafficEntriesData({
-    required this.day,
-    required this.upload,
-    required this.download,
-    this.profileId,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['day'] = Variable<String>(day);
-    map['upload'] = Variable<int>(upload);
-    map['download'] = Variable<int>(download);
-    if (!nullToAbsent || profileId != null) {
-      map['profile_id'] = Variable<String>(profileId);
-    }
-    return map;
-  }
-
-  DailyTrafficEntriesCompanion toCompanion(bool nullToAbsent) {
-    return DailyTrafficEntriesCompanion(
-      day: Value(day),
-      upload: Value(upload),
-      download: Value(download),
-      profileId: profileId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(profileId),
-    );
-  }
-
-  factory DailyTrafficEntriesData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return DailyTrafficEntriesData(
-      day: serializer.fromJson<String>(json['day']),
-      upload: serializer.fromJson<int>(json['upload']),
-      download: serializer.fromJson<int>(json['download']),
-      profileId: serializer.fromJson<String?>(json['profileId']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'day': serializer.toJson<String>(day),
-      'upload': serializer.toJson<int>(upload),
-      'download': serializer.toJson<int>(download),
-      'profileId': serializer.toJson<String?>(profileId),
-    };
-  }
-
-  DailyTrafficEntriesData copyWith({
-    String? day,
-    int? upload,
-    int? download,
-    Value<String?> profileId = const Value.absent(),
-  }) => DailyTrafficEntriesData(
-    day: day ?? this.day,
-    upload: upload ?? this.upload,
-    download: download ?? this.download,
-    profileId: profileId.present ? profileId.value : this.profileId,
-  );
-  DailyTrafficEntriesData copyWithCompanion(DailyTrafficEntriesCompanion data) {
-    return DailyTrafficEntriesData(
-      day: data.day.present ? data.day.value : this.day,
-      upload: data.upload.present ? data.upload.value : this.upload,
-      download: data.download.present ? data.download.value : this.download,
-      profileId: data.profileId.present ? data.profileId.value : this.profileId,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('DailyTrafficEntriesData(')
-          ..write('day: $day, ')
-          ..write('upload: $upload, ')
-          ..write('download: $download, ')
-          ..write('profileId: $profileId')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(day, upload, download, profileId);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is DailyTrafficEntriesData &&
-          other.day == this.day &&
-          other.upload == this.upload &&
-          other.download == this.download &&
-          other.profileId == this.profileId);
-}
-
-class DailyTrafficEntriesCompanion
-    extends UpdateCompanion<DailyTrafficEntriesData> {
-  final Value<String> day;
-  final Value<int> upload;
-  final Value<int> download;
-  final Value<String?> profileId;
-  final Value<int> rowid;
-  const DailyTrafficEntriesCompanion({
-    this.day = const Value.absent(),
-    this.upload = const Value.absent(),
-    this.download = const Value.absent(),
-    this.profileId = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  DailyTrafficEntriesCompanion.insert({
-    required String day,
-    this.upload = const Value.absent(),
-    this.download = const Value.absent(),
-    this.profileId = const Value.absent(),
-    this.rowid = const Value.absent(),
-  }) : day = Value(day);
-  static Insertable<DailyTrafficEntriesData> custom({
-    Expression<String>? day,
-    Expression<int>? upload,
-    Expression<int>? download,
-    Expression<String>? profileId,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (day != null) 'day': day,
-      if (upload != null) 'upload': upload,
-      if (download != null) 'download': download,
-      if (profileId != null) 'profile_id': profileId,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  DailyTrafficEntriesCompanion copyWith({
-    Value<String>? day,
-    Value<int>? upload,
-    Value<int>? download,
-    Value<String?>? profileId,
-    Value<int>? rowid,
-  }) {
-    return DailyTrafficEntriesCompanion(
-      day: day ?? this.day,
-      upload: upload ?? this.upload,
-      download: download ?? this.download,
-      profileId: profileId ?? this.profileId,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (day.present) {
-      map['day'] = Variable<String>(day.value);
-    }
-    if (upload.present) {
-      map['upload'] = Variable<int>(upload.value);
-    }
-    if (download.present) {
-      map['download'] = Variable<int>(download.value);
-    }
-    if (profileId.present) {
-      map['profile_id'] = Variable<String>(profileId.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('DailyTrafficEntriesCompanion(')
-          ..write('day: $day, ')
-          ..write('upload: $upload, ')
-          ..write('download: $download, ')
-          ..write('profileId: $profileId, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class DatabaseAtV7 extends GeneratedDatabase {
   DatabaseAtV7(QueryExecutor e) : super(e);
   late final ProfileEntries profileEntries = ProfileEntries(this);
   late final AppProxyEntries appProxyEntries = AppProxyEntries(this);
-  late final DailyTrafficEntries dailyTrafficEntries = DailyTrafficEntries(
-    this,
-  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1215,7 +986,6 @@ class DatabaseAtV7 extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     profileEntries,
     appProxyEntries,
-    dailyTrafficEntries,
   ];
   @override
   int get schemaVersion => 7;

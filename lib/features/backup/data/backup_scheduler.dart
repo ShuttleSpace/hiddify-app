@@ -12,6 +12,8 @@ import 'package:hiddify/features/backup/data/webdav_backup_repository.dart';
 import 'package:hiddify/features/backup/model/backup_target.dart';
 import 'package:hiddify/features/settings/data/config_option_repository.dart';
 import 'package:hiddify/utils/custom_loggers.dart';
+import 'package:hiddify/core/localization/translations.dart';
+import 'package:hiddify/core/notification/in_app_notification_controller.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class BackupScheduler with AppLogger {
@@ -44,6 +46,9 @@ class BackupScheduler with AppLogger {
   }
 
   Future<void> runNow() async {
+    // A failure has to reach the screen, not just the log. The catch used to swallow
+    // everything, so a backup that could not be written looked exactly like a tap
+    // that did nothing.
     try {
       final bytes = _encodeBackup();
       final target = _ref.read(BackupPreferences.autoBackupTarget);
@@ -61,8 +66,14 @@ class BackupScheduler with AppLogger {
       }
 
       await _ref.read(BackupPreferences.lastAutoBackupAt.notifier).update(DateTime.now().toUtc());
+      loggy.info('backup written: $name');
     } catch (error, stackTrace) {
       loggy.warning('automatic backup failed', error, stackTrace);
+      final t = _ref.read(translationsProvider).valueOrNull;
+      if (t == null) return;
+      _ref
+          .read(inAppNotificationControllerProvider)
+          .showErrorToast(t.pages.settings.backup.createFailed);
     }
   }
 

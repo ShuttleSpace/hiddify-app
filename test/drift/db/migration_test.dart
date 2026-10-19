@@ -2,10 +2,10 @@
 // ignore_for_file: unused_local_variable, unused_import
 import 'package:drift/drift.dart';
 import 'package:drift_dev/api/migrations_native.dart';
-import 'package:hiddify/core/db/db.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'generated/schema.dart';
+import 'package:hiddify/core/db/db.dart';
 
+import 'generated/schema.dart';
 import 'generated/schema_v1.dart' as v1;
 import 'generated/schema_v2.dart' as v2;
 import 'generated/schema_v3.dart' as v3;
@@ -127,5 +127,59 @@ void main() {
         await newDb.close();
       },
     );
+
+    test('migration from v7 to v9 adds pinned to a fork-written v7', () async {
+      // Upstream's 7 and the fork's 7 are different schemas under the same
+      // version number, so a database the fork created reports 7 and the 6 to 7
+      // step never runs on it. `pinned` is what it ends up missing, and reading
+      // it back is a null on a non-nullable field, which surfaces as a black
+      // screen rather than as a migration error.
+      final schema = await verifier.schemaAt(7);
+      addTearDown(() => schema.rawDatabase.dispose());
+
+      // Rebuild the table without `pinned`, which is the fork's v7 verbatim.
+      // DROP COLUMN is not on every SQLite the tests run, and rebuilding says
+      // exactly which shape is meant.
+      schema.rawDatabase.execute(
+        'CREATE TABLE profile_entries_fork_v7 ("id" TEXT NOT NULL, "type" TEXT NOT NULL, '
+        '"active" INTEGER NOT NULL CHECK ("active" IN (0, 1)), "name" TEXT NOT NULL, "url" TEXT NULL, '
+        '"last_update" TEXT NOT NULL, "update_interval" INTEGER NULL, "upload" INTEGER NULL, '
+        '"download" INTEGER NULL, "total" INTEGER NULL, "expire" TEXT NULL, '
+        '"web_page_url" TEXT NULL, "support_url" TEXT NULL, "populated_headers" TEXT NULL, '
+        '"user_override" TEXT NULL, PRIMARY KEY ("id"))',
+      );
+      schema.rawDatabase.execute(
+        'INSERT INTO profile_entries_fork_v7 SELECT "id", "type", "active", "name", "url", '
+        '"last_update", "update_interval", "upload", "download", "total", "expire", '
+        '"web_page_url", "support_url", "populated_headers", "user_override" FROM profile_entries',
+      );
+      schema.rawDatabase.execute('DROP TABLE profile_entries');
+      schema.rawDatabase.execute('ALTER TABLE profile_entries_fork_v7 RENAME TO profile_entries');
+
+      // Opening a Db on a database whose version is behind runs the migration
+      // chain, so the missing column cannot be observed through one first.
+      final migratedDb = Db(schema.newConnection());
+      await verifier.migrateAndValidate(migratedDb, 9);
+      await migratedDb.close();
+
+      // The column has to be readable, not merely present: that read is what
+      // threw before.
+      final newDb = Db(schema.newConnection());
+      expect(await newDb.select(newDb.profileEntries).get(), isA<List<ProfileEntry>>());
+      await newDb.close();
+    });
+
+    test('migration from v8 to v9 leaves an already-pinned table alone', () async {
+      final schema = await verifier.schemaAt(8);
+      addTearDown(() => schema.rawDatabase.dispose());
+
+      final migratedDb = Db(schema.newConnection());
+      await verifier.migrateAndValidate(migratedDb, 9);
+      await migratedDb.close();
+
+      final newDb = Db(schema.newConnection());
+      expect(await newDb.select(newDb.profileEntries).get(), isA<List<ProfileEntry>>());
+      await newDb.close();
+    });
   });
 }

@@ -41,13 +41,14 @@ migrate_working_dir/
 **/*.freezed.dart
 **/*.mapper.dart
 **/*.gen.dart
+
+# slang analysis reports (dart run slang analyze)
+_missing_translations*.json
+_unused_translations*.json
 **/*.dll
 **/*.dylib
 **/*.xcframework
 /dist/
-
-# simple_icons ships its generated icon tables (not rebuilt by build_runner)
-!simple_icons-10.1.3-fixed/lib/src/*.g.dart
 /dist_docker/
 
 /assets/core/*
@@ -71,11 +72,8 @@ app.*.map.json
 # Windows Self-Signed for msix
 windows/sign.pfx
 windows/sign.cer
-.aider.input.history
-.aider.chat.history.md
-.aider.tags.cache.v4
 
-# ai agent and tools
-graphify-out
-.deepseek
-android/build/
+# local signing material
+/cert.pem
+/key.pem
+/sign.pfx

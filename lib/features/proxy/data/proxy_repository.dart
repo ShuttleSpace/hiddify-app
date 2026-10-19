@@ -76,6 +76,8 @@ class ProxyRepositoryImpl with ExceptionHandler, InfraLogger implements ProxyRep
     });
   }
 
+  /// Every group including the ones no profile currently selects, so the node
+  /// list can show nodes the active profile never reaches.
   @override
   Stream<Either<ProxyFailure, List<OutboundGroup>>> watchAllGroups() {
     return singbox.watchAllGroups().handleExceptions((error, stackTrace) {

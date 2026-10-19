@@ -3,7 +3,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:hiddify/core/db/converters/duration_converter.dart';
 import 'package:hiddify/core/db/db.steps.dart';
 import 'package:hiddify/core/directories/directories_provider.dart';
-import 'package:hiddify/features/per_app_proxy/model/per_app_proxy_mode.dart';
+import 'package:hiddify/features/app_based_routing/model/per_app_proxy_mode.dart';
 import 'package:hiddify/features/profile/model/profile_entity.dart';
 import 'package:hiddify/utils/custom_loggers.dart';
 
@@ -13,8 +13,11 @@ part 'db.g.dart';
 class Db extends _$Db with InfraLogger {
   Db([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
+  // Changing the schema? Bump `schemaVersion`, add a matching `stepByStep` step
+  // below, and regenerate — full checklist in `README.md` next to this file.
+  // Migrations run on every user's device on update; a wrong one can lose data.
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 9;
 
   static QueryExecutor _openConnection() {
     return LazyDatabase(
@@ -63,13 +66,37 @@ class Db extends _$Db with InfraLogger {
           await m.createTable(schema.appProxyEntries);
         },
         from5To6: (m, schema) async {
-          final profileOverrideExists = await _columnExists(schema.profileEntries.actualTableName, 'profile_override');
+          final profileOverrideExists = await _columnExists(
+            schema.profileEntries.actualTableName,
+            'profile_override',
+          );
           if (profileOverrideExists) {
             await m.dropColumn(schema.profileEntries, 'profile_override');
           }
         },
         from6To7: (m, schema) async {
-          await m.createTable(schema.dailyTrafficEntries);
+          await m.addColumn(schema.profileEntries, schema.profileEntries.pinned);
+        },
+        from7To8: (m, schema) async {
+          // A build from the fork already carried this table at v7, so creating
+          // it blindly would abort the whole upgrade on those devices.
+          if (!await _tableExists(schema.dailyTrafficEntries.actualTableName)) {
+            await m.createTable(schema.dailyTrafficEntries);
+          }
+        },
+        from8To9: (m, schema) async {
+          // v7 is two different schemas: upstream added `pinned` in its own 7,
+          // and the fork shipped a 7 without it. A database either build made
+          // reports 7, so the 6 to 7 step never runs on it and the column is
+          // simply missing - which reads back as a null on a non-nullable
+          // field. Add it wherever it turned out to be absent.
+          final pinnedExists = await _columnExists(
+            schema.profileEntries.actualTableName,
+            schema.profileEntries.pinned.name,
+          );
+          if (!pinnedExists) {
+            await m.addColumn(schema.profileEntries, schema.profileEntries.pinned);
+          }
         },
       ),
     );
@@ -78,6 +105,14 @@ class Db extends _$Db with InfraLogger {
   Future<bool> _columnExists(String table, String column) async {
     final result = await customSelect('PRAGMA table_info($table);').get();
     return result.any((row) => row.data['name'] == column);
+  }
+
+  Future<bool> _tableExists(String table) async {
+    final result = await customSelect(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+      variables: [Variable<String>(table)],
+    ).get();
+    return result.isNotEmpty;
   }
 }
 
@@ -98,6 +133,7 @@ class ProfileEntries extends Table {
   TextColumn get supportUrl => text().nullable()();
   TextColumn get populatedHeaders => text().nullable()();
   TextColumn get userOverride => text().nullable()();
+  BoolColumn get pinned => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};

@@ -9,6 +9,7 @@ import android.net.VpnService
 import android.os.Build
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
+import com.hiddify.core.libbox.Libbox
 import com.hiddify.core.libbox.Notification
 import com.hiddify.hiddify.constant.PerAppProxyMode
 import com.hiddify.hiddify.ktx.toIpPrefix
@@ -23,11 +24,7 @@ class VPNService : VpnService(), PlatformInterfaceWrapper {
         private const val TAG = "A/VPNService"
     }
 
-    private val service = BoxService(this, PlatformInterfaceBridge)
-
-    init {
-        PlatformInterfaceBridge.delegate = this
-    }
+    private val service = BoxService(this, this)
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) =
         service.onStartCommand()
@@ -116,7 +113,12 @@ class VPNService : VpnService(), PlatformInterfaceWrapper {
         }
 
         if (options.autoRoute) {
-            builder.addDnsServer(options.dnsServerAddress.value)
+            if (options.dnsMode.value != Libbox.DNSModeDisabled) {
+                val dnsServerAddress = options.dnsServerAddress
+                while (dnsServerAddress.hasNext()) {
+                    builder.addDnsServer(dnsServerAddress.next())
+                }
+            }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 val inet4RouteAddress = options.inet4RouteAddress
@@ -221,4 +223,6 @@ class VPNService : VpnService(), PlatformInterfaceWrapper {
     override fun sendNotification(notification: Notification) {
 //        service.sendNotification(notification)
     }
+
+    override fun cancelNotification(identifier: String, typeID: Int) = service.cancelNotification(identifier, typeID)
 }

@@ -54,6 +54,7 @@ class ProfileDetailsNotifier extends _$ProfileDetailsNotifier with AppLogger {
       } else {
         // print('No outbounds found in the config');
       }
+      // ignore: avoid_dynamic_calls
       final endpoints = jsonObject['endpoints'] as List? ?? [];
       profContent = '{"outbounds": ${json.encode(outbounds)},"endpoints":${json.encode(endpoints)} }';
       loggy.info(profContent);
@@ -84,12 +85,6 @@ class ProfileDetailsNotifier extends _$ProfileDetailsNotifier with AppLogger {
       state = AsyncData(
         data.copyWith(profile: data.profile.copyWith(userOverride: userOverride), isDetailsChanged: true),
       );
-    }
-  }
-
-  void updateProfile(ProfileEntity profile) {
-    if (state case AsyncData(value: final ProfileDetailsState data)) {
-      state = AsyncData(data.copyWith(profile: profile, isDetailsChanged: true));
     }
   }
 

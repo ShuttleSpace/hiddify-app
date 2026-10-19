@@ -1,4 +1,4 @@
-﻿{
+{
   "common": {
     "appTitle": "Hiddify",
     "start": "Start",
@@ -6,6 +6,7 @@
     "ok": "OK",
     "cancel": "Cancel",
     "kContinue": "Continue",
+    "undo": "Undo",
     "showMore": "Show more",
     "showLess": "Show less",
     "filter": "Filter",
@@ -14,8 +15,6 @@
     "resume": "Resume",
     "clear": "Clear",
     "close": "Close",
-    "copy": "Copy",
-    "copied": "Copied",
     "auto": "Auto",
     "manually": "Manually",
     "name": "Name",
@@ -30,6 +29,8 @@
     "help": "Help",
     "save": "Save",
     "update": "Update",
+    "pin": "Pin",
+    "unpin": "Unpin",
     "share": "Share",
     "edit": "Edit",
     "delete": "Delete",
@@ -73,13 +74,6 @@
       "permission": {
         "denied": "Permission denied"
       },
-      "qrCode": {
-        "notFound": "No QR code found",
-        "save": {
-          "success": "QR code saved successfully",
-          "failure": "Failed to save QR code: $error"
-        }
-      },
       "export": {
         "clipboard": {
           "success": "Added to clipboard successfully",
@@ -98,8 +92,17 @@
       },
       "autoSave": {
         "success": "Changes auto-saved successfully"
+      },
+      "qrCode": {
+        "notFound": "No QR code found",
+        "save": {
+          "success": "QR code saved successfully",
+          "failure": "Failed to save QR code: $error"
+        }
       }
-    }
+    },
+    "copy": "Copy",
+    "copied": "Copied"
   },
   "intro": {
     "banner": "All you need for an unrestricted internet",
@@ -116,6 +119,25 @@
       "sort": "Sort proxies",
       "testDelay": "Test delay",
       "empty": "No proxies available",
+      "activeProxy": "Active proxy",
+      "unknownIp": "Unknown IP",
+      "switchFailed": "Couldn’t switch to this proxy. Try again.",
+      "sortOptions": {
+        "unsorted": "Default",
+        "name": "Alphabetically",
+        "delay": "By delay",
+        "usage": "By usage"
+      },
+      "ipInfo": {
+        "address": "IP address",
+        "country": "Country",
+        "organization": "Organization"
+      },
+      "delay": {
+        "result": "Delay: ${delay}ms",
+        "timeout": "Delay test timeout",
+        "testing": "Delay: testing..."
+      },
       "nodeBlacklist": {
         "title": "Node blacklist",
         "copyJson": "Copy JSON",
@@ -161,24 +183,6 @@
           "customOnly": "Custom only",
           "globalPlusCustom": "Global + custom"
         }
-      },
-      "activeProxy": "Active proxy",
-      "unknownIp": "Unknown IP",
-      "sortOptions": {
-        "unsorted": "Default",
-        "name": "Alphabetically",
-        "delay": "By delay",
-        "usage": "By usage"
-      },
-      "ipInfo": {
-        "address": "IP address",
-        "country": "Country",
-        "organization": "Organization"
-      },
-      "delay": {
-        "result": "Delay: ${delay}ms",
-        "timeout": "Delay test timeout",
-        "testing": "Delay: testing..."
       }
     },
     "profiles": {
@@ -207,9 +211,14 @@
         },
         "update": {
           "success": "Profile updated successfully",
-          "successNamed": "\"${name}\" updated successfully",
           "failure": "Failed to update profile",
-          "failureNamed": "Failed to update \"${name}\""
+          "failureNamed": "Failed to update \"${name}\"",
+          "bulkSuccess(plural, param=count)": {
+            "one": "$count profile updated",
+            "other": "$count profiles updated"
+          },
+          "bulkPartial": "${success} updated\n${failed} failed: ${names}",
+          "successNamed": "\"${name}\" updated successfully"
         },
         "delete": {
           "success": "Profile deleted successfully"
@@ -224,15 +233,43 @@
         "emptyName": "Name is required",
         "invalidUrl": "Invalid URL",
         "urlHint": "Full config URL",
-        "homePage": "Provider home page",
-        "homePageHint": "https://provider.example",
         "disableAutoUpdate": "Disable auto update",
         "autoUpdateInterval": "Auto update interval",
-        "loading": "Adding profile..."
+        "loading": "Adding profile...",
+        "homePage": "Provider home page",
+        "homePageHint": "https://provider.example",
+        "customProxy": "Custom proxy",
+        "server": "Server",
+        "serverHint": "proxy.example.com",
+        "port": "Port",
+        "protocol": "Protocol",
+        "credentialsOptional": "Only if the proxy asks for them",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {
       "title": "Logs",
+      "category": "Category",
+      "level": "Level",
+      "recentLogs": "Recent logs",
+      "recentLogsMsg": "What you see on this page",
+      "errorLog": "App and core log",
+      "errorLogMsg": "Errors from both, across runs",
+      "coreLog": "Core log",
+      "coreLogMsg": "Everything the core recorded",
+      "coreCrash": "Core crash",
+      "coreCrashMsg": "What the core was doing when it last crashed",
+      "exportToFile": "Export to file",
+      "linesMatch": "$count lines match",
+      "fileSaved": "File saved",
+      "fileSaveFailed": "Could not save the file",
+      "coreLogLevel": "Core level",
+      "coreLogLevelMsg": "Takes effect after reconnecting",
+      "buffer": "Buffer",
       "shareCoreLogs": "Share core logs",
       "shareAppLogs": "Share app logs"
     },
@@ -280,145 +317,25 @@
         "actionAtClosing": "Action at closing",
         "autoStart": "Start at login",
         "silentStart": "Start minimized",
-        "openMainWindowOnStartup": "Open main window at startup",
         "ignoreBatteryOptimizations": "Disable battery optimization",
         "ignoreBatteryOptimizationsMsg": "Remove restrictions for optimal VPN performance",
         "memoryLimit": "Memory limit",
         "memoryLimitMsg": "Enable if you're experiencing out of memory errors or frequent app crashes",
-        "debugMode": "Debug mode",
-        "debugModeMsg": "Restart the app for applying this change",
-        "logLevel": "Log level",
         "connectionTestUrl": "Connection test URL",
         "urlTestInterval": "URL test interval",
         "clashApiPort": "Clash API port",
         "useXrayCoreWhenPossible": "Use xray-core when possible",
-        "useXrayCoreWhenPossibleMsg": "Use xray-core during parsing sub links. You need to reimport the sub link to enable this option."
-      },
-      "appearance": {
-        "title": "Appearance",
-        "textSize": "Text size",
-        "textSizes": {
-          "system": "System",
-          "small": "Small",
-          "standard": "Standard",
-          "large": "Large",
-          "extraLarge": "Extra large"
-        },
-        "themeColor": "Theme color",
-        "themeColors": {
-          "brand": "Hiddify",
-          "dynamicColor": "System dynamic",
-          "seed": "Preset color"
-        },
-        "presetColors": "Preset colors"
-      },
-      "traffic": {
-        "title": "Traffic & network",
-        "live": "Live traffic",
-        "upload": "Upload",
-        "download": "Download",
-        "today": "Today",
-        "thisMonth": "This month",
-        "allRecorded": "All recorded",
-        "recordHistory": "Record traffic history",
-        "retention": "Retention",
-        "retentionMonths": "$n months",
-        "showTraySpeed": "Show speed in tray",
-        "showTraySpeedWarning": "High CPU usage",
-        "showTraySpeedWarningMsg": "Enabling this may significantly increase system CPU usage.",
-        "viewHistory": "View history calendar",
-        "historyCalendarTitle": "Traffic history calendar",
-        "previousMonth": "Previous month",
-        "nextMonth": "Next month",
-        "selectDay": "Select a day",
-        "noTrafficForDay": "No traffic recorded for this day",
-        "traySpeedLayout": "Tray speed layout",
-        "traySpeedLayoutHorizontal": "Side by side",
-        "traySpeedLayoutVertical": "Vertical",
-        "clearHistory": "Clear traffic history",
-        "clearHistoryMsg": "This cannot be undone."
-      },
-      "nodeBlacklist": {
-        "title": "Node blacklist",
-        "global": "Global rules",
-        "provider": "Provider rules",
-        "filteredCount": "Filtered nodes",
-        "showFiltered": "Show filtered nodes",
-        "importJson": "Import JSON",
-        "exportJson": "Export JSON",
-        "importText": "Import plain text",
-        "currentNodeBlocked": "Current node is blacklisted"
-      },
-      "networkIdentity": {
-        "title": "GeoIP & network identity",
-        "refresh": "Refresh",
-        "country": "Country",
-        "region": "Region",
-        "city": "City",
-        "asn": "ASN",
-        "organization": "Organization",
-        "notAvailable": "Connect and refresh to identify the exit network.",
-        "resources": "GeoIP resources",
-        "resourcesMsg": "GeoIP, GeoSite and MMDB assets are managed by the sing-box core. Their health and update time are reflected when routing rules use them.",
-        "noReferences": "No routing rules currently reference Geo resources."
-      },
-      "backup": {
-        "title": "Backup & restore",
-        "local": "Local backup",
-        "localMsg": "Creates a versioned settings backup file. Subscriptions and cached assets are not included.",
-        "create": "Create backup",
-        "created": "Backup created.",
-        "createFailed": "Failed to create backup.",
-        "backupDirectory": "Backup directory",
-        "chooseDirectory": "Choose directory",
-        "directoryNotSet": "Use save dialog",
-        "restore": "Restore",
-        "restored": "Backup restored.",
-        "settingsData": "Settings data",
-        "automatic": "Automatic backup",
-        "enable": "Enable automatic backup",
-        "interval": "Interval",
-        "days": "$n days",
-        "target": "Target",
-        "neverRun": "Never run",
-        "lastRun": "Last run: $time",
-        "runNow": "Run now",
-        "webdav": "WebDAV",
-        "noWebdav": "No WebDAV connection configured.",
-        "connect": "Connect",
-        "edit": "Edit",
-        "test": "Test",
-        "upload": "Upload",
-        "remove": "Remove",
-        "connected": "WebDAV connected.",
-        "connectionWorks": "WebDAV connection works.",
-        "connectionFailed": "WebDAV connection failed.",
-        "uploaded": "Backup uploaded to WebDAV.",
-        "uploadFailed": "WebDAV upload failed.",
-        "noRemote": "No remote backups found.",
-        "selectRemote": "Select remote backup",
-        "remoteRestored": "Remote backup restored.",
-        "restoreFailed": "WebDAV restore failed."
-      },
-      "shortcuts": {
-        "title": "Shortcuts",
-        "mobileMsg": "Global hotkeys are available on desktop platforms. On mobile, system shortcuts and quick tiles remain available.",
-        "globalHotkeys": "Global hotkeys",
-        "globalHotkeysMsg": "Work while Hiddify is in the background.",
-        "failed": "Some hotkeys could not be registered",
-        "toggleConnection": "Toggle connection",
-        "addClipboard": "Add profile from clipboard",
-        "cycleMode": "Cycle service mode",
-        "openSettings": "Open settings",
-        "closeWindow": "Close window",
-        "quit": "Quit"
+        "useXrayCoreWhenPossibleMsg": "Use xray-core during parsing sub links. You need to reimport the sub link to enable this option.",
+        "openMainWindowOnStartup": "Open main window at startup",
+        "debugMode": "Debug mode",
+        "debugModeMsg": "Restart the app for applying this change",
+        "logLevel": "Log level"
       },
       "routing": {
         "title": "Routing",
         "routeRule": {
-          "empty": "No rules added yet\n\nTap the + button to create a new rule or choose from predefined rules",
+          "add": "Add rule",
           "delete": "Delete rule",
-          "create": "Create new rule",
           "options": {
             "import": {
               "clipboard": "Import rules from clipboard",
@@ -433,7 +350,7 @@
           "rule": {
             "title": "Rule",
             "onlyTunMode": "Available only in tun mode",
-            "notAvailabeInThisPlatform": "Not available in this platform",
+            "notAvailableInThisPlatform": "Not available on this platform",
             "canNotBeEmpty": "Can not be empty",
             "validUrlEx": "https://example.com",
             "validUrl": "Valid \"URL\" like\n@:pages.settings.routing.routeRule.rule.validUrlEx",
@@ -486,14 +403,121 @@
               "stun": "STUN",
               "dns": "DNS",
               "bittorrent": "BitTorrent"
-            }
+            },
+            "notAvailabeInThisPlatform": "Not available in this platform"
           },
           "genericList": {
             "addNew": "Add new value",
             "update": "Update value",
             "clearList": "Clear list",
             "clearListMsg": "All items are deleted"
+          },
+          "empty": "No rules added yet\n\nTap the + button to create a new rule or choose from predefined rules",
+          "create": "Create new rule"
+        },
+        "builtinRules": {
+          "tag": "Built-in",
+          "bypassLan": "Bypass LAN",
+          "blockAds": "Block ads and malware",
+          "bypassRegion": "Bypass sites in $region"
+        },
+        "appBasedRouting": {
+          "title": "App-based routing",
+          "hideSysApps": "Hide system apps",
+          "listTitle": {
+            "bypass": "Bypassed apps",
+            "proxy": "Proxied apps"
+          },
+          "chooseApps": "Choose apps",
+          "apps": {
+            "one": "app",
+            "other": "apps"
+          },
+          "moreApps": {
+            "one": "+$n app",
+            "other": "+$n apps"
+          },
+          "autoTag": "Auto",
+          "outsideVpn": "Outside the VPN",
+          "ruleWontApply": "Outside the VPN · rule won’t apply",
+          "notInstalled": "Not installed",
+          "share": {
+            "invite": "Help improve auto selection",
+            "removed": {
+              "one": "$n removed",
+              "other": "$n removed"
+            },
+            "added": {
+              "one": "$n added",
+              "other": "$n added"
+            },
+            "title": "Share your changes",
+            "where": "Opens a public issue on GitHub, already filled in with these app names. To share them, submit it there. You need a GitHub account.",
+            "action": "Continue on GitHub"
+          },
+          "options": {
+            "import": {
+              "clipboard": "Import selection from clipboard",
+              "file": "Import selection from file",
+              "msg": "Importing replaces your current selections. Continue?"
+            },
+            "export": {
+              "clipboard": "Copy selection to clipboard",
+              "file": "Export selection to file"
+            },
+            "clearAllSelections": "Clear all selections"
+          },
+          "modes": {
+            "proxy": "Proxy only",
+            "bypass": "Bypass"
+          },
+          "autoSelection": {
+            "title": "Auto selection based on $region",
+            "performNow": "Update now",
+            "updated": {
+              "zero": "Updated today",
+              "one": "Updated $n day ago",
+              "other": "Updated $n days ago"
+            },
+            "noList": "No list for this region",
+            "loadFailed": "Couldn’t load the list",
+            "restore": {
+              "one": "Restore $n auto pick",
+              "other": "Restore $n auto picks"
+            },
+            "restored": {
+              "one": "$n auto pick restored",
+              "other": "$n auto picks restored"
+            }
           }
+        },
+        "region": "Region",
+        "regions": {
+          "ir": "Iran (ir)",
+          "cn": "China (cn)",
+          "ru": "Russia (ru)",
+          "af": "Afghanistan (af)",
+          "id": "Indonesia (id)",
+          "tr": "Türkiye (tr)",
+          "br": "Brazil (br)",
+          "other": "Other"
+        },
+        "balancerStrategy": {
+          "title": "Balancer strategy",
+          "roundRobin": "Round robin",
+          "consistentHash": "Consistent hash",
+          "stickySession": "Sticky session",
+          "roundRobinDescription": "Each connection uses the next server, so sites may see your IP change",
+          "consistentHashDescription": "Each site always uses the same server",
+          "stickySessionDescription": "Each site keeps a random server until you reconnect"
+        },
+        "resolveDestination": "Resolve destination",
+        "ipv6Route": "IPv6 route",
+        "ipv6Modes": {
+          "disable": "Off",
+          "enable": "On",
+          "prefer": "Preferred",
+          "only": "Exclusive"
         },
         "generalOptions": {
           "title": "Route general options",
@@ -631,11 +655,12 @@
         "directPort": "Direct port",
         "redirectPort": "Redirect port",
         "lanSharing": "VPN sharing",
+        "qrCode": "QR Code",
+        "lanQrSubtitle": "SOCKS5 proxy for this Wi-Fi",
+        "lanIPError": "Failed to get local IP address",
         "lanSharingPasswordNotSet": "Password not set",
         "lanSharingPassword": "VPN sharing password",
-        "copyLink": "Copy link",
-        "qrCode": "QR Code",
-        "lanIPError": "Failed to get local IP address"
+        "copyLink": "Copy link"
       },
       "tlsTricks": {
         "title": "TLS tricks",
@@ -735,6 +760,125 @@
           "selectProfile": "Select profile",
           "conduitPairingId": "Conduit pairing ID"
         }
+      },
+      "appearance": {
+        "title": "Appearance",
+        "textSize": "Text size",
+        "textSizes": {
+          "system": "System",
+          "small": "Small",
+          "standard": "Standard",
+          "large": "Large",
+          "extraLarge": "Extra large"
+        },
+        "themeColor": "Theme color",
+        "themeColors": {
+          "brand": "Hiddify",
+          "dynamicColor": "System dynamic",
+          "seed": "Preset color"
+        },
+        "presetColors": "Preset colors"
+      },
+      "traffic": {
+        "title": "Traffic & network",
+        "live": "Live traffic",
+        "upload": "Upload",
+        "download": "Download",
+        "today": "Today",
+        "thisMonth": "This month",
+        "allRecorded": "All recorded",
+        "recordHistory": "Record traffic history",
+        "retention": "Retention",
+        "retentionMonths": "$n months",
+        "showTraySpeed": "Show speed in tray",
+        "showTraySpeedWarning": "High CPU usage",
+        "showTraySpeedWarningMsg": "Enabling this may significantly increase system CPU usage.",
+        "viewHistory": "View history calendar",
+        "historyCalendarTitle": "Traffic history calendar",
+        "previousMonth": "Previous month",
+        "nextMonth": "Next month",
+        "selectDay": "Select a day",
+        "noTrafficForDay": "No traffic recorded for this day",
+        "traySpeedLayout": "Tray speed layout",
+        "traySpeedLayoutHorizontal": "Side by side",
+        "traySpeedLayoutVertical": "Vertical",
+        "clearHistory": "Clear traffic history",
+        "clearHistoryMsg": "This cannot be undone."
+      },
+      "nodeBlacklist": {
+        "title": "Node blacklist",
+        "global": "Global rules",
+        "provider": "Provider rules",
+        "filteredCount": "Filtered nodes",
+        "showFiltered": "Show filtered nodes",
+        "importJson": "Import JSON",
+        "exportJson": "Export JSON",
+        "importText": "Import plain text",
+        "currentNodeBlocked": "Current node is blacklisted"
+      },
+      "networkIdentity": {
+        "title": "GeoIP & network identity",
+        "refresh": "Refresh",
+        "country": "Country",
+        "region": "Region",
+        "city": "City",
+        "asn": "ASN",
+        "organization": "Organization",
+        "notAvailable": "Connect and refresh to identify the exit network.",
+        "resources": "GeoIP resources",
+        "resourcesMsg": "GeoIP, GeoSite and MMDB assets are managed by the sing-box core. Their health and update time are reflected when routing rules use them.",
+        "noReferences": "No routing rules currently reference Geo resources."
+      },
+      "backup": {
+        "title": "Backup & restore",
+        "local": "Local backup",
+        "localMsg": "Creates a versioned settings backup file. Subscriptions and cached assets are not included.",
+        "create": "Create backup",
+        "created": "Backup created.",
+        "createFailed": "Failed to create backup.",
+        "backupDirectory": "Backup directory",
+        "chooseDirectory": "Choose directory",
+        "directoryNotSet": "Use save dialog",
+        "restore": "Restore",
+        "restored": "Backup restored.",
+        "settingsData": "Settings data",
+        "automatic": "Automatic backup",
+        "enable": "Enable automatic backup",
+        "interval": "Interval",
+        "days": "$n days",
+        "target": "Target",
+        "neverRun": "Never run",
+        "lastRun": "Last run: $time",
+        "runNow": "Run now",
+        "webdav": "WebDAV",
+        "noWebdav": "No WebDAV connection configured.",
+        "connect": "Connect",
+        "edit": "Edit",
+        "test": "Test",
+        "upload": "Upload",
+        "remove": "Remove",
+        "connected": "WebDAV connected.",
+        "connectionWorks": "WebDAV connection works.",
+        "connectionFailed": "WebDAV connection failed.",
+        "uploaded": "Backup uploaded to WebDAV.",
+        "uploadFailed": "WebDAV upload failed.",
+        "noRemote": "No remote backups found.",
+        "selectRemote": "Select remote backup",
+        "remoteRestored": "Remote backup restored.",
+        "restoreFailed": "WebDAV restore failed."
+      },
+      "shortcuts": {
+        "title": "Shortcuts",
+        "mobileMsg": "Global hotkeys are available on desktop platforms. On mobile, system shortcuts and quick tiles remain available.",
+        "globalHotkeys": "Global hotkeys",
+        "globalHotkeysMsg": "Work while Hiddify is in the background.",
+        "failed": "Some hotkeys could not be registered",
+        "toggleConnection": "Toggle connection",
+        "addClipboard": "Add profile from clipboard",
+        "cycleMode": "Cycle service mode",
+        "openSettings": "Open settings",
+        "closeWindow": "Close window",
+        "quit": "Quit"
       }
     }
   },
@@ -756,11 +900,19 @@
       "expireDate": "Expire date",
       "expired": "Expired",
       "noTraffic": "Out of quota",
-      "remainingTime": "Remaining time",
-      "remainingDuration": "${duration} days remaining",
-      "remainingDurationNew": "${duration} days",
+      "remainingDuration(plural, param=days)": {
+        "one": "$days day remaining",
+        "other": "$days days remaining"
+      },
+      "remainingUnlimited": "Unlimited",
       "remainingTrafficSemanticLabel": "${consumed} of ${total} traffic consumed",
       "remainingTraffic": "Remaining traffic",
+      "openWebPage": "Open web page",
+      "support": "Support",
+      "openLinkTitle": "Open this link?",
+      "openLinkAction": "Open",
+      "remainingTime": "Remaining time",
+      "remainingDurationNew": "${duration} days",
       "remainingUsage": "Remaining",
       "profileSite": "Provider",
       "profileSupport": "Support"
@@ -772,6 +924,10 @@
       "sort": {
         "name": "Alphabetically",
         "lastUpdate": "Recently updated"
+      },
+      "direction": {
+        "newestFirst": "Newest first",
+        "oldestFirst": "Oldest first"
       }
     },
     "warpLicense": {
@@ -801,13 +957,9 @@
           "msg": "Are you sure you want to permanently delete this profile?"
         }
       },
-      "perAppProxy": {
-        "shareOnGithub": {
-          "title": "Improving auto selection",
-          "msg": "By sharing selected apps, you help complete the \"auto selection\" list"
-        },
+      "appList": {
         "import": {
-          "msg": "This will replace all your current per-app proxy selections. Are you sure you want to continue?"
+          "msg": "This replaces your Bypass and Proxy only apps. Continue?"
         }
       },
       "routeRule": {
@@ -823,6 +975,15 @@
       "importRouteRuleByDeepLinkWarning": {
         "title": "Import route-rule?",
         "message": "Importing route rules from untrusted sources can be a security risk\nOnly proceed if you trust this link"
+      },
+      "perAppProxy": {
+        "shareOnGithub": {
+          "title": "Improving auto selection",
+          "msg": "By sharing selected apps, you help complete the \"auto selection\" list"
+        },
+        "import": {
+          "msg": "This will replace all your current per-app proxy selections. Are you sure you want to continue?"
+        }
       }
     },
     "experimentalNotice": {
@@ -840,6 +1001,11 @@
     },
     "unknownDomainsWarning": {
       "title": "External link warning",
+      "cannotVerify": "This link isn’t verified",
+      "avoidIfUnsure": "If you’re not fully sure, do not pay or share sensitive information",
+      "ownResponsibility": "You continue at your own risk",
+      "open": "Open",
+      "openIn": "Open (${seconds})",
       "youAreAboutToVisit": "You are about to visit :",
       "thisWebsiteIsNotInOurTrustedList": "This website is not in our trusted list. Please proceed with caution."
     },
@@ -868,15 +1034,28 @@
       "askEachTime": "Ask each time",
       "alertMessage": "Hide or exit the application?",
       "remember": "Remember my choice"
+    },
+    "qrCode": {
+      "copyFullLink": "Copy full link",
+      "copied": "Copied",
+      "ip": "IP",
+      "port": "Port",
+      "username": "Username",
+      "password": "Password",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
     }
   },
   "connection": {
     "tapToConnect": "Tap to connect",
     "connect": "Connect",
     "connecting": "Connecting...",
+    "hotReloading": "Applying changes…",
     "connected": "Connected",
     "disconnect": "Disconnect",
     "disconnecting": "Disconnecting...",
+    "failed": "Couldn't connect",
+    "tapToRetry": "Tap to try again",
     "reconnect": "Reconnect",
     "reconnectMsg": "Reconnecting for taking into account the changes...",
     "shellProxyEnv": "Terminals that export HTTP_PROXY=127.0.0.1:$port now point at a closed port. Run \"unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy\" in them, otherwise curl, git and go builds will fail.",
@@ -908,6 +1087,8 @@
       "serviceNotRunning": "Service is not running",
       "missingPrivilege": "Missing privilege",
       "missingPrivilegeMsg": "VPN mode requires administrator privileges. Either relaunch the app as administrator or change service mode.",
+      "tunAddressInUse": "Another VPN is active",
+      "tunAddressInUseMsg": "VPN mode can’t start. Turn off the other VPN or change service mode.",
       "invalidConfigOptions": "Invalid configuration options",
       "invalidConfig": "Invalid configuration"
     },

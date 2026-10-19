@@ -10,6 +10,7 @@ import 'package:hiddify/features/connection/data/connection_data_providers.dart'
 import 'package:hiddify/features/connection/data/connection_repository.dart';
 import 'package:hiddify/features/connection/model/connection_failure.dart';
 import 'package:hiddify/features/connection/model/connection_status.dart';
+import 'package:hiddify/features/connection/model/startup_connection.dart';
 import 'package:hiddify/features/platform_specific/shell_proxy_env.dart';
 import 'package:hiddify/features/profile/model/profile_entity.dart';
 import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
@@ -76,10 +77,24 @@ class ConnectionNotifier extends _$ConnectionNotifier with AppLogger {
 
   ConnectionRepository get _connectionRepo => ref.read(connectionRepositoryProvider);
 
-  Future<void> mayConnect() async {
-    if (state case AsyncData(:final value)) {
-      if (value case Disconnected()) return _connect();
+  /// Reconnects only if the last run ended with the tunnel up. The previous
+/// `mayConnect` fired on any disconnected state, which meant a user who had
+/// deliberately turned the tunnel off got it back on the next launch.
+Future<void> restoreConnectionOnStartup() async {
+    final startedByUser = ref.read(Preferences.startedByUser);
+    final activeProfile = await ref.read(activeProfileProvider.future);
+    final shouldRestore = shouldRestoreConnectionOnStartup(
+      isDesktop: PlatformUtils.isDesktop,
+      startedByUser: startedByUser,
+      hasActiveProfile: activeProfile != null,
+    );
+    if (!shouldRestore) {
+      loggy.debug("no previous connection to restore");
+      return;
     }
+    loggy.info("restoring previous connection on startup");
+    await ref.read(Preferences.startedByUser.notifier).update(true);
+    await _connect();
   }
 
   Future<void> toggleConnection() async {
@@ -175,11 +190,29 @@ class ConnectionNotifier extends _$ConnectionNotifier with AppLogger {
   Future<void> _disconnect() async {
     final dialogNotifier = ref.read(dialogNotifierProvider.notifier);
     final translations = ref.read(translationsProvider);
+    final wasSystemProxy = ref.read(ConfigOptions.serviceMode) == ServiceMode.systemProxy;
     await _connectionRepo.disconnect().mapLeft((err) {
       dialogNotifier.showCustomAlertFromErr(err.present(translations.requireValue));
       state = AsyncError(err, StackTrace.current);
     }).run();
     unawaited(_announceDisconnect(translations));
+    if (wasSystemProxy) unawaited(_releaseSystemProxy());
+  }
+
+  /// Hands the OS proxy back without waiting for the inbound's own cleanup.
+  ///
+  /// Closing the core is supposed to unwind into the listener's Disable, but that
+  /// path only runs when the listener is still holding a proxy it believes it
+  /// enabled, and on macOS the setting outlives it. Going through the release RPC
+  /// also covers being turned off from the outside: System Settings switching the
+  /// service mode to VPN-only does not come through this app at all, and the
+  /// inbound that owned the proxy is gone with the old core process.
+  Future<void> _releaseSystemProxy() async {
+    if (!Platform.isMacOS) return;
+    loggy.info("releasing the system proxy on disconnect");
+    await _connectionRepo.releaseSystemProxy().mapLeft((err) {
+      loggy.warning("failed to release the system proxy on disconnect", err);
+    }).run();
   }
 
   /// Leaving system-proxy mode while connected has to reach the OS by hand. The
@@ -256,3 +289,8 @@ class SingleCall {
     }
   }
 }
+
+/// Whether the core is hot reloading; only the connection button shows it.
+final hotReloadingProvider = StreamProvider<bool>(
+  (ref) => ref.watch(connectionRepositoryProvider).watchHotReloading(),
+);

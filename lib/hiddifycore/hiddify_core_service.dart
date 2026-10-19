@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:grpc/grpc.dart';
 import 'package:hiddify/core/directories/directories_provider.dart';
@@ -30,6 +31,7 @@ import 'package:hiddify/utils/custom_loggers.dart';
 import 'package:hiddify/utils/platform_utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loggy/loggy.dart' as loggyl;
+import 'package:logging/logging.dart' as logging;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -95,7 +97,7 @@ class HiddifyCoreService with InfraLogger {
     return TaskEither(() async {
       try {
         final directories = ref.read(appDirectoriesProvider).requireValue;
-        final debug = ref.read(debugModeNotifierProvider);
+        final debug = kDebugMode || ref.read(ConfigOptions.logLevel).isVerbose;
         final setupResponse = await core.setup(directories, debug, 3);
 
         if (setupResponse.isNotEmpty) {
@@ -616,7 +618,7 @@ class HiddifyCoreService with InfraLogger {
       },
       cancelOnError: true,
       onError: (error) {
-        loggy.log(loggyl.LogLevel.error, 'Stream error: $error');
+        loggy.log(logging.Level.SEVERE, 'Stream error: $error');
         onError?.call(error);
         subscriptions[key]?.cancel();
         subscriptions.remove(key);
@@ -625,14 +627,16 @@ class HiddifyCoreService with InfraLogger {
     return subscriptions[key] as StreamSubscription<T>?;
   }
 
-  loggyl.LogLevel getLogLevel(LogLevel level) {
+  logging.Level getLogLevel(LogLevel level) {
     return switch (level) {
-      LogLevel.DEBUG => loggyl.LogLevel.debug,
-      LogLevel.INFO => loggyl.LogLevel.info,
-      LogLevel.WARNING => loggyl.LogLevel.warning,
-      LogLevel.ERROR => loggyl.LogLevel.error,
-      LogLevel.FATAL => loggyl.LogLevel.error,
-      _ => loggyl.LogLevel.info, // Default case
+      LogLevel.TRACE => logging.Level.FINEST,
+      LogLevel.DEBUG => logging.Level.FINE,
+      LogLevel.INFO => logging.Level.INFO,
+      LogLevel.WARNING => logging.Level.WARNING,
+      LogLevel.ERROR => logging.Level.SEVERE,
+      LogLevel.FATAL => logging.Level.SHOUT,
+      // the proto enum is a generated class, so a default is unavoidable
+      _ => logging.Level.INFO,
     };
   }
 

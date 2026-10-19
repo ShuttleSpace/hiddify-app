@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/model/constants.dart';
+import 'package:hiddify/features/profile/add/widgets/add_profile_custom_proxy.dart';
 import 'package:hiddify/features/profile/add/widgets/free_btns.dart';
 import 'package:hiddify/features/profile/add/widgets/widgets.dart';
 import 'package:hiddify/features/profile/model/profile_entity.dart';
@@ -105,11 +106,99 @@ class AddProfileManual extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final t = ref.watch(translationsProvider).requireValue;
-    final formKey = useMemoized(() => GlobalKey<FormState>());
-    final nameTextController = useTextEditingController();
-    final urlTextController = useTextEditingController();
+
+    // Both tabs add a profile, so they share the name field: a profile named in
+    // one is still named after switching, and the form fields below are the only
+    // thing that changes. Keeping the name outside the tabs says so.
+    final nameController = useTextEditingController();
+
+    final tabController = useTabController(initialLength: 2);
     final isAutoUpdateDisable = useState<bool>(false);
     final updateInterval = useState(.0);
+
+    // A fixed height keeps the Expanded below bounded, so the form opens at
+    // about the height the URL form always had instead of stretching to
+    // fullscreen. A taller tab scrolls inside its own view.
+    final form = Column(
+      children: [
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 12),
+          child: Row(
+            children: [
+              Expanded(child: Text(t.common.manually, style: theme.textTheme.headlineMedium)),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => ref.read(addProfilePageNotifierProvider.notifier).goOptions(),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: CustomTextFormField(
+            maxLines: 1,
+            controller: nameController,
+            validator: (value) => (value?.isEmpty ?? true) ? t.pages.profileDetails.form.emptyName : null,
+            label: t.common.name,
+            hint: t.pages.profileDetails.form.nameHint,
+          ),
+        ),
+        const Gap(12),
+        TabBar(
+          controller: tabController,
+          tabs: [
+            Tab(text: t.common.url),
+            Tab(text: t.pages.profileDetails.form.customProxy),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: tabController,
+            children: [
+              _SubscriptionUrlForm(
+                nameController: nameController,
+                isAutoUpdateDisable: isAutoUpdateDisable,
+                updateInterval: updateInterval,
+                sliderText: _genSliderText(t, updateInterval.value.round()),
+              ),
+              CustomProxyForm(nameController: nameController),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final available = constraints.maxHeight.isFinite ? constraints.maxHeight : MediaQuery.sizeOf(context).height;
+        return SizedBox(height: available * 0.6, child: form);
+      },
+    );
+  }
+}
+
+/// The subscription URL tab: what a profile config is fetched from, and how often.
+///
+/// The auto-update section is only about a remote config. A custom proxy has
+/// nothing to fetch, so it lives here rather than on the other tab.
+class _SubscriptionUrlForm extends HookConsumerWidget {
+  const _SubscriptionUrlForm({
+    required this.nameController,
+    required this.isAutoUpdateDisable,
+    required this.updateInterval,
+    required this.sliderText,
+  });
+
+  final TextEditingController nameController;
+  final ValueNotifier<bool> isAutoUpdateDisable;
+  final ValueNotifier<double> updateInterval;
+  final String sliderText;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider).requireValue;
+    final theme = Theme.of(context);
+    final urlController = useTextEditingController();
     final sliderFocusNode = useFocusNode(
       onKeyEvent: (node, event) {
         if (KeyboardConst.verticalArrows.contains(event.logicalKey) && event is KeyDownEvent) {
@@ -123,39 +212,17 @@ class AddProfileManual extends HookConsumerWidget {
         return KeyEventResult.ignored;
       },
     );
-    return Form(
-      key: formKey,
+
+    return SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 12),
-            child: Row(
-              children: [
-                Expanded(child: Text(t.common.manually, style: theme.textTheme.headlineMedium)),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => ref.read(addProfilePageNotifierProvider.notifier).goOptions(),
-                ),
-              ],
-            ),
-          ),
+          const Gap(12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: CustomTextFormField(
               maxLines: 1,
-              controller: nameTextController,
-              validator: (value) => (value?.isEmpty ?? true) ? t.pages.profileDetails.form.emptyName : null,
-              label: t.common.name,
-              hint: t.pages.profileDetails.form.nameHint,
-            ),
-          ),
-          const Gap(16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: CustomTextFormField(
-              maxLines: 1,
-              controller: urlTextController,
+              controller: urlController,
               validator: (value) => (value != null && !isUrl(value)) ? t.pages.profileDetails.form.invalidUrl : null,
               label: t.common.url,
               hint: t.pages.profileDetails.form.urlHint,
@@ -190,7 +257,7 @@ class AddProfileManual extends HookConsumerWidget {
                               ),
                             ),
                             Text(
-                              _genSliderText(t, updateInterval.value.round()),
+                              sliderText,
                               style: theme.textTheme.labelSmall!.copyWith(color: theme.colorScheme.onSurfaceVariant),
                             ),
                           ],
@@ -212,36 +279,30 @@ class AddProfileManual extends HookConsumerWidget {
                   )
                 : const SizedBox.shrink(),
           ),
-
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(top: 12, bottom: 8),
             child: Row(
               children: [
                 Expanded(
                   child: FilledButton(
                     child: Text(t.common.add),
                     onPressed: () async {
-                      if (formKey.currentState!.validate()) {
-                        final i = updateInterval.value.toInt();
-                        final interval = i > 0 ? i : null;
-                        await ref
-                            .read(addProfileNotifierProvider.notifier)
-                            .addManual(
-                              url: urlTextController.text.trim(),
-                              userOverride: UserOverride(
-                                name: nameTextController.text.trim(),
-                                isAutoUpdateDisable: isAutoUpdateDisable.value,
-                                updateInterval: interval,
-                              ),
-                            );
-                      }
+                      await ref
+                          .read(addProfileNotifierProvider.notifier)
+                          .addManual(
+                            url: urlController.text.trim(),
+                            userOverride: UserOverride(
+                              name: nameController.text.trim(),
+                              isAutoUpdateDisable: isAutoUpdateDisable.value,
+                              updateInterval: updateInterval.value.round().toInt(),
+                            ),
+                          );
                     },
                   ),
                 ),
               ],
             ),
           ),
-          // const Gap(16),
         ],
       ),
     );

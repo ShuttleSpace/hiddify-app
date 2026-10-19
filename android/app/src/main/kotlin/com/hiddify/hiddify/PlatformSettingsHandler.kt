@@ -138,6 +138,9 @@ class PlatformSettingsHandler : FlutterPlugin, MethodChannel.MethodCallHandler, 
                             }
                         val list = mutableListOf<AppItem>()
                         installedPackages.forEach {
+                            // Everything but this app is reported, including the ones with no
+                            // internet permission: the app list filters on that, and a filter
+                            // that cannot show what it hides is not much of a filter.
                             if (it.packageName != Application.application.packageName) {
                                 list.add(
                                     AppItem(

@@ -6,6 +6,7 @@
     "ok": "Aceptar",
     "cancel": "Cancelar",
     "kContinue": "Continuar",
+    "undo": "Deshacer",
     "showMore": "Mostrar más",
     "showLess": "Mostrar menos",
     "filter": "Filtrar",
@@ -28,6 +29,8 @@
     "help": "Ayuda",
     "save": "Guardar",
     "update": "Actualizar",
+    "pin": "Fijar",
+    "unpin": "Dejar de fijar",
     "share": "Compartir",
     "edit": "Editar",
     "delete": "Eliminar",
@@ -109,6 +112,7 @@
       "empty": "No hay proxies disponibles",
       "activeProxy": "Proxy activo",
       "unknownIp": "IP desconocida",
+      "switchFailed": "No se pudo cambiar a este proxy. Vuelve a intentarlo.",
       "sortOptions": {
         "unsorted": "Por defecto",
         "name": "Alfabéticamente",
@@ -152,9 +156,14 @@
         },
         "update": {
           "success": "Perfil actualizado con éxito",
-          "successNamed": "\"${name}\" actualizado con éxito",
           "failure": "Error al actualizar el perfil",
-          "failureNamed": "Error al actualizar \"${name}\""
+          "failureNamed": "Error al actualizar \"${name}\"",
+          "bulkSuccess(plural, param=count)": {
+            "one": "$count perfil actualizado",
+            "other": "$count perfiles actualizados"
+          },
+          "bulkPartial": "${success} actualizados\n${failed} fallidos: ${names}",
+          "successNamed": "\"${name}\" actualizado con éxito"
         },
         "delete": {
           "success": "Perfil eliminado con éxito"
@@ -171,11 +180,39 @@
         "urlHint": "URL de configuración completa",
         "disableAutoUpdate": "Desactivar actualización automática",
         "autoUpdateInterval": "Intervalo de actualización automática",
-        "loading": "Añadiendo perfil..."
+        "loading": "Añadiendo perfil...",
+        "customProxy": "Custom proxy",
+        "server": "Server",
+        "serverHint": "proxy.example.com",
+        "port": "Port",
+        "protocol": "Protocol",
+        "credentialsOptional": "Only if the proxy asks for them",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {
       "title": "Registros",
+      "category": "Categoría",
+      "level": "Nivel",
+      "recentLogs": "Registros recientes",
+      "recentLogsMsg": "Lo que ves en esta página",
+      "errorLog": "Registro de la aplicación y el núcleo",
+      "errorLogMsg": "Errores de ambos, en todas las ejecuciones",
+      "coreLog": "Registro del núcleo",
+      "coreLogMsg": "Todo lo que registró el núcleo",
+      "coreCrash": "Fallo del núcleo",
+      "coreCrashMsg": "Lo que hacía el núcleo en su último fallo",
+      "exportToFile": "Exportar a archivo",
+      "linesMatch": "$count líneas coinciden",
+      "fileSaved": "Archivo guardado",
+      "fileSaveFailed": "No se pudo guardar el archivo",
+      "coreLogLevel": "Nivel del núcleo",
+      "coreLogLevelMsg": "Se aplica al volver a conectar",
+      "buffer": "Búfer",
       "shareCoreLogs": "Compartir registros del núcleo",
       "shareAppLogs": "Compartir registros de la aplicación"
     },
@@ -227,21 +264,20 @@
         "ignoreBatteryOptimizationsMsg": "Eliminar restricciones para un rendimiento óptimo de la VPN",
         "memoryLimit": "Límite de memoria",
         "memoryLimitMsg": "Habilitar si experimentas errores de falta de memoria o fallos frecuentes de la aplicación",
-        "debugMode": "Modo de depuración",
-        "debugModeMsg": "Reinicia la aplicación para aplicar este cambio",
-        "logLevel": "Nivel de registro",
         "connectionTestUrl": "URL de prueba de conexión",
         "urlTestInterval": "Intervalo de prueba de URL",
         "clashApiPort": "Puerto de la API de Clash",
         "useXrayCoreWhenPossible": "Usar xray-core cuando sea posible",
-        "useXrayCoreWhenPossibleMsg": "Usa xray-core al analizar enlaces de suscripción. Necesitas reimportar el enlace para habilitar esta opción"
+        "useXrayCoreWhenPossibleMsg": "Usa xray-core al analizar enlaces de suscripción. Necesitas reimportar el enlace para habilitar esta opción",
+        "debugMode": "Modo de depuración",
+        "debugModeMsg": "Reinicia la aplicación para aplicar este cambio",
+        "logLevel": "Nivel de registro"
       },
       "routing": {
         "title": "Enrutamiento",
         "routeRule": {
-          "empty": "No se han añadido reglas todavía\n\nToca el botón + para crear una nueva regla o elige de las reglas predefinidas",
+          "add": "Añadir regla",
           "delete": "Eliminar regla",
-          "create": "Crear nueva regla",
           "options": {
             "import": {
               "clipboard": "Importar reglas desde el portapapeles",
@@ -256,7 +292,7 @@
           "rule": {
             "title": "Regla",
             "onlyTunMode": "Disponible solo en modo TUN",
-            "notAvailabeInThisPlatform": "No disponible en esta plataforma",
+            "notAvailableInThisPlatform": "No disponible en esta plataforma",
             "canNotBeEmpty": "No puede estar vacío",
             "validUrlEx": "https://example.com",
             "validUrl": "\"URL\" válida como\n@:pages.settings.routing.routeRule.rule.validUrlEx",
@@ -309,14 +345,121 @@
               "stun": "STUN",
               "dns": "DNS",
               "bittorrent": "BitTorrent"
-            }
+            },
+            "notAvailabeInThisPlatform": "No disponible en esta plataforma"
           },
           "genericList": {
             "addNew": "Añadir nuevo valor",
             "update": "Actualizar valor",
             "clearList": "Limpiar lista",
             "clearListMsg": "Todos los elementos han sido eliminados"
+          },
+          "empty": "No se han añadido reglas todavía\n\nToca el botón + para crear una nueva regla o elige de las reglas predefinidas",
+          "create": "Crear nueva regla"
+        },
+        "builtinRules": {
+          "tag": "Integrada",
+          "bypassLan": "Omitir LAN",
+          "blockAds": "Bloquear anuncios y malware",
+          "bypassRegion": "Omitir sitios de $region"
+        },
+        "appBasedRouting": {
+          "title": "Enrutamiento por aplicación",
+          "hideSysApps": "Ocultar aplicaciones del sistema",
+          "listTitle": {
+            "bypass": "Aplicaciones omitidas",
+            "proxy": "Aplicaciones con proxy"
+          },
+          "chooseApps": "Elegir aplicaciones",
+          "apps": {
+            "one": "aplicación",
+            "other": "aplicaciones"
+          },
+          "moreApps": {
+            "one": "+$n aplicación",
+            "other": "+$n aplicaciones"
+          },
+          "autoTag": "Auto",
+          "outsideVpn": "Fuera de la VPN",
+          "ruleWontApply": "Fuera de la VPN · la regla no se aplicará",
+          "notInstalled": "No instalada",
+          "share": {
+            "invite": "Ayuda a mejorar la selección automática",
+            "removed": {
+              "one": "$n eliminada",
+              "other": "$n eliminadas"
+            },
+            "added": {
+              "one": "$n añadida",
+              "other": "$n añadidas"
+            },
+            "title": "Comparte tus cambios",
+            "where": "Abre una incidencia pública en GitHub, ya rellenada con los nombres de estas aplicaciones. Para compartirlos, envíala allí. Necesitas una cuenta de GitHub.",
+            "action": "Continuar en GitHub"
+          },
+          "options": {
+            "import": {
+              "clipboard": "Importar selección desde el portapapeles",
+              "file": "Importar selección desde un archivo",
+              "msg": "La importación reemplaza tus selecciones actuales. ¿Continuar?"
+            },
+            "export": {
+              "clipboard": "Copiar selección al portapapeles",
+              "file": "Exportar selección a un archivo"
+            },
+            "clearAllSelections": "Borrar todas las selecciones"
+          },
+          "modes": {
+            "proxy": "Solo proxy",
+            "bypass": "Omitir"
+          },
+          "autoSelection": {
+            "title": "Selección automática basada en $region",
+            "performNow": "Actualizar ahora",
+            "updated": {
+              "zero": "Actualizada hoy",
+              "one": "Actualizada hace $n día",
+              "other": "Actualizada hace $n días"
+            },
+            "noList": "No hay lista para esta región",
+            "loadFailed": "No se pudo cargar la lista",
+            "restore": {
+              "one": "Restaurar $n selección automática",
+              "other": "Restaurar $n selecciones automáticas"
+            },
+            "restored": {
+              "one": "$n selección automática restaurada",
+              "other": "$n selecciones automáticas restauradas"
+            }
           }
+        },
+        "region": "Región",
+        "regions": {
+          "ir": "Irán (ir)",
+          "cn": "China (cn)",
+          "ru": "Rusia (ru)",
+          "af": "Afganistán (af)",
+          "id": "Indonesia (id)",
+          "tr": "Turquía (tr)",
+          "br": "Brasil (br)",
+          "other": "Otro"
+        },
+        "balancerStrategy": {
+          "title": "Estrategia de Balancer",
+          "roundRobin": "Round robin",
+          "consistentHash": "Consistent hash",
+          "stickySession": "Sticky session",
+          "roundRobinDescription": "Cada conexión usa el siguiente servidor, así que los sitios pueden ver que tu IP cambia",
+          "consistentHashDescription": "Cada sitio usa siempre el mismo servidor",
+          "stickySessionDescription": "Cada sitio mantiene un servidor aleatorio hasta que te vuelvas a conectar"
+        },
+        "resolveDestination": "Resolver destino",
+        "ipv6Route": "Ruta IPv6",
+        "ipv6Modes": {
+          "disable": "Desactivado",
+          "enable": "Activado",
+          "prefer": "Preferido",
+          "only": "Exclusivo"
         },
         "generalOptions": {
           "title": "Opciones generales de enrutamiento",
@@ -454,11 +597,12 @@
         "directPort": "Puerto de Directo",
         "redirectPort": "Puerto de redirección",
         "lanSharing": "Compartir VPN",
+        "qrCode": "Código QR",
+        "lanQrSubtitle": "Proxy SOCKS5 para esta red Wi-Fi",
+        "lanIPError": "Error al obtener la IP local",
         "lanSharingPasswordNotSet": "Contraseña no establecida",
         "lanSharingPassword": "Contraseña de compartir VPN",
-        "copyLink": "Copiar enlace",
-        "qrCode": "Código QR",
-        "lanIPError": "Error al obtener la IP local"
+        "copyLink": "Copiar enlace"
       },
       "tlsTricks": {
         "title": "Trucos de TLS",
@@ -579,11 +723,19 @@
       "expireDate": "Fecha de caducidad",
       "expired": "Caducado",
       "noTraffic": "Cuota agotada",
-      "remainingTime": "Tiempo restante",
-      "remainingDuration": "${duration} días restantes",
-      "remainingDurationNew": "${duration} días",
+      "remainingDuration(plural, param=days)": {
+        "one": "Queda $days día",
+        "other": "Quedan $days días"
+      },
+      "remainingUnlimited": "Ilimitado",
       "remainingTrafficSemanticLabel": "${consumed} de ${total} de tráfico consumido",
       "remainingTraffic": "Tráfico restante",
+      "openWebPage": "Abrir página web",
+      "support": "Soporte",
+      "openLinkTitle": "¿Abrir este enlace?",
+      "openLinkAction": "Abrir",
+      "remainingTime": "Tiempo restante",
+      "remainingDurationNew": "${duration} días",
       "remainingUsage": "Restante",
       "profileSite": "Proveedor",
       "profileSupport": "Soporte"
@@ -595,6 +747,10 @@
       "sort": {
         "name": "Alfabéticamente",
         "lastUpdate": "Última actualización"
+      },
+      "direction": {
+        "newestFirst": "Más recientes primero",
+        "oldestFirst": "Más antiguos primero"
       }
     },
     "warpLicense": {
@@ -624,13 +780,9 @@
           "msg": "¿Estás seguro de que quieres eliminar este perfil permanentemente?"
         }
       },
-      "perAppProxy": {
-        "shareOnGithub": {
-          "title": "Mejorando la selección automática",
-          "msg": "Al compartir las aplicaciones seleccionadas, ayudas a completar la lista de \"selección automática\""
-        },
+      "appList": {
         "import": {
-          "msg": "Esto reemplazará todas tus selecciones actuales de proxy por aplicación. ¿Estás seguro de que quieres continuar?"
+          "msg": "Esto reemplaza tus aplicaciones de Omitir y Solo proxy. ¿Continuar?"
         }
       },
       "routeRule": {
@@ -646,6 +798,15 @@
       "importRouteRuleByDeepLinkWarning": {
         "title": "¿Importar regla de enrutamiento?",
         "message": "Importar reglas de enrutamiento desde fuentes no confiables puede ser un riesgo de seguridad\nSolo continúe si confía en este enlace"
+      },
+      "perAppProxy": {
+        "shareOnGithub": {
+          "title": "Mejorando la selección automática",
+          "msg": "Al compartir las aplicaciones seleccionadas, ayudas a completar la lista de \"selección automática\""
+        },
+        "import": {
+          "msg": "Esto reemplazará todas tus selecciones actuales de proxy por aplicación. ¿Estás seguro de que quieres continuar?"
+        }
       }
     },
     "experimentalNotice": {
@@ -663,6 +824,11 @@
     },
     "unknownDomainsWarning": {
       "title": "Advertencia de enlace externo",
+      "cannotVerify": "Este enlace no está verificado",
+      "avoidIfUnsure": "Si no estás totalmente seguro, no pagues ni compartas información sensible",
+      "ownResponsibility": "Continúas bajo tu propia responsabilidad",
+      "open": "Abrir",
+      "openIn": "Abrir (${seconds})",
       "youAreAboutToVisit": "Estás a punto de visitar:",
       "thisWebsiteIsNotInOurTrustedList": "Este sitio web no está en nuestra lista de confianza. Procede con precaución."
     },
@@ -691,15 +857,28 @@
       "askEachTime": "Preguntar cada vez",
       "alertMessage": "¿Ocultar o salir de la aplicación?",
       "remember": "Recordar mi elección"
+    },
+    "qrCode": {
+      "copyFullLink": "Copiar enlace completo",
+      "copied": "Copiado",
+      "ip": "IP",
+      "port": "Puerto",
+      "username": "Nombre de usuario",
+      "password": "Contraseña",
+      "showPassword": "Mostrar contraseña",
+      "hidePassword": "Ocultar contraseña"
     }
   },
   "connection": {
     "tapToConnect": "Toca para conectar",
     "connect": "Conectar",
     "connecting": "Conectando...",
+    "hotReloading": "Aplicando cambios…",
     "connected": "Conectado",
     "disconnect": "Desconectar",
     "disconnecting": "Desconectando...",
+    "failed": "No se pudo conectar",
+    "tapToRetry": "Toca para volver a intentarlo",
     "reconnect": "Reconectar",
     "reconnectMsg": "Reconectando para aplicar los cambios..."
   },
@@ -729,6 +908,8 @@
       "serviceNotRunning": "El servicio no se está ejecutando",
       "missingPrivilege": "Falta privilegio",
       "missingPrivilegeMsg": "El modo VPN requiere privilegios de administrador. Reinicia la aplicación como administrador o cambia el modo de servicio.",
+      "tunAddressInUse": "Hay otra VPN activa",
+      "tunAddressInUseMsg": "El modo VPN no puede iniciarse. Desactiva la otra VPN o cambia el modo de servicio.",
       "invalidConfigOptions": "Opciones de configuración no válidas",
       "invalidConfig": "Configuración no válida"
     },

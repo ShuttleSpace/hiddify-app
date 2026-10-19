@@ -6,6 +6,7 @@
     "ok": "Oke",
     "cancel": "Batal",
     "kContinue": "Lanjutkan",
+    "undo": "Urungkan",
     "showMore": "Tampilkan lebih banyak",
     "showLess": "Tampilkan lebih sedikit",
     "filter": "Filter",
@@ -28,6 +29,8 @@
     "help": "Bantuan",
     "save": "Simpan",
     "update": "Perbarui",
+    "pin": "Sematkan",
+    "unpin": "Lepas sematan",
     "share": "Bagikan",
     "edit": "Edit",
     "delete": "Hapus",
@@ -109,6 +112,7 @@
       "empty": "Tidak ada proksi yang tersedia",
       "activeProxy": "Proksi aktif",
       "unknownIp": "IP tidak dikenal",
+      "switchFailed": "Tidak dapat beralih ke proxy ini. Coba lagi.",
       "sortOptions": {
         "unsorted": "Default",
         "name": "Berdasarkan abjad",
@@ -152,9 +156,13 @@
         },
         "update": {
           "success": "Profil berhasil diperbarui",
-          "successNamed": "\"${name}\" berhasil diperbarui",
           "failure": "Gagal memperbarui profil",
-          "failureNamed": "Gagal memperbarui \"${name}\""
+          "failureNamed": "Gagal memperbarui \"${name}\"",
+          "bulkSuccess(plural, param=count)": {
+            "other": "$count profil diperbarui"
+          },
+          "bulkPartial": "${success} diperbarui\n${failed} gagal: ${names}",
+          "successNamed": "\"${name}\" berhasil diperbarui"
         },
         "delete": {
           "success": "Profil berhasil dihapus"
@@ -171,11 +179,39 @@
         "urlHint": "URL konfigurasi lengkap",
         "disableAutoUpdate": "Nonaktifkan pembaruan otomatis",
         "autoUpdateInterval": "Interval pembaruan otomatis",
-        "loading": "Menambahkan profil..."
+        "loading": "Menambahkan profil...",
+        "customProxy": "Custom proxy",
+        "server": "Server",
+        "serverHint": "proxy.example.com",
+        "port": "Port",
+        "protocol": "Protocol",
+        "credentialsOptional": "Only if the proxy asks for them",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {
       "title": "Log",
+      "category": "Kategori",
+      "level": "Level",
+      "recentLogs": "Log terbaru",
+      "recentLogsMsg": "Yang Anda lihat di halaman ini",
+      "errorLog": "Log aplikasi dan inti",
+      "errorLogMsg": "Kesalahan keduanya, di seluruh sesi",
+      "coreLog": "Log inti",
+      "coreLogMsg": "Semua yang dicatat inti",
+      "coreCrash": "Crash inti",
+      "coreCrashMsg": "Yang sedang dilakukan inti saat crash terakhir",
+      "exportToFile": "Ekspor ke berkas",
+      "linesMatch": "$count baris cocok",
+      "fileSaved": "Berkas disimpan",
+      "fileSaveFailed": "Tidak dapat menyimpan berkas",
+      "coreLogLevel": "Level inti",
+      "coreLogLevelMsg": "Berlaku setelah menyambung ulang",
+      "buffer": "Bufer",
       "shareCoreLogs": "Bagikan log inti",
       "shareAppLogs": "Bagikan log aplikasi"
     },
@@ -227,21 +263,20 @@
         "ignoreBatteryOptimizationsMsg": "Hapus batasan untuk kinerja VPN yang optimal",
         "memoryLimit": "Batas memori",
         "memoryLimitMsg": "Aktifkan jika Anda mengalami kesalahan kehabisan memori atau aplikasi sering macet",
-        "debugMode": "Mode debug",
-        "debugModeMsg": "Mulai ulang aplikasi untuk menerapkan perubahan ini",
-        "logLevel": "Level log",
         "connectionTestUrl": "URL uji koneksi",
         "urlTestInterval": "Interval uji URL",
         "clashApiPort": "Port API Clash",
         "useXrayCoreWhenPossible": "Gunakan xray-core jika memungkinkan",
-        "useXrayCoreWhenPossibleMsg": "Gunakan xray-core saat mengurai tautan langganan. Anda perlu mengimpor ulang tautan untuk mengaktifkan opsi ini."
+        "useXrayCoreWhenPossibleMsg": "Gunakan xray-core saat mengurai tautan langganan. Anda perlu mengimpor ulang tautan untuk mengaktifkan opsi ini.",
+        "debugMode": "Mode debug",
+        "debugModeMsg": "Mulai ulang aplikasi untuk menerapkan perubahan ini",
+        "logLevel": "Level log"
       },
       "routing": {
         "title": "Perutean",
         "routeRule": {
-          "empty": "Belum ada aturan yang ditambahkan\n\nKetuk tombol + untuk membuat aturan baru atau pilih dari aturan yang telah ditentukan sebelumnya",
+          "add": "Tambah aturan",
           "delete": "Hapus aturan",
-          "create": "Buat aturan baru",
           "options": {
             "import": {
               "clipboard": "Impor aturan dari papan klip",
@@ -256,7 +291,7 @@
           "rule": {
             "title": "Aturan",
             "onlyTunMode": "Hanya tersedia dalam mode TUN",
-            "notAvailabeInThisPlatform": "Tidak tersedia di platform ini",
+            "notAvailableInThisPlatform": "Tidak tersedia di platform ini",
             "canNotBeEmpty": "Tidak boleh kosong",
             "validUrlEx": "https://example.com",
             "validUrl": "\"URL\" yang valid seperti\n@:pages.settings.routing.routeRule.rule.validUrlEx",
@@ -309,14 +344,121 @@
               "stun": "STUN",
               "dns": "DNS",
               "bittorrent": "BitTorrent"
-            }
+            },
+            "notAvailabeInThisPlatform": "Tidak tersedia di platform ini"
           },
           "genericList": {
             "addNew": "Tambah nilai baru",
             "update": "Perbarui nilai",
             "clearList": "Bersihkan daftar",
             "clearListMsg": "Semua item dihapus"
+          },
+          "empty": "Belum ada aturan yang ditambahkan\n\nKetuk tombol + untuk membuat aturan baru atau pilih dari aturan yang telah ditentukan sebelumnya",
+          "create": "Buat aturan baru"
+        },
+        "builtinRules": {
+          "tag": "Bawaan",
+          "bypassLan": "Lewati LAN",
+          "blockAds": "Blokir iklan dan malware",
+          "bypassRegion": "Lewati situs di $region"
+        },
+        "appBasedRouting": {
+          "title": "Perutean berbasis aplikasi",
+          "hideSysApps": "Sembunyikan aplikasi sistem",
+          "listTitle": {
+            "bypass": "Aplikasi yang dilewati",
+            "proxy": "Aplikasi dengan proxy"
+          },
+          "chooseApps": "Pilih aplikasi",
+          "apps": {
+            "one": "aplikasi",
+            "other": "aplikasi"
+          },
+          "moreApps": {
+            "one": "+$n aplikasi",
+            "other": "+$n aplikasi"
+          },
+          "autoTag": "Otomatis",
+          "outsideVpn": "Di luar VPN",
+          "ruleWontApply": "Di luar VPN · aturan tidak berlaku",
+          "notInstalled": "Tidak terpasang",
+          "share": {
+            "invite": "Bantu tingkatkan pilihan otomatis",
+            "removed": {
+              "one": "$n dihapus",
+              "other": "$n dihapus"
+            },
+            "added": {
+              "one": "$n ditambahkan",
+              "other": "$n ditambahkan"
+            },
+            "title": "Bagikan perubahan Anda",
+            "where": "Membuka issue publik di GitHub yang sudah berisi nama aplikasi ini. Untuk membagikannya, kirim issue itu di sana. Anda memerlukan akun GitHub.",
+            "action": "Lanjutkan di GitHub"
+          },
+          "options": {
+            "import": {
+              "clipboard": "Impor pilihan dari papan klip",
+              "file": "Impor pilihan dari file",
+              "msg": "Mengimpor menggantikan pilihan Anda saat ini. Lanjutkan?"
+            },
+            "export": {
+              "clipboard": "Salin pilihan ke papan klip",
+              "file": "Ekspor pilihan ke file"
+            },
+            "clearAllSelections": "Hapus semua pilihan"
+          },
+          "modes": {
+            "proxy": "Hanya proxy",
+            "bypass": "Lewati"
+          },
+          "autoSelection": {
+            "title": "Pilihan otomatis berdasarkan $region",
+            "performNow": "Perbarui sekarang",
+            "updated": {
+              "zero": "Diperbarui hari ini",
+              "one": "Diperbarui $n hari lalu",
+              "other": "Diperbarui $n hari lalu"
+            },
+            "noList": "Tidak ada daftar untuk wilayah ini",
+            "loadFailed": "Tidak dapat memuat daftar",
+            "restore": {
+              "one": "Pulihkan $n pilihan otomatis",
+              "other": "Pulihkan $n pilihan otomatis"
+            },
+            "restored": {
+              "one": "$n pilihan otomatis dipulihkan",
+              "other": "$n pilihan otomatis dipulihkan"
+            }
           }
+        },
+        "region": "Wilayah",
+        "regions": {
+          "ir": "Iran (ir)",
+          "cn": "Tiongkok (cn)",
+          "ru": "Rusia (ru)",
+          "af": "Afghanistan (af)",
+          "id": "Indonesia (id)",
+          "tr": "Turki (tr)",
+          "br": "Brasil (br)",
+          "other": "Lainnya"
+        },
+        "balancerStrategy": {
+          "title": "Strategi Balancer",
+          "roundRobin": "Round robin",
+          "consistentHash": "Consistent hash",
+          "stickySession": "Sticky session",
+          "roundRobinDescription": "Setiap koneksi memakai server berikutnya, jadi situs mungkin melihat IP Anda berubah",
+          "consistentHashDescription": "Setiap situs selalu memakai server yang sama",
+          "stickySessionDescription": "Setiap situs memakai server acak sampai Anda menyambung ulang"
+        },
+        "resolveDestination": "Resolusi tujuan",
+        "ipv6Route": "Rute IPv6",
+        "ipv6Modes": {
+          "disable": "Nonaktif",
+          "enable": "Aktif",
+          "prefer": "Prioritaskan",
+          "only": "Eksklusif"
         },
         "generalOptions": {
           "title": "Opsi umum perutean",
@@ -454,11 +596,12 @@
         "directPort": "Port direct",
         "redirectPort": "Port pengalihan",
         "lanSharing": "Berbagi VPN",
+        "qrCode": "Kode QR",
+        "lanQrSubtitle": "Proxy SOCKS5 untuk Wi-Fi ini",
+        "lanIPError": "Gagal mendapatkan alamat IP lokal",
         "lanSharingPasswordNotSet": "Kata sandi belum diatur",
         "lanSharingPassword": "Kata sandi berbagi VPN",
-        "copyLink": "Salin tautan",
-        "qrCode": "Kode QR",
-        "lanIPError": "Gagal mendapatkan alamat IP lokal"
+        "copyLink": "Salin tautan"
       },
       "tlsTricks": {
         "title": "Trik TLS",
@@ -579,11 +722,18 @@
       "expireDate": "Tanggal kedaluwarsa",
       "expired": "Kedaluwarsa",
       "noTraffic": "Kuota habis",
-      "remainingTime": "Sisa waktu",
-      "remainingDuration": "tersisa ${duration} hari",
-      "remainingDurationNew": "${duration} hari",
+      "remainingDuration(plural, param=days)": {
+        "other": "Sisa $days hari"
+      },
+      "remainingUnlimited": "Tanpa batas",
       "remainingTrafficSemanticLabel": "${consumed} dari ${total} lalu lintas terpakai",
       "remainingTraffic": "Sisa lalu lintas",
+      "openWebPage": "Buka halaman web",
+      "support": "Dukungan",
+      "openLinkTitle": "Buka tautan ini?",
+      "openLinkAction": "Buka",
+      "remainingTime": "Sisa waktu",
+      "remainingDurationNew": "${duration} hari",
       "remainingUsage": "Sisa",
       "profileSite": "Penyedia",
       "profileSupport": "Dukungan"
@@ -595,6 +745,10 @@
       "sort": {
         "name": "Menurut abjad",
         "lastUpdate": "Terakhir diperbarui"
+      },
+      "direction": {
+        "newestFirst": "Terbaru dulu",
+        "oldestFirst": "Terlama dulu"
       }
     },
     "warpLicense": {
@@ -624,13 +778,9 @@
           "msg": "Anda yakin ingin menghapus profil ini secara permanen?"
         }
       },
-      "perAppProxy": {
-        "shareOnGithub": {
-          "title": "Meningkatkan pilihan otomatis",
-          "msg": "Dengan membagikan aplikasi yang dipilih, Anda membantu melengkapi daftar \"pilihan otomatis\""
-        },
+      "appList": {
         "import": {
-          "msg": "Ini akan menggantikan semua pilihan proksi per aplikasi Anda saat ini. Anda yakin ingin melanjutkan?"
+          "msg": "Ini menggantikan aplikasi Lewati dan Hanya proxy Anda. Lanjutkan?"
         }
       },
       "routeRule": {
@@ -646,6 +796,15 @@
       "importRouteRuleByDeepLinkWarning": {
         "title": "Impor aturan rute?",
         "message": "Mengimpor aturan rute dari sumber yang tidak tepercaya dapat menjadi risiko keamanan\nLanjutkan hanya jika Anda mempercayai tautan ini"
+      },
+      "perAppProxy": {
+        "shareOnGithub": {
+          "title": "Meningkatkan pilihan otomatis",
+          "msg": "Dengan membagikan aplikasi yang dipilih, Anda membantu melengkapi daftar \"pilihan otomatis\""
+        },
+        "import": {
+          "msg": "Ini akan menggantikan semua pilihan proksi per aplikasi Anda saat ini. Anda yakin ingin melanjutkan?"
+        }
       }
     },
     "experimentalNotice": {
@@ -663,6 +822,11 @@
     },
     "unknownDomainsWarning": {
       "title": "Peringatan tautan eksternal",
+      "cannotVerify": "Tautan ini belum diverifikasi",
+      "avoidIfUnsure": "Jika Anda tidak sepenuhnya yakin, jangan membayar atau membagikan informasi sensitif",
+      "ownResponsibility": "Anda melanjutkan dengan risiko sendiri",
+      "open": "Buka",
+      "openIn": "Buka (${seconds})",
       "youAreAboutToVisit": "Anda akan mengunjungi:",
       "thisWebsiteIsNotInOurTrustedList": "Situs web ini tidak ada dalam daftar tepercaya kami. Harap lanjutkan dengan hati-hati."
     },
@@ -691,15 +855,28 @@
       "askEachTime": "Tanyakan setiap kali",
       "alertMessage": "Sembunyikan atau keluar dari aplikasi?",
       "remember": "Ingat pilihan saya"
+    },
+    "qrCode": {
+      "copyFullLink": "Salin tautan lengkap",
+      "copied": "Disalin",
+      "ip": "IP",
+      "port": "Port",
+      "username": "Nama pengguna",
+      "password": "Kata sandi",
+      "showPassword": "Tampilkan kata sandi",
+      "hidePassword": "Sembunyikan kata sandi"
     }
   },
   "connection": {
     "tapToConnect": "Ketuk untuk menyambungkan",
     "connect": "Sambungkan",
     "connecting": "Menyambungkan...",
+    "hotReloading": "Menerapkan perubahan…",
     "connected": "Tersambung",
     "disconnect": "Putuskan",
     "disconnecting": "Memutuskan...",
+    "failed": "Tidak dapat tersambung",
+    "tapToRetry": "Ketuk untuk mencoba lagi",
     "reconnect": "Sambungkan kembali",
     "reconnectMsg": "Menyambungkan kembali untuk menerapkan perubahan..."
   },
@@ -729,6 +906,8 @@
       "serviceNotRunning": "Layanan tidak berjalan",
       "missingPrivilege": "Izin hilang",
       "missingPrivilegeMsg": "Mode VPN memerlukan izin administrator. Harap mulai ulang aplikasi sebagai administrator atau ubah mode layanan.",
+      "tunAddressInUse": "VPN lain sedang aktif",
+      "tunAddressInUseMsg": "Mode VPN tidak dapat dimulai. Matikan VPN lain atau ubah mode layanan.",
       "invalidConfigOptions": "Opsi konfigurasi tidak valid",
       "invalidConfig": "Konfigurasi tidak valid"
     },

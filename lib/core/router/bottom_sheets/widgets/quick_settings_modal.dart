@@ -21,7 +21,6 @@ class QuickSettingsModal extends HookConsumerWidget {
               padding: const EdgeInsets.all(16),
               child: SegmentedButton(
                 showSelectedIcon: false,
-                expandedInsets: EdgeInsets.zero,
                 segments: ServiceMode.choices
                     .map(
                       (e) => ButtonSegment(
@@ -39,7 +38,7 @@ class QuickSettingsModal extends HookConsumerWidget {
               ),
             ),
             const Divider(height: 2, thickness: 2),
-            const LanSharingPreferenceWidget(),
+            const LanSharingPreferenceWidget(showLeading: false),
             const Divider(height: 2, thickness: 2),
             const ChainQuickSettings(),
             // const Gap(12),

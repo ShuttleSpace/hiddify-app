@@ -50,9 +50,9 @@ CORE_NAME=hiddify-lib
 LIB_NAME=hiddify-core
 
 ifeq ($(CHANNEL),prod)
-	CORE_URL=https://github.com/ShuttleSpace/hiddify-core/releases/download/v$(core.version)
+	CORE_URL=https://github.com/hiddify/hiddify-core/releases/download/v$(core.version)
 else
-	CORE_URL=https://github.com/ShuttleSpace/hiddify-core/releases/download/draft
+	CORE_URL=https://github.com/hiddify/hiddify-core/releases/download/draft
 endif
 
 ifeq ($(CHANNEL),prod)
@@ -294,6 +294,7 @@ windows-zip-release:
 	  --build-target=$(TARGET) \
 	  --build-dart-define=sentry_dsn=$(SENTRY_DSN) \
 	  --build-dart-define=portable=true
+# 	repacking needs Windows' own tar.exe: GNU tar from Git Bash ignores -a for .zip and writes a plain tar
 	@FULL_PATH=$$(ls dist/*/*.zip | head -n 1); \
 	ZIP_DIR=$$(dirname "$$FULL_PATH"); \
 	ZIP_FILE=$$(basename "$$FULL_PATH"); \
@@ -304,7 +305,11 @@ windows-zip-release:
 	mkdir -p Hiddify; \
 	unzip -q "$$ZIP_FILE" -d Hiddify/; \
 	rm "$$ZIP_FILE"; \
-	tar -a -cf "$$FILE_NAME.zip" Hiddify; \
+	if command -v 7z > /dev/null 2>&1; then \
+	  7z a -tzip -bso0 -bsp0 "$$FILE_NAME.zip" Hiddify; \
+	else \
+	  pwsh -NoProfile -Command "Compress-Archive -Path Hiddify -DestinationPath '$$FILE_NAME.zip' -Force"; \
+	fi; \
 	rm -rf Hiddify; \
 	$(GREEN)Successful$(DONE)
 
@@ -514,13 +519,6 @@ build-headers:
 build-android-libs:
 	make -C hiddify-core -f Makefile android 
 	mv $(BINDIR)/$(LIB_NAME).aar $(ANDROID_OUT)/
-
-build-android-debug-libs:
-	make -C hiddify-core -f Makefile android-debug
-	mv $(BINDIR)/$(LIB_NAME)-debug.aar $(ANDROID_OUT)/
-
-android-debug-apk: build-android-debug-libs
-	cd android && ./gradlew :app:assembleDebug -PhiddifyDebugCore=true --console=plain
 
 build-windows-libs:
 	make -C hiddify-core -f Makefile windows-amd64

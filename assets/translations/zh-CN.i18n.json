@@ -1,4 +1,4 @@
-﻿{
+{
   "common": {
     "appTitle": "Hiddify",
     "start": "开始",
@@ -6,6 +6,7 @@
     "ok": "确定",
     "cancel": "取消",
     "kContinue": "继续",
+    "undo": "撤销",
     "showMore": "显示更多",
     "showLess": "显示更少",
     "filter": "筛选",
@@ -14,8 +15,6 @@
     "resume": "恢复",
     "clear": "清除",
     "close": "关闭",
-    "copy": "复制",
-    "copied": "已复制",
     "auto": "自动",
     "manually": "手动",
     "name": "名称",
@@ -30,6 +29,8 @@
     "help": "帮助",
     "save": "保存",
     "update": "更新",
+    "pin": "置顶",
+    "unpin": "取消置顶",
     "share": "分享",
     "edit": "编辑",
     "delete": "删除",
@@ -73,13 +74,6 @@
       "permission": {
         "denied": "权限被拒绝"
       },
-      "qrCode": {
-        "notFound": "未识别到二维码",
-        "save": {
-          "success": "二维码保存成功",
-          "failure": "二维码保存失败：$error"
-        }
-      },
       "export": {
         "clipboard": {
           "success": "已成功添加到剪贴板",
@@ -98,8 +92,17 @@
       },
       "autoSave": {
         "success": "更改已自动保存"
+      },
+      "qrCode": {
+        "notFound": "未识别到二维码",
+        "save": {
+          "success": "二维码保存成功",
+          "failure": "二维码保存失败：$error"
+        }
       }
-    }
+    },
+    "copy": "复制",
+    "copied": "已复制"
   },
   "intro": {
     "banner": "畅享无限制网络的所需一切",
@@ -116,6 +119,25 @@
       "sort": "排序代理",
       "testDelay": "测试延迟",
       "empty": "无可用代理",
+      "activeProxy": "当前代理",
+      "unknownIp": "未知 IP",
+      "switchFailed": "无法切换到此代理。请重试。",
+      "sortOptions": {
+        "unsorted": "默认",
+        "name": "按名称",
+        "delay": "按延迟",
+        "usage": "按用量"
+      },
+      "ipInfo": {
+        "address": "IP 地址",
+        "country": "国家",
+        "organization": "组织"
+      },
+      "delay": {
+        "result": "延迟：${delay}毫秒",
+        "timeout": "延迟测试超时",
+        "testing": "延迟：测试中..."
+      },
       "nodeBlacklist": {
         "title": "节点黑名单",
         "copyJson": "复制 JSON",
@@ -161,24 +183,6 @@
           "customOnly": "仅自定义",
           "globalPlusCustom": "全局 + 自定义"
         }
-      },
-      "activeProxy": "当前代理",
-      "unknownIp": "未知 IP",
-      "sortOptions": {
-        "unsorted": "默认",
-        "name": "按名称",
-        "delay": "按延迟",
-        "usage": "按用量"
-      },
-      "ipInfo": {
-        "address": "IP 地址",
-        "country": "国家",
-        "organization": "组织"
-      },
-      "delay": {
-        "result": "延迟：${delay}毫秒",
-        "timeout": "延迟测试超时",
-        "testing": "延迟：测试中..."
       }
     },
     "profiles": {
@@ -207,9 +211,13 @@
         },
         "update": {
           "success": "配置文件更新成功",
-          "successNamed": "\"${name}\" 更新成功",
           "failure": "更新配置文件失败",
-          "failureNamed": "更新 \"${name}\" 失败"
+          "failureNamed": "更新 \"${name}\" 失败",
+          "bulkSuccess(plural, param=count)": {
+            "other": "已更新 $count 个配置文件"
+          },
+          "bulkPartial": "${success} 个已更新\n${failed} 个失败：${names}",
+          "successNamed": "\"${name}\" 更新成功"
         },
         "delete": {
           "success": "配置文件删除成功"
@@ -224,15 +232,43 @@
         "emptyName": "名称为必填项",
         "invalidUrl": "无效的 URL",
         "urlHint": "完整的配置 URL",
-        "homePage": "提供商主页（管理页）",
-        "homePageHint": "https://provider.example",
         "disableAutoUpdate": "禁用自动更新",
         "autoUpdateInterval": "自动更新间隔",
-        "loading": "正在添加配置文件..."
+        "loading": "正在添加配置文件...",
+        "homePage": "提供商主页（管理页）",
+        "homePageHint": "https://provider.example",
+        "customProxy": "自定义代理",
+        "server": "服务器",
+        "serverHint": "proxy.example.com",
+        "port": "端口",
+        "protocol": "协议",
+        "credentialsOptional": "仅当代理会要求时填写",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {
       "title": "日志",
+      "category": "类别",
+      "level": "级别",
+      "recentLogs": "最近日志",
+      "recentLogsMsg": "本页显示的内容",
+      "errorLog": "应用和核心日志",
+      "errorLogMsg": "两者的错误，跨所有运行",
+      "coreLog": "核心日志",
+      "coreLogMsg": "核心记录的全部内容",
+      "coreCrash": "核心崩溃",
+      "coreCrashMsg": "核心上次崩溃时正在做的事",
+      "exportToFile": "导出到文件",
+      "linesMatch": "$count 行匹配",
+      "fileSaved": "文件已保存",
+      "fileSaveFailed": "无法保存文件",
+      "coreLogLevel": "核心级别",
+      "coreLogLevelMsg": "重新连接后生效",
+      "buffer": "缓冲区",
       "shareCoreLogs": "分享核心日志",
       "shareAppLogs": "分享应用日志"
     },
@@ -280,145 +316,25 @@
         "actionAtClosing": "关闭时操作",
         "autoStart": "开机自启",
         "silentStart": "静默启动",
-        "openMainWindowOnStartup": "启动时打开主界面",
         "ignoreBatteryOptimizations": "忽略电池优化",
         "ignoreBatteryOptimizationsMsg": "移除限制以获得最佳 VPN 性能",
         "memoryLimit": "内存限制",
         "memoryLimitMsg": "如果您遇到内存不足错误或应用频繁崩溃，请启用此选项",
-        "debugMode": "调试模式",
-        "debugModeMsg": "重启应用以应用此更改",
-        "logLevel": "日志级别",
         "connectionTestUrl": "连接测试 URL",
         "urlTestInterval": "URL 测试间隔",
         "clashApiPort": "Clash API 端口",
         "useXrayCoreWhenPossible": "尽可能使用 xray-core",
-        "useXrayCoreWhenPossibleMsg": "解析订阅链接时使用 xray-core。您需要重新导入订阅链接才能启用此选项"
-      },
-      "appearance": {
-        "title": "外观",
-        "textSize": "文本大小",
-        "textSizes": {
-          "system": "跟随系统",
-          "small": "小",
-          "standard": "标准",
-          "large": "大",
-          "extraLarge": "特大"
-        },
-        "themeColor": "主题色",
-        "themeColors": {
-          "brand": "Hiddify",
-          "dynamicColor": "系统动态色",
-          "seed": "预设颜色"
-        },
-        "presetColors": "预设颜色"
-      },
-      "traffic": {
-        "title": "流量与网络",
-        "live": "实时流量",
-        "upload": "上传",
-        "download": "下载",
-        "today": "今日",
-        "thisMonth": "本月",
-        "allRecorded": "全部记录",
-        "recordHistory": "记录流量历史",
-        "retention": "保留期限",
-        "retentionMonths": "$n 个月",
-        "showTraySpeed": "在托盘显示网速",
-        "showTraySpeedWarning": "高 CPU 占用",
-        "showTraySpeedWarningMsg": "此操作可能导致系统 CPU 占用过大。",
-        "viewHistory": "查看历史日历",
-        "historyCalendarTitle": "流量历史日历",
-        "previousMonth": "上个月",
-        "nextMonth": "下个月",
-        "selectDay": "选择一天",
-        "noTrafficForDay": "当天没有记录流量",
-        "traySpeedLayout": "托盘网速布局",
-        "traySpeedLayoutHorizontal": "水平并排",
-        "traySpeedLayoutVertical": "纵向堆叠",
-        "clearHistory": "清除流量历史",
-        "clearHistoryMsg": "此操作无法撤销。"
-      },
-      "nodeBlacklist": {
-        "title": "节点黑名单",
-        "global": "全局规则",
-        "provider": "提供商规则",
-        "filteredCount": "已过滤节点",
-        "showFiltered": "显示已过滤节点",
-        "importJson": "导入 JSON",
-        "exportJson": "导出 JSON",
-        "importText": "导入纯文本",
-        "currentNodeBlocked": "当前节点已被加入黑名单"
-      },
-      "networkIdentity": {
-        "title": "GeoIP 与网络身份",
-        "refresh": "刷新",
-        "country": "国家/地区",
-        "region": "区域",
-        "city": "城市",
-        "asn": "ASN",
-        "organization": "组织",
-        "notAvailable": "连接并刷新以识别出口网络。",
-        "resources": "GeoIP 资源",
-        "resourcesMsg": "GeoIP、GeoSite 和 MMDB 资源由 sing-box 核心管理。当路由规则使用它们时，会反映其健康状态和更新时间。",
-        "noReferences": "当前路由规则未引用 Geo 资源。"
-      },
-      "backup": {
-        "title": "备份与恢复",
-        "local": "本地备份",
-        "localMsg": "创建版本化设置备份文件。订阅和缓存资源不会包含在内。",
-        "create": "创建备份",
-        "created": "备份已创建。",
-        "createFailed": "创建备份失败。",
-        "backupDirectory": "备份目录",
-        "chooseDirectory": "选择目录",
-        "directoryNotSet": "使用保存对话框",
-        "restore": "恢复",
-        "restored": "备份已恢复。",
-        "settingsData": "设置数据",
-        "automatic": "自动备份",
-        "enable": "启用自动备份",
-        "interval": "间隔",
-        "days": "$n 天",
-        "target": "目标",
-        "neverRun": "从未执行",
-        "lastRun": "上次执行：$time",
-        "runNow": "立即执行",
-        "webdav": "WebDAV",
-        "noWebdav": "尚未配置 WebDAV 连接。",
-        "connect": "连接",
-        "edit": "编辑",
-        "test": "测试",
-        "upload": "上传",
-        "remove": "移除",
-        "connected": "WebDAV 已连接。",
-        "connectionWorks": "WebDAV 连接正常。",
-        "connectionFailed": "WebDAV 连接失败。",
-        "uploaded": "备份已上传到 WebDAV。",
-        "uploadFailed": "WebDAV 上传失败。",
-        "noRemote": "未找到远程备份。",
-        "selectRemote": "选择远程备份",
-        "remoteRestored": "远程备份已恢复。",
-        "restoreFailed": "WebDAV 恢复失败。"
-      },
-      "shortcuts": {
-        "title": "快捷键",
-        "mobileMsg": "全局快捷键仅在桌面平台可用。移动端仍可使用系统快捷入口和快捷磁贴。",
-        "globalHotkeys": "全局快捷键",
-        "globalHotkeysMsg": "Hiddify 在后台时也可使用。",
-        "failed": "部分快捷键未能注册",
-        "toggleConnection": "切换连接",
-        "addClipboard": "从剪贴板添加配置",
-        "cycleMode": "循环服务模式",
-        "openSettings": "打开设置",
-        "closeWindow": "关闭窗口",
-        "quit": "退出"
+        "useXrayCoreWhenPossibleMsg": "解析订阅链接时使用 xray-core。您需要重新导入订阅链接才能启用此选项",
+        "openMainWindowOnStartup": "启动时打开主界面",
+        "debugMode": "调试模式",
+        "debugModeMsg": "重启应用以应用此更改",
+        "logLevel": "日志级别"
       },
       "routing": {
         "title": "路由",
         "routeRule": {
-          "empty": "尚未添加规则\n\n点击 + 按钮创建新规则或从预设规则中选择",
+          "add": "添加规则",
           "delete": "删除规则",
-          "create": "创建新规则",
           "options": {
             "import": {
               "clipboard": "从剪贴板导入规则",
@@ -433,7 +349,7 @@
           "rule": {
             "title": "规则",
             "onlyTunMode": "仅在 TUN 模式下可用",
-            "notAvailabeInThisPlatform": "在此平台上不可用",
+            "notAvailableInThisPlatform": "在此平台上不可用",
             "canNotBeEmpty": "不能为空",
             "validUrlEx": "https://example.com",
             "validUrl": "有效的 \"URL\"，例如\n@:pages.settings.routing.routeRule.rule.validUrlEx",
@@ -486,14 +402,121 @@
               "stun": "STUN",
               "dns": "DNS",
               "bittorrent": "BitTorrent"
-            }
+            },
+            "notAvailabeInThisPlatform": "在此平台上不可用"
           },
           "genericList": {
             "addNew": "添加新值",
             "update": "更新值",
             "clearList": "清空列表",
             "clearListMsg": "所有项目已删除"
+          },
+          "empty": "尚未添加规则\n\n点击 + 按钮创建新规则或从预设规则中选择",
+          "create": "创建新规则"
+        },
+        "builtinRules": {
+          "tag": "内置",
+          "bypassLan": "绕过局域网",
+          "blockAds": "拦截广告和恶意软件",
+          "bypassRegion": "绕过${region}的网站"
+        },
+        "appBasedRouting": {
+          "title": "分应用路由",
+          "hideSysApps": "隐藏系统应用",
+          "listTitle": {
+            "bypass": "绕过的应用",
+            "proxy": "代理的应用"
+          },
+          "chooseApps": "选择应用",
+          "apps": {
+            "one": "应用",
+            "other": "应用"
+          },
+          "moreApps": {
+            "one": "+$n 个应用",
+            "other": "+$n 个应用"
+          },
+          "autoTag": "自动",
+          "outsideVpn": "不经过 VPN",
+          "ruleWontApply": "不经过 VPN · 规则不会生效",
+          "notInstalled": "未安装",
+          "share": {
+            "invite": "帮助改进自动选择",
+            "removed": {
+              "one": "已移除 $n 个",
+              "other": "已移除 $n 个"
+            },
+            "added": {
+              "one": "已添加 $n 个",
+              "other": "已添加 $n 个"
+            },
+            "title": "分享您的更改",
+            "where": "将在 GitHub 上打开一个已填好这些应用名称的公开 issue。提交后即可分享。需要 GitHub 账号。",
+            "action": "在 GitHub 上继续"
+          },
+          "options": {
+            "import": {
+              "clipboard": "从剪贴板导入选择",
+              "file": "从文件导入选择",
+              "msg": "导入会替换您当前的选择。要继续吗？"
+            },
+            "export": {
+              "clipboard": "复制选择到剪贴板",
+              "file": "导出选择到文件"
+            },
+            "clearAllSelections": "清除所有选择"
+          },
+          "modes": {
+            "proxy": "仅代理",
+            "bypass": "绕过"
+          },
+          "autoSelection": {
+            "title": "基于${region}自动选择",
+            "performNow": "立即更新",
+            "updated": {
+              "zero": "今天已更新",
+              "one": "$n 天前更新",
+              "other": "$n 天前更新"
+            },
+            "noList": "此地区没有列表",
+            "loadFailed": "无法加载列表",
+            "restore": {
+              "one": "恢复 $n 个自动选择项",
+              "other": "恢复 $n 个自动选择项"
+            },
+            "restored": {
+              "one": "已恢复 $n 个自动选择项",
+              "other": "已恢复 $n 个自动选择项"
+            }
           }
+        },
+        "region": "地区",
+        "regions": {
+          "ir": "伊朗 (ir)",
+          "cn": "中国 (cn)",
+          "ru": "俄罗斯 (ru)",
+          "af": "阿富汗 (af)",
+          "id": "印度尼西亚 (id)",
+          "tr": "土耳其 (tr)",
+          "br": "巴西 (br)",
+          "other": "其他"
+        },
+        "balancerStrategy": {
+          "title": "Balancer 策略",
+          "roundRobin": "Round robin",
+          "consistentHash": "Consistent hash",
+          "stickySession": "Sticky session",
+          "roundRobinDescription": "每个连接依次使用下一个服务器，网站可能会看到您的 IP 变化",
+          "consistentHashDescription": "每个网站始终使用同一个服务器",
+          "stickySessionDescription": "每个网站使用一个随机服务器，直到您重新连接"
+        },
+        "resolveDestination": "解析目的地",
+        "ipv6Route": "IPv6 路由",
+        "ipv6Modes": {
+          "disable": "关闭",
+          "enable": "开启",
+          "prefer": "首选",
+          "only": "专享"
         },
         "generalOptions": {
           "title": "路由通用选项",
@@ -631,11 +654,12 @@
         "directPort": "本地 Direct 端口",
         "redirectPort": "重定向端口",
         "lanSharing": "VPN 共享",
+        "qrCode": "二维码",
+        "lanQrSubtitle": "适用于此 Wi-Fi 的 SOCKS5 代理",
+        "lanIPError": "获取本地 IP 地址失败",
         "lanSharingPasswordNotSet": "密码未设置",
         "lanSharingPassword": "VPN 共享密码",
-        "copyLink": "复制链接",
-        "qrCode": "二维码",
-        "lanIPError": "获取本地 IP 地址失败"
+        "copyLink": "复制链接"
       },
       "tlsTricks": {
         "title": "TLS 技巧",
@@ -735,6 +759,125 @@
           "selectProfile": "选择配置",
           "conduitPairingId": "Conduit 配对 ID"
         }
+      },
+      "appearance": {
+        "title": "外观",
+        "textSize": "文本大小",
+        "textSizes": {
+          "system": "跟随系统",
+          "small": "小",
+          "standard": "标准",
+          "large": "大",
+          "extraLarge": "特大"
+        },
+        "themeColor": "主题色",
+        "themeColors": {
+          "brand": "Hiddify",
+          "dynamicColor": "系统动态色",
+          "seed": "预设颜色"
+        },
+        "presetColors": "预设颜色"
+      },
+      "traffic": {
+        "title": "流量与网络",
+        "live": "实时流量",
+        "upload": "上传",
+        "download": "下载",
+        "today": "今日",
+        "thisMonth": "本月",
+        "allRecorded": "全部记录",
+        "recordHistory": "记录流量历史",
+        "retention": "保留期限",
+        "retentionMonths": "$n 个月",
+        "showTraySpeed": "在托盘显示网速",
+        "showTraySpeedWarning": "高 CPU 占用",
+        "showTraySpeedWarningMsg": "此操作可能导致系统 CPU 占用过大。",
+        "viewHistory": "查看历史日历",
+        "historyCalendarTitle": "流量历史日历",
+        "previousMonth": "上个月",
+        "nextMonth": "下个月",
+        "selectDay": "选择一天",
+        "noTrafficForDay": "当天没有记录流量",
+        "traySpeedLayout": "托盘网速布局",
+        "traySpeedLayoutHorizontal": "水平并排",
+        "traySpeedLayoutVertical": "纵向堆叠",
+        "clearHistory": "清除流量历史",
+        "clearHistoryMsg": "此操作无法撤销。"
+      },
+      "nodeBlacklist": {
+        "title": "节点黑名单",
+        "global": "全局规则",
+        "provider": "提供商规则",
+        "filteredCount": "已过滤节点",
+        "showFiltered": "显示已过滤节点",
+        "importJson": "导入 JSON",
+        "exportJson": "导出 JSON",
+        "importText": "导入纯文本",
+        "currentNodeBlocked": "当前节点已被加入黑名单"
+      },
+      "networkIdentity": {
+        "title": "GeoIP 与网络身份",
+        "refresh": "刷新",
+        "country": "国家/地区",
+        "region": "区域",
+        "city": "城市",
+        "asn": "ASN",
+        "organization": "组织",
+        "notAvailable": "连接并刷新以识别出口网络。",
+        "resources": "GeoIP 资源",
+        "resourcesMsg": "GeoIP、GeoSite 和 MMDB 资源由 sing-box 核心管理。当路由规则使用它们时，会反映其健康状态和更新时间。",
+        "noReferences": "当前路由规则未引用 Geo 资源。"
+      },
+      "backup": {
+        "title": "备份与恢复",
+        "local": "本地备份",
+        "localMsg": "创建版本化设置备份文件。订阅和缓存资源不会包含在内。",
+        "create": "创建备份",
+        "created": "备份已创建。",
+        "createFailed": "创建备份失败。",
+        "backupDirectory": "备份目录",
+        "chooseDirectory": "选择目录",
+        "directoryNotSet": "使用保存对话框",
+        "restore": "恢复",
+        "restored": "备份已恢复。",
+        "settingsData": "设置数据",
+        "automatic": "自动备份",
+        "enable": "启用自动备份",
+        "interval": "间隔",
+        "days": "$n 天",
+        "target": "目标",
+        "neverRun": "从未执行",
+        "lastRun": "上次执行：$time",
+        "runNow": "立即执行",
+        "webdav": "WebDAV",
+        "noWebdav": "尚未配置 WebDAV 连接。",
+        "connect": "连接",
+        "edit": "编辑",
+        "test": "测试",
+        "upload": "上传",
+        "remove": "移除",
+        "connected": "WebDAV 已连接。",
+        "connectionWorks": "WebDAV 连接正常。",
+        "connectionFailed": "WebDAV 连接失败。",
+        "uploaded": "备份已上传到 WebDAV。",
+        "uploadFailed": "WebDAV 上传失败。",
+        "noRemote": "未找到远程备份。",
+        "selectRemote": "选择远程备份",
+        "remoteRestored": "远程备份已恢复。",
+        "restoreFailed": "WebDAV 恢复失败。"
+      },
+      "shortcuts": {
+        "title": "快捷键",
+        "mobileMsg": "全局快捷键仅在桌面平台可用。移动端仍可使用系统快捷入口和快捷磁贴。",
+        "globalHotkeys": "全局快捷键",
+        "globalHotkeysMsg": "Hiddify 在后台时也可使用。",
+        "failed": "部分快捷键未能注册",
+        "toggleConnection": "切换连接",
+        "addClipboard": "从剪贴板添加配置",
+        "cycleMode": "循环服务模式",
+        "openSettings": "打开设置",
+        "closeWindow": "关闭窗口",
+        "quit": "退出"
       }
     }
   },
@@ -756,11 +899,18 @@
       "expireDate": "到期日期",
       "expired": "已过期",
       "noTraffic": "流量已用尽",
-      "remainingTime": "剩余时间",
-      "remainingDuration": "剩余 ${duration} 天",
-      "remainingDurationNew": "${duration} 天",
+      "remainingDuration(plural, param=days)": {
+        "other": "剩余 $days 天"
+      },
+      "remainingUnlimited": "无限制",
       "remainingTrafficSemanticLabel": "已使用 ${consumed} / ${total} 流量",
       "remainingTraffic": "剩余流量",
+      "openWebPage": "打开网页",
+      "support": "支持",
+      "openLinkTitle": "打开此链接？",
+      "openLinkAction": "打开",
+      "remainingTime": "剩余时间",
+      "remainingDurationNew": "${duration} 天",
       "remainingUsage": "剩余",
       "profileSite": "提供商",
       "profileSupport": "支持"
@@ -772,6 +922,10 @@
       "sort": {
         "name": "按字母顺序",
         "lastUpdate": "最近更新"
+      },
+      "direction": {
+        "newestFirst": "最新优先",
+        "oldestFirst": "最旧优先"
       }
     },
     "warpLicense": {
@@ -801,13 +955,9 @@
           "msg": "您确定要永久删除此配置文件吗？"
         }
       },
-      "perAppProxy": {
-        "shareOnGithub": {
-          "title": "改进自动选择",
-          "msg": "通过分享您选择的应用，可以帮助完善“自动选择”列表"
-        },
+      "appList": {
         "import": {
-          "msg": "这将替换您当前所有的分应用代理选择。您确定要继续吗？"
+          "msg": "这会替换您“绕过”和“仅代理”中的应用。要继续吗？"
         }
       },
       "routeRule": {
@@ -823,6 +973,15 @@
       "importRouteRuleByDeepLinkWarning": {
         "title": "导入路由规则？",
         "message": "从不受信任的来源导入路由规则可能会存在安全风险\n仅当您信任此链接时才继续"
+      },
+      "perAppProxy": {
+        "shareOnGithub": {
+          "title": "改进自动选择",
+          "msg": "通过分享您选择的应用，可以帮助完善“自动选择”列表"
+        },
+        "import": {
+          "msg": "这将替换您当前所有的分应用代理选择。您确定要继续吗？"
+        }
       }
     },
     "experimentalNotice": {
@@ -840,6 +999,11 @@
     },
     "unknownDomainsWarning": {
       "title": "外部链接警告",
+      "cannotVerify": "此链接未经验证",
+      "avoidIfUnsure": "如果您不能完全确定，请勿付款或分享敏感信息",
+      "ownResponsibility": "继续操作的风险由您自行承担",
+      "open": "打开",
+      "openIn": "打开 (${seconds})",
       "youAreAboutToVisit": "您即将访问：",
       "thisWebsiteIsNotInOurTrustedList": "此网站不在我们的信任列表中。请谨慎操作。"
     },
@@ -868,15 +1032,28 @@
       "askEachTime": "每次询问",
       "alertMessage": "隐藏还是退出应用程序？",
       "remember": "记住我的选择"
+    },
+    "qrCode": {
+      "copyFullLink": "复制完整链接",
+      "copied": "已复制",
+      "ip": "IP",
+      "port": "端口",
+      "username": "用户名",
+      "password": "密码",
+      "showPassword": "显示密码",
+      "hidePassword": "隐藏密码"
     }
   },
   "connection": {
     "tapToConnect": "点击连接",
     "connect": "连接",
     "connecting": "连接中...",
+    "hotReloading": "应用更改中…",
     "connected": "已连接",
     "disconnect": "断开连接",
     "disconnecting": "断开连接中...",
+    "failed": "无法连接",
+    "tapToRetry": "点击重试",
     "reconnect": "重新连接",
     "reconnectMsg": "正在重新连接以应用更改...",
     "shellProxyEnv": "已导出 HTTP_PROXY=127.0.0.1:$port 的终端现在指向已关闭的端口。请在这些终端执行 \"unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy\"，否则 curl、git 和 go 构建都会失败。",
@@ -908,6 +1085,8 @@
       "serviceNotRunning": "服务未运行",
       "missingPrivilege": "缺少权限",
       "missingPrivilegeMsg": "VPN 模式需要管理员权限。请以管理员身份重新启动应用，或更改服务模式。",
+      "tunAddressInUse": "另一个 VPN 正在运行",
+      "tunAddressInUseMsg": "VPN 模式无法启动。请关闭另一个 VPN，或更改服务模式。",
       "invalidConfigOptions": "配置选项无效",
       "invalidConfig": "配置无效"
     },

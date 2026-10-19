@@ -176,8 +176,10 @@ fmt:
     cd {{core}}/hiddify-sing-box && gofmt -w common/settings/
     dart format --line-length 120 lib/
 
+# Analyzes the whole project, not just lib/: the test tree has its own
+# compile errors, and `flutter analyze lib/` never sees them.
 check:
-    flutter analyze lib/
+    flutter analyze
     @just test
 
 clean-core:

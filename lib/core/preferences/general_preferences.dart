@@ -1,19 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:hiddify/core/app_info/app_info_provider.dart';
-import 'package:hiddify/core/model/environment.dart';
+import 'package:hiddify/core/logger/ring/log_ring.dart';
 import 'package:hiddify/core/model/region.dart';
 import 'package:hiddify/core/preferences/actions_at_closing.dart';
-
-import 'package:hiddify/core/preferences/preferences_provider.dart';
 import 'package:hiddify/core/utils/preferences_utils.dart';
-import 'package:hiddify/features/per_app_proxy/model/per_app_proxy_mode.dart';
+import 'package:hiddify/features/app_based_routing/model/per_app_proxy_mode.dart';
+import 'package:hiddify/features/profile/model/profile_sort_enum.dart';
 import 'package:hiddify/features/system_tray/model/tray_speed_layout.dart';
 import 'package:hiddify/features/window/notifier/window_notifier.dart';
 import 'package:hiddify/utils/platform_utils.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
-part 'general_preferences.g.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:logging/logging.dart';
 
 bool _debugIntroPage = false;
 
@@ -32,16 +29,18 @@ abstract class Preferences {
     mapTo: (value) => value == null ? '' : value.name,
   );
 
-  static final autoAppsSelectionUpdateInterval = PreferencesNotifier.create<double, double>(
-    "auto_apps_selection_update_interval",
-    1.0,
-  );
-
   static final autoAppsSelectionLastUpdate = PreferencesNotifier.create<DateTime?, String?>(
     "auto_apps_selection_last_update",
     null,
     mapFrom: (value) => value == null ? null : DateTime.tryParse(value),
     mapTo: (value) => value?.toIso8601String(),
+  );
+
+  // Set when the user turns auto selection off by hand. Until then it comes on by itself when App-based routing
+  // is turned on.
+  static final autoAppsSelectionOffByUser = PreferencesNotifier.create<bool, bool>(
+    "auto_apps_selection_off_by_user",
+    false,
   );
 
   static final includeApps = PreferencesNotifier.create<List<String>, List<String>>(
@@ -80,7 +79,7 @@ abstract class Preferences {
     mapTo: (value) => "${value.width},${value.height}",
   );
 
-  static final openMainWindowOnStartup = PreferencesNotifier.create<bool, bool>("open-main-window-on-startup", false);
+  static final silentStart = PreferencesNotifier.create<bool, bool>("silent_start", false);
 
   static final disableMemoryLimit = PreferencesNotifier.create<bool, bool>(
     "disable_memory_limit",
@@ -88,11 +87,19 @@ abstract class Preferences {
     PlatformUtils.isDesktop,
   );
 
-  static final perAppProxyMode = PreferencesNotifier.create<PerAppProxyMode, String>(
+  static final perAppProxyEnabled = PreferencesNotifier.create<bool, bool>("per_app_proxy_enabled", false);
+
+  // Kept while App-based routing is off, for when it is turned on again.
+  static final perAppProxyMode = PreferencesNotifier.create<AppProxyMode, String>(
     "per_app_proxy_mode",
-    PerAppProxyMode.off,
-    mapFrom: PerAppProxyMode.values.byName,
+    AppProxyMode.exclude,
+    mapFrom: AppProxyMode.values.byName,
     mapTo: (value) => value.name,
+  );
+
+  // The mode in use, or null while App-based routing is off.
+  static final perAppProxyModeInUse = Provider<AppProxyMode?>(
+    (ref) => ref.watch(perAppProxyEnabled) ? ref.watch(perAppProxyMode) : null,
   );
 
   static final markNewProfileActive = PreferencesNotifier.create<bool, bool>("mark_new_profile_active", true);
@@ -116,10 +123,13 @@ abstract class Preferences {
 
   static final psiphonConsentGiven = PreferencesNotifier.create<bool, bool>("psiphon-consent-given", false);
 
-  static final showRouteGeneralOptions = PreferencesNotifier.create<bool, bool>("show-route-general-options", true);
-
+  /// Whether per-day upload and download totals are written to the database.
+  /// On by default, but it is a growing table on someone's phone, so it stays
+  /// switchable.
   static final recordTrafficHistory = PreferencesNotifier.create<bool, bool>("record-traffic-history", true);
 
+  /// How many months of daily totals to keep. Older months are pruned on write,
+  /// so this is also the bound on how much history can be shown.
   static final trafficHistoryRetentionMonths = PreferencesNotifier.create<int, int>(
     "traffic-history-retention-months",
     12,
@@ -137,6 +147,8 @@ abstract class Preferences {
 
   static final enableGlobalHotkeys = PreferencesNotifier.create<bool, bool>("enable-global-hotkeys", false);
 
+  /// Null means unbound rather than empty, so a key the user cleared stops
+  /// firing instead of matching every keypress.
   static final globalHotkeyToggleConnection = PreferencesNotifier.create<String?, String?>(
     "global-hotkey-toggle-connection",
     null,
@@ -157,21 +169,39 @@ abstract class Preferences {
     mapFrom: (value) => value == null || value.isEmpty ? null : value,
     mapTo: (value) => value ?? '',
   );
-}
 
-@Riverpod(keepAlive: true)
-class DebugModeNotifier extends _$DebugModeNotifier {
-  late final _pref = PreferencesEntry(
-    preferences: ref.watch(sharedPreferencesProvider).requireValue,
-    key: "debug_mode",
-    defaultValue: ref.read(environmentProvider) == Environment.dev,
+  /// How many records the in-memory log ring keeps. Saved, so a size picked
+  /// once while chasing a bug is still there on the next run.
+  static final logBufferSize = PreferencesNotifier.create<int, int>("log-buffer-size", 1000);
+
+  /// The level filter on the logs page. Saved, so the page opens on the level
+  /// picked last time.
+  ///
+  /// Starts at warn: below that the page is mostly the app narrating itself,
+  /// which buries the lines somebody opened this page to find.
+  static final logFilterLevel = PreferencesNotifier.create<Level, String>(
+    "log-filter-level",
+    Level.WARNING,
+    mapFrom: (value) => Level.LEVELS.firstWhere((level) => level.name == value),
+    mapTo: (value) => value.name,
   );
 
-  @override
-  bool build() => _pref.read();
+  /// The category filter on the logs page, saved the same way. Null shows every
+  /// category.
+  static final logFilterCategory = PreferencesNotifier.create<LogCategory?, String?>(
+    "log-filter-category",
+    null,
+    mapFrom: (value) => value == null || value.isEmpty ? null : LogCategory.values.byName(value),
+    mapTo: (value) => value == null ? '' : value.name,
+  );
 
-  Future<void> update(bool value) {
-    state = value;
-    return _pref.write(value);
-  }
+  static final profilesSort = PreferencesNotifier.create<({ProfilesSort by, SortMode mode}), String>(
+    "profiles_sort",
+    (by: ProfilesSort.lastUpdate, mode: SortMode.descending),
+    mapFrom: (value) {
+      final parts = value.split(":");
+      return (by: ProfilesSort.values.byName(parts.first), mode: SortMode.values.byName(parts.last));
+    },
+    mapTo: (value) => "${value.by.name}:${value.mode.name}",
+  );
 }

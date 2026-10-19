@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
@@ -14,7 +15,6 @@ import 'package:hiddify/features/profile/add/model/free_profiles_model.dart';
 import 'package:hiddify/features/profile/data/profile_data_providers.dart';
 import 'package:hiddify/features/profile/data/profile_repository.dart';
 import 'package:hiddify/features/profile/model/profile_entity.dart';
-import 'package:hiddify/features/profile/model/profile_export_bundle.dart';
 import 'package:hiddify/features/profile/model/profile_failure.dart';
 import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
 import 'package:hiddify/features/settings/data/config_option_repository.dart';
@@ -24,20 +24,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'profile_notifier.g.dart';
-
-const supportedProfileFileExtensions = ['json', 'yaml', 'yml', 'txt', 'url'];
-
-bool isSupportedProfileFileName(String fileName) {
-  final extension = fileName.split('.').last.toLowerCase();
-  return supportedProfileFileExtensions.contains(extension);
-}
-
-String? profileNameFromFileName(String? fileName) {
-  final trimmed = fileName?.trim();
-  if (trimmed == null || trimmed.isEmpty) return null;
-  final name = trimmed.replaceFirst(RegExp(r'\.(json|ya?ml|txt|url)$', caseSensitive: false), '').trim();
-  return name.isEmpty ? null : name;
-}
 
 @riverpod
 class AddProfileNotifier extends _$AddProfileNotifier with AppLogger {
@@ -75,39 +61,23 @@ class AddProfileNotifier extends _$AddProfileNotifier with AppLogger {
   ProfileRepository get _profilesRepo => ref.read(profileRepositoryProvider).requireValue;
   CancelToken? _cancelToken;
 
-  Future<void> addClipboard(String rawInput, {String? sourceFileName}) async {
+  Future<void> addClipboard(String rawInput) async {
     if (state.isLoading) return;
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       // final activeProfile = await ref.read(activeProfileProvider.future);
       // final markAsActive = activeProfile == null || ref.read(Preferences.markNewProfileActive);
       final TaskEither<ProfileFailure, Unit> task;
-      final importedName = profileNameFromFileName(sourceFileName);
-      final exportBundle = ProfileExportBundle.tryDecode(rawInput);
-      if (exportBundle case ProfileExportBundle(:final sourceUrl?) when sourceUrl.isNotEmpty) {
-        loggy.debug('adding exported remote profile');
-        task = _profilesRepo.upsertRemote(
-          sourceUrl,
-          userOverride: UserOverride(name: exportBundle.name),
-          cancelToken: _cancelToken = CancelToken(),
-        );
-      } else if (exportBundle case final bundle?) {
-        loggy.debug('adding exported local profile');
-        task = _profilesRepo.addLocal(bundle.configJson, userOverride: UserOverride(name: bundle.name));
-      } else if (LinkParser.parse(rawInput) case (final rs)?) {
+      if (LinkParser.parse(rawInput) case (final rs)?) {
         loggy.debug("adding profile, url: [${rs.url}]");
-        final profileName = rs.name.isNotEmpty ? rs.name : importedName;
         task = _profilesRepo.upsertRemote(
           rs.url,
-          userOverride: profileName != null ? UserOverride(name: profileName) : null,
+          userOverride: rs.name.isNotEmpty ? UserOverride(name: rs.name) : null,
           cancelToken: _cancelToken = CancelToken(),
         );
       } else {
         loggy.debug("adding profile, content");
-        task = _profilesRepo.addLocal(
-          safeDecodeBase64(rawInput),
-          userOverride: importedName != null ? UserOverride(name: importedName) : null,
-        );
+        task = _profilesRepo.addLocal(safeDecodeBase64(rawInput));
       }
       return await task
           .match(
@@ -118,6 +88,54 @@ class AddProfileNotifier extends _$AddProfileNotifier with AppLogger {
             (_) {
               loggy.info("successfully added profile");
               return unit;
+            },
+          )
+          .run();
+    });
+  }
+
+  /// Adds all the files of a zip as one profile named [name]. The files are merged into one text that goes straight to
+  /// the core, which decides which of them are valid configs.
+  Future<void> addArchive(Uint8List zipBytes, {required String name}) async {
+    if (state.isLoading) return;
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final text = readZipText(zipBytes);
+      if (text.isEmpty) throw const ProfileFailure.invalidConfig();
+      return await _profilesRepo
+          .addLocal(text, userOverride: UserOverride(name: name))
+          .match(
+            (err) {
+              loggy.warning("failed to add profile from zip", err);
+              throw err;
+            },
+            (_) {
+              loggy.info("successfully added profile from zip");
+              return unit;
+            },
+          )
+          .run();
+    });
+  }
+
+  /// Saves a proxy the user typed in, as a generated local config.
+  ///
+  /// Local rather than remote: the credentials are in the config, not a URL that
+  /// would carry them in the clear and end up in logs and history.
+  Future<void> addCustomProxy(String configJson, String name) async {
+    if (state.isLoading) return;
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      return await _profilesRepo
+          .addLocal(configJson, userOverride: UserOverride(name: name))
+          .match(
+            (err) {
+              loggy.warning("failed to add the custom proxy", err);
+              throw err;
+            },
+            (r) {
+              loggy.info("successfully added the custom proxy");
+              return r;
             },
           )
           .run();
@@ -147,30 +165,22 @@ class AddProfileNotifier extends _$AddProfileNotifier with AppLogger {
 
 @riverpod
 class UpdateProfileNotifier extends _$UpdateProfileNotifier with AppLogger {
+  Timer? _resetTimer;
+
   @override
   AsyncValue<Unit?> build(String id) {
     ref.disposeDelay(const Duration(minutes: 1));
-    listenSelf((previous, next) {
-      final t = ref.read(translationsProvider).requireValue;
-      final notification = ref.read(inAppNotificationControllerProvider);
-      switch (next) {
-        case AsyncData(value: final _?):
-          notification.showSuccessToast(t.pages.profiles.msg.update.success);
-        case AsyncError(:final error):
-          ref
-              .read(dialogNotifierProvider.notifier)
-              .showCustomAlertFromErr(t.presentError(error, action: t.pages.profiles.msg.update.failure));
-      }
-    });
+    ref.onDispose(() => _resetTimer?.cancel());
     return const AsyncData(null);
   }
 
   ProfileRepository get _profilesRepo => ref.read(profileRepositoryProvider).requireValue;
 
-  Future<void> updateProfile(RemoteProfileEntity profile) async {
+  Future<void> updateProfile(RemoteProfileEntity profile, {bool isBulk = false}) async {
     if (state.isLoading) return;
+    _resetTimer?.cancel();
     state = const AsyncLoading();
-    await ref.read(hapticServiceProvider.notifier).lightImpact();
+    if (!isBulk) await ref.read(hapticServiceProvider.notifier).lightImpact();
     state = await AsyncValue.guard(() async {
       return await _profilesRepo
           .upsertRemote(profile.url)
@@ -192,6 +202,22 @@ class UpdateProfileNotifier extends _$UpdateProfileNotifier with AppLogger {
           )
           .run();
     });
+
+    // Single, user-initiated updates report failure via a dialog; success is
+    // shown inline by the button indicator. Bulk runs stay silent here and are
+    // summarized in one aggregate toast by ForegroundProfilesUpdateNotifier.
+    if (state case AsyncError(:final error) when !isBulk) {
+      final t = ref.read(translationsProvider).requireValue;
+      ref
+          .read(dialogNotifierProvider.notifier)
+          .showCustomAlertFromErr(t.presentError(error, action: t.pages.profiles.msg.update.failure));
+    }
+
+    // Hold the success/failure result for 2s so the leading can flash an icon,
+    // then reset to idle. Kept in the provider (not widget state) so it survives
+    // the profile list re-sorting that happens right after an update.
+    _resetTimer?.cancel();
+    _resetTimer = Timer(const Duration(seconds: 2), () => state = const AsyncData(null));
   }
 }
 

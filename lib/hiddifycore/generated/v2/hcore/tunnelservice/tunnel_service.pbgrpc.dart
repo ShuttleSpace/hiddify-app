@@ -63,16 +63,23 @@ class TunnelServiceClient extends $grpc.Client {
 
   // method descriptors
 
-  static final _$start = $grpc.ClientMethod<$0.TunnelStartRequest, $0.TunnelResponse>(
-      '/tunnelservice.TunnelService/Start',
-      ($0.TunnelStartRequest value) => value.writeToBuffer(),
-      $0.TunnelResponse.fromBuffer);
+  static final _$start =
+      $grpc.ClientMethod<$0.TunnelStartRequest, $0.TunnelResponse>(
+          '/tunnelservice.TunnelService/Start',
+          ($0.TunnelStartRequest value) => value.writeToBuffer(),
+          $0.TunnelResponse.fromBuffer);
   static final _$stop = $grpc.ClientMethod<$1.Empty, $0.TunnelResponse>(
-      '/tunnelservice.TunnelService/Stop', ($1.Empty value) => value.writeToBuffer(), $0.TunnelResponse.fromBuffer);
+      '/tunnelservice.TunnelService/Stop',
+      ($1.Empty value) => value.writeToBuffer(),
+      $0.TunnelResponse.fromBuffer);
   static final _$status = $grpc.ClientMethod<$1.Empty, $0.TunnelResponse>(
-      '/tunnelservice.TunnelService/Status', ($1.Empty value) => value.writeToBuffer(), $0.TunnelResponse.fromBuffer);
+      '/tunnelservice.TunnelService/Status',
+      ($1.Empty value) => value.writeToBuffer(),
+      $0.TunnelResponse.fromBuffer);
   static final _$exit = $grpc.ClientMethod<$1.Empty, $0.TunnelResponse>(
-      '/tunnelservice.TunnelService/Exit', ($1.Empty value) => value.writeToBuffer(), $0.TunnelResponse.fromBuffer);
+      '/tunnelservice.TunnelService/Exit',
+      ($1.Empty value) => value.writeToBuffer(),
+      $0.TunnelResponse.fromBuffer);
 }
 
 @$pb.GrpcServiceName('tunnelservice.TunnelService')
@@ -85,7 +92,8 @@ abstract class TunnelServiceBase extends $grpc.Service {
         start_Pre,
         false,
         false,
-        ($core.List<$core.int> value) => $0.TunnelStartRequest.fromBuffer(value),
+        ($core.List<$core.int> value) =>
+            $0.TunnelStartRequest.fromBuffer(value),
         ($0.TunnelResponse value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$1.Empty, $0.TunnelResponse>(
         'Stop',
@@ -110,28 +118,35 @@ abstract class TunnelServiceBase extends $grpc.Service {
         ($0.TunnelResponse value) => value.writeToBuffer()));
   }
 
-  $async.Future<$0.TunnelResponse> start_Pre(
-      $grpc.ServiceCall $call, $async.Future<$0.TunnelStartRequest> $request) async {
+  $async.Future<$0.TunnelResponse> start_Pre($grpc.ServiceCall $call,
+      $async.Future<$0.TunnelStartRequest> $request) async {
     return start($call, await $request);
   }
 
-  $async.Future<$0.TunnelResponse> start($grpc.ServiceCall call, $0.TunnelStartRequest request);
+  $async.Future<$0.TunnelResponse> start(
+      $grpc.ServiceCall call, $0.TunnelStartRequest request);
 
-  $async.Future<$0.TunnelResponse> stop_Pre($grpc.ServiceCall $call, $async.Future<$1.Empty> $request) async {
+  $async.Future<$0.TunnelResponse> stop_Pre(
+      $grpc.ServiceCall $call, $async.Future<$1.Empty> $request) async {
     return stop($call, await $request);
   }
 
-  $async.Future<$0.TunnelResponse> stop($grpc.ServiceCall call, $1.Empty request);
+  $async.Future<$0.TunnelResponse> stop(
+      $grpc.ServiceCall call, $1.Empty request);
 
-  $async.Future<$0.TunnelResponse> status_Pre($grpc.ServiceCall $call, $async.Future<$1.Empty> $request) async {
+  $async.Future<$0.TunnelResponse> status_Pre(
+      $grpc.ServiceCall $call, $async.Future<$1.Empty> $request) async {
     return status($call, await $request);
   }
 
-  $async.Future<$0.TunnelResponse> status($grpc.ServiceCall call, $1.Empty request);
+  $async.Future<$0.TunnelResponse> status(
+      $grpc.ServiceCall call, $1.Empty request);
 
-  $async.Future<$0.TunnelResponse> exit_Pre($grpc.ServiceCall $call, $async.Future<$1.Empty> $request) async {
+  $async.Future<$0.TunnelResponse> exit_Pre(
+      $grpc.ServiceCall $call, $async.Future<$1.Empty> $request) async {
     return exit($call, await $request);
   }
 
-  $async.Future<$0.TunnelResponse> exit($grpc.ServiceCall call, $1.Empty request);
+  $async.Future<$0.TunnelResponse> exit(
+      $grpc.ServiceCall call, $1.Empty request);
 }

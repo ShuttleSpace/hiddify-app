@@ -1,19 +1,16 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:dartx/dartx.dart';
 
 import 'package:hiddify/core/haptic/haptic_service.dart';
 import 'package:hiddify/core/localization/translations.dart';
+import 'package:hiddify/core/notification/in_app_notification_controller.dart';
 import 'package:hiddify/core/preferences/preferences_provider.dart';
 import 'package:hiddify/core/utils/preferences_utils.dart';
 import 'package:hiddify/features/connection/notifier/connection_notifier.dart';
-import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
-import 'package:hiddify/features/proxy/data/node_blacklist_engine.dart';
 import 'package:hiddify/features/proxy/data/proxy_data_providers.dart';
-import 'package:hiddify/features/proxy/model/node_blacklist.dart';
 import 'package:hiddify/features/proxy/model/proxy_failure.dart';
-import 'package:hiddify/features/proxy/notifier/active_proxy_group_notifier.dart';
-import 'package:hiddify/features/proxy/notifier/node_blacklist_controller.dart';
 import 'package:hiddify/hiddifycore/generated/v2/hcore/hcore.pb.dart';
 
 import 'package:hiddify/utils/riverpod_utils.dart';
@@ -61,19 +58,15 @@ class ProxiesSortNotifier extends _$ProxiesSortNotifier with AppLogger {
 
 @riverpod
 class ProxiesOverviewNotifier extends _$ProxiesOverviewNotifier with AppLogger {
-  List<OutboundGroup> _lastGroups = [];
-
   @override
   Stream<OutboundGroup?> build() {
     ref.disposeDelay(const Duration(seconds: 15));
+    _pinned = null;
     final serviceRunning = ref.watch(serviceRunningProvider);
     if (!serviceRunning) {
       return Stream.error(const ServiceNotRunning());
     }
     final sortBy = ref.watch(proxiesSortNotifierProvider);
-    final selectedTag = ref.watch(activeProxyGroupNotifierProvider);
-    final profileId = ref.watch(activeProfileProvider).valueOrNull?.id;
-    final rules = effectiveRules(ref.watch(nodeBlacklistControllerProvider), profileId);
     // yield* ref
     //     .watch(proxyRepositoryProvider)
     //     .watchProxies()
@@ -93,31 +86,14 @@ class ProxiesOverviewNotifier extends _$ProxiesOverviewNotifier with AppLogger {
     //     .asyncMap((proxies) async => _sortOutbounds(proxies, sortBy));
     return ref
         .watch(proxyRepositoryProvider)
-        .watchAllGroups()
+        .watchProxies()
         .map(
-          (event) => event.getOrElse((error) {
-            if (_lastGroups.isNotEmpty) return _lastGroups;
-            throw error;
+          (event) => event.getOrElse((err) {
+            loggy.warning("error receiving proxies", err);
+            throw err;
           }),
         )
-        .asyncMap((groups) async {
-          _lastGroups = groups;
-          ref.read(activeProxyGroupNotifierProvider.notifier).setDefault(groups);
-          final proxies = groups.firstOrNullWhere((group) => group.tag == selectedTag);
-          if (proxies == null) return null;
-
-          final filteredGroup = OutboundGroup(
-            tag: proxies.tag,
-            type: proxies.type,
-            selected: proxies.selected,
-            selectable: proxies.selectable,
-            isExpand: proxies.isExpand,
-            items: proxies.items,
-          );
-          final sortedGroup = await _sortOutbounds(filteredGroup, sortBy, rules);
-          if (sortedGroup == null) return null;
-          return sortedGroup;
-        });
+        .asyncMap((proxies) async => await _sortOutbounds(proxies, sortBy));
   }
 
   // Future<List<OutboundGroup>> _sortOutbounds(
@@ -163,41 +139,47 @@ class ProxiesOverviewNotifier extends _$ProxiesOverviewNotifier with AppLogger {
   //   return sortedProxies;
   // }
 
-  Future<OutboundGroup?> _sortOutbounds(
-    OutboundGroup? proxies,
-    ProxiesSort sortBy,
-    List<NodeBlacklistRule> blacklistRules,
-  ) async {
+  /// The proxy picked on this page and the row it was in. Cleared by a new connection or sort.
+  ({String tag, int index})? _pinned;
+
+  Future<OutboundGroup?> _sortOutbounds(OutboundGroup? proxies, ProxiesSort sortBy) async {
     if (proxies == null) return null;
 
-    final normalItems = proxies.items.where((item) => !isNodeBlacklisted(item, blacklistRules)).toList();
-    final blacklistedItems = proxies.items.where((item) => isNodeBlacklisted(item, blacklistRules)).toList();
+    final sortedItems = switch (sortBy) {
+      ProxiesSort.name => proxies.items.sortedWith((a, b) {
+        if (a.isGroup && !b.isGroup) return -1;
+        if (!a.isGroup && b.isGroup) return 1;
+        return a.tag.compareTo(b.tag);
+      }),
+      ProxiesSort.delay => proxies.items.sortedWith((a, b) {
+        if (a.isGroup && !b.isGroup) return -1;
+        if (!a.isGroup && b.isGroup) return 1;
+
+        final ai = a.urlTestDelay;
+        final bi = b.urlTestDelay;
+        if (ai == 0 && bi == 0) return -1;
+        if (ai == 0 && bi > 0) return 1;
+        if (ai > 0 && bi == 0) return -1;
+        return ai.compareTo(bi);
+      }),
+      ProxiesSort.unsorted => proxies.items,
+      ProxiesSort.usage => proxies.items.sortedWith((a, b) {
+        if (a.isGroup && !b.isGroup) return -1;
+        if (!a.isGroup && b.isGroup) return 1;
+        return (b.upload + b.download).compareTo(a.upload + a.download);
+      }),
+    };
+    // a copy: sortedItems reads proxies.items, which is cleared below
+    final items = sortedItems.toList();
+    // The proxy the user picked stays in the row they tapped, and the rest sorts around it. A new
+    // ping used to move it, often to the end of the list, right after the tap.
+    if (_pinned case (:final tag, :final index) when proxies.selected == tag) {
+      final picked = items.indexWhere((item) => item.tag == tag);
+      if (picked != -1) items.insert(min(index, items.length - 1), items.removeAt(picked));
+    }
     proxies.items.clear();
-    proxies.items.addAll([..._sortItems(normalItems, sortBy), ..._sortItems(blacklistedItems, sortBy)]);
+    proxies.items.addAll(items);
     return proxies;
-  }
-
-  List<OutboundInfo> _sortItems(Iterable<OutboundInfo> items, ProxiesSort sortBy) {
-    return items.sortedWith((a, b) {
-      if (a.isGroup && !b.isGroup) return -1;
-      if (!a.isGroup && b.isGroup) return 1;
-
-      return switch (sortBy) {
-        ProxiesSort.unsorted => 0,
-        ProxiesSort.name => a.tag.compareTo(b.tag),
-        ProxiesSort.delay => _compareDelay(a, b),
-        ProxiesSort.usage => (b.upload + b.download).compareTo(a.upload + a.download),
-      };
-    }).toList();
-  }
-
-  int _compareDelay(OutboundInfo a, OutboundInfo b) {
-    final ai = a.urlTestDelay;
-    final bi = b.urlTestDelay;
-    if (ai == 0 && bi == 0) return 0;
-    if (ai == 0 && bi > 0) return 1;
-    if (ai > 0 && bi == 0) return -1;
-    return ai.compareTo(bi);
   }
 
   // Future<void> changeProxy(String groupTag, String outboundTag) async {
@@ -229,10 +211,21 @@ class ProxiesOverviewNotifier extends _$ProxiesOverviewNotifier with AppLogger {
     if (!state.hasValue) return;
     final outbounds = state.value!;
     await ref.read(hapticServiceProvider.notifier).lightImpact();
-    await ref.read(proxyRepositoryProvider).selectProxy(groupTag, outboundTag).getOrElse((err) {
-      loggy.warning("error selecting outbound", err);
-      throw err;
-    }).run();
+    final selected = await ref
+        .read(proxyRepositoryProvider)
+        .selectProxy(groupTag, outboundTag)
+        .map((_) => true)
+        .getOrElse((err) {
+          loggy.warning("error selecting outbound", err);
+          // thrown from a tap, the error reached no one and the tap seemed ignored
+          final t = ref.read(translationsProvider).requireValue;
+          ref.read(inAppNotificationControllerProvider).showErrorToast(t.pages.proxies.switchFailed);
+          return false;
+        })
+        .run();
+    if (!selected) return;
+    final row = outbounds.items.indexWhere((e) => e.tag == outboundTag);
+    if (row != -1) _pinned = (tag: outboundTag, index: row);
     final newselected = outbounds.items.where((e) => e.tag == outboundTag).firstOrNull;
     if (newselected != null) {
       newselected.isSelected = true;

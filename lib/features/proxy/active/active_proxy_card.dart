@@ -10,47 +10,23 @@ import 'package:hiddify/hiddifycore/generated/v2/hcore/hcore.pb.dart';
 import 'package:hiddify/utils/custom_loggers.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class ActiveProxyFooter extends ConsumerStatefulWidget with InfraLogger {
+class ActiveProxyFooter extends ConsumerWidget with InfraLogger {
   const ActiveProxyFooter({super.key});
 
   @override
-  ConsumerState<ActiveProxyFooter> createState() => _ActiveProxyFooterState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final connectionState = ref.watch(
+      connectionNotifierProvider.select((value) => value.valueOrNull ?? const Disconnected()),
+    );
 
-class _ActiveProxyFooterState extends ConsumerState<ActiveProxyFooter> with InfraLogger {
-  ConnectionStatus? _connectionState;
-  OutboundInfo? _activeProxy;
-
-  @override
-  void initState() {
-    super.initState();
-    _connectionState = ref.read(connectionNotifierProvider).valueOrNull ?? const Disconnected();
-    _activeProxy = ref.read(activeProxyNotifierProvider).valueOrNull;
-    ref.listenManual(connectionNotifierProvider, (_, next) {
-      if (!mounted) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        setState(() => _connectionState = next.valueOrNull ?? const Disconnected());
-      });
-    });
-    ref.listenManual(activeProxyNotifierProvider, (_, next) {
-      if (!mounted) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        setState(() => _activeProxy = next.valueOrNull);
-      });
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
+    final activeProxy = ref.watch(activeProxyNotifierProvider.select((value) => value.valueOrNull));
     final t = ref.watch(translationsProvider).requireValue;
 
-    if (_connectionState != const Connected() || _activeProxy == null) {
+    // Early return if required data is not available
+    if (connectionState != const Connected() || activeProxy == null) {
       return const SizedBox.shrink();
     }
 
-    final activeProxy = _activeProxy!;
     final theme = Theme.of(context);
 
     // Handle URL test in a way that won't trigger during build
@@ -68,7 +44,7 @@ class _ActiveProxyFooterState extends ConsumerState<ActiveProxyFooter> with Infr
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withValues(alpha: 1),
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -120,22 +96,25 @@ class _ActiveProxyFooterState extends ConsumerState<ActiveProxyFooter> with Infr
                         IPText(ip: activeProxy.ipinfo.ip, onLongPress: handleUrlTest, constrained: true)
                       else
                         UnknownIPText(text: t.pages.proxies.unknownIp, onTap: handleUrlTest),
-                      const Spacer(),
-                      Text(
-                        // getRealOutboundTag(activeProxy),
-                        activeProxy.type,
-                        style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          // getRealOutboundTag(activeProxy),
+                          activeProxy.type,
+                          style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
+                        ),
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Icon(Icons.arrow_forward_ios, color: theme.colorScheme.primary),
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Icon(Icons.arrow_forward_ios, color: Colors.blue),
             ),
           ],
         ),
@@ -151,3 +130,66 @@ String getRealOutboundTag(OutboundInfo group) {
   }
   return tag;
 }
+
+// class _StatsColumn extends HookConsumerWidget {
+//   const _StatsColumn();
+
+//   @override
+//   Widget build(BuildContext context, WidgetRef ref) {
+//     final t = ref.watch(translationsProvider).requireValue;
+//     final stats = ref.watch(statsNotifierProvider).value;
+
+//     return Directionality(
+//       textDirection: TextDirection.values[(Directionality.of(context).index + 1) % TextDirection.values.length],
+//       child: Flexible(
+//         child: Column(
+//           children: [
+//             _InfoProp(
+//               icon: FluentIcons.arrow_bidirectional_up_down_20_regular,
+//               text: (stats?.downlinkTotal ?? 0).size(),
+//               semanticLabel: t.stats.totalTransferred,
+//             ),
+//             const Gap(8),
+//             _InfoProp(
+//               icon: FluentIcons.arrow_download_20_regular,
+//               text: (stats?.downlink ?? 0).speed(),
+//               semanticLabel: t.stats.speed,
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+// class _InfoProp extends StatelessWidget {
+//   const _InfoProp({
+//     required this.icon,
+//     required this.text,
+//     this.semanticLabel,
+//   });
+
+//   final IconData icon;
+//   final String text;
+//   final String? semanticLabel;
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Semantics(
+//       label: semanticLabel,
+//       child: Row(
+//         children: [
+//           Icon(icon),
+//           const Gap(8),
+//           Flexible(
+//             child: Text(
+//               text,
+//               style: Theme.of(context).textTheme.labelMedium?.copyWith(fontFamily: FontFamily.emoji),
+//               overflow: TextOverflow.ellipsis,
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }

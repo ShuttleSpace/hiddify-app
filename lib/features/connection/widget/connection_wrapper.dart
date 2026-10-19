@@ -3,8 +3,6 @@ import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/notification/in_app_notification_controller.dart';
 import 'package:hiddify/features/connection/notifier/connection_notifier.dart';
 import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
-import 'package:hiddify/features/proxy/data/node_blacklist_engine.dart';
-import 'package:hiddify/features/proxy/notifier/node_blacklist_controller.dart';
 import 'package:hiddify/features/settings/notifier/config_option/config_option_notifier.dart';
 import 'package:hiddify/utils/custom_loggers.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -42,27 +40,5 @@ class _ConnectionWrapperState extends ConsumerState<ConnectionWrapper> with AppL
     });
 
     return widget.child;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final profile = await ref.read(activeProfileProvider.future);
-      final blacklistDoc = ref.read(nodeBlacklistControllerProvider);
-      if (profile == null || effectiveRules(blacklistDoc, profile.id).isEmpty) return;
-      if (!ref.read(serviceRunningProvider)) return;
-      await ref.read(connectionNotifierProvider.notifier).reconnect(profile);
-    });
-    // remove for now...
-    //
-    // Future.delayed(const Duration(seconds: 2)).then(
-    //   (_) async {
-    //     if (ref.read(startedByUserProvider) && PlatformUtils.isDesktop) {
-    //       loggy.debug("previously started by user, trying to connect");
-    //       return ref.read(connectionNotifierProvider.notifier).mayConnect();
-    //     }
-    //   },
-    // );
   }
 }

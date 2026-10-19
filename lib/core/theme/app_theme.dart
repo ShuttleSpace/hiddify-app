@@ -7,11 +7,13 @@ class AppTheme {
   AppTheme(this.mode, this.fontFamily, {this.seedColor});
   final AppThemeMode mode;
   final String fontFamily;
+
+  /// The user's colour from the appearance page. Falls back to the built-in brand
+  /// colour when none was picked, which is what the ?: in the builders below do.
   final Color? seedColor;
 
   ThemeData lightTheme(ColorScheme? lightColorScheme) {
-    final ColorScheme scheme =
-        lightColorScheme ?? ColorScheme.fromSeed(seedColor: seedColor ?? const Color(0xFF293CA0));
+    final ColorScheme scheme = lightColorScheme ?? ColorScheme.fromSeed(seedColor: seedColor ?? const Color(0xFF293CA0));
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
@@ -27,7 +29,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: mode.trueBlack ? Colors.black : scheme.background,
+      scaffoldBackgroundColor: mode.trueBlack ? Colors.black : scheme.surface,
       fontFamily: fontFamily,
       extensions: const <ThemeExtension<dynamic>>{ConnectionButtonTheme.light},
     );

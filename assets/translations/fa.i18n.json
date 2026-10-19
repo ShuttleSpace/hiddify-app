@@ -6,6 +6,7 @@
     "ok": "باشه",
     "cancel": "لغو",
     "kContinue": "ادامه",
+    "undo": "واگرد",
     "showMore": "نمایش بیشتر",
     "showLess": "نمایش کمتر",
     "filter": "فیلتر",
@@ -28,6 +29,8 @@
     "help": "راهنما",
     "save": "ذخیره",
     "update": "به‌روزرسانی",
+    "pin": "سنجاق کردن",
+    "unpin": "برداشتن سنجاق",
     "share": "اشتراک‌گذاری",
     "edit": "ویرایش",
     "delete": "حذف",
@@ -109,6 +112,7 @@
       "empty": "هیچ پروکسی موجود نیست",
       "activeProxy": "پروکسی فعال",
       "unknownIp": "IP ناشناخته",
+      "switchFailed": "تغییر به این پروکسی ممکن نشد. دوباره تلاش کنید.",
       "sortOptions": {
         "unsorted": "پیش‌فرض",
         "name": "بر اساس نام",
@@ -152,9 +156,14 @@
         },
         "update": {
           "success": "پروفایل با موفقیت به‌روز شد",
-          "successNamed": "«${name}» با موفقیت به‌روز شد",
           "failure": "به‌روزرسانی پروفایل ناموفق بود",
-          "failureNamed": "به‌روزرسانی «${name}» ناموفق بود"
+          "failureNamed": "به‌روزرسانی «${name}» ناموفق بود",
+          "bulkSuccess(plural, param=count)": {
+            "one": "$count پروفایل به‌روزرسانی شد",
+            "other": "$count پروفایل به‌روزرسانی شد"
+          },
+          "bulkPartial": "${success} به‌روزرسانی شد\n${failed} ناموفق: ${names}",
+          "successNamed": "«${name}» با موفقیت به‌روز شد"
         },
         "delete": {
           "success": "پروفایل با موفقیت حذف شد"
@@ -171,11 +180,39 @@
         "urlHint": "URL کامل کانفیگ",
         "disableAutoUpdate": "غیرفعال کردن به‌روزرسانی خودکار",
         "autoUpdateInterval": "فاصله زمانی به‌روزرسانی خودکار",
-        "loading": "در حال افزودن پروفایل..."
+        "loading": "در حال افزودن پروفایل...",
+        "customProxy": "پروکسی سفارشی",
+        "server": "سرور",
+        "serverHint": "proxy.example.com",
+        "port": "درگاه",
+        "protocol": "پروتکل",
+        "credentialsOptional": "فقط در صورتی که پروکسی بخواهد",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {
       "title": "گزارش‌ها",
+      "category": "دسته",
+      "level": "سطح",
+      "recentLogs": "گزارش‌های اخیر",
+      "recentLogsMsg": "آنچه در این صفحه می‌بینید",
+      "errorLog": "گزارش برنامه و هسته",
+      "errorLogMsg": "خطاهای هر دو، در همه اجراها",
+      "coreLog": "گزارش هسته",
+      "coreLogMsg": "هر چه هسته ثبت کرده",
+      "coreCrash": "کرش هسته",
+      "coreCrashMsg": "آنچه هسته هنگام آخرین کرش انجام می‌داد",
+      "exportToFile": "خروجی در فایل",
+      "linesMatch": "$count خط مطابق",
+      "fileSaved": "فایل ذخیره شد",
+      "fileSaveFailed": "ذخیره فایل ممکن نشد",
+      "coreLogLevel": "سطح هسته",
+      "coreLogLevelMsg": "پس از اتصال مجدد اعمال می‌شود",
+      "buffer": "بافر",
       "shareCoreLogs": "اشتراک‌گذاری گزارش‌های هسته",
       "shareAppLogs": "اشتراک‌گذاری گزارش‌های برنامه"
     },
@@ -227,21 +264,20 @@
         "ignoreBatteryOptimizationsMsg": "حذف محدودیت‌ها برای عملکرد بهینه VPN",
         "memoryLimit": "محدودیت حافظه",
         "memoryLimitMsg": "در صورت مواجهه با خطای کمبود حافظه یا بسته‌شدن‌های مکرر برنامه، این گزینه را فعال کنید",
-        "debugMode": "حالت اشکال‌زدایی",
-        "debugModeMsg": "برای اعمال این تغییر، برنامه را مجدداً راه‌اندازی کنید",
-        "logLevel": "سطح گزارش‌گیری",
         "connectionTestUrl": "URL تست اتصال",
         "urlTestInterval": "فاصله زمانی تست URL",
         "clashApiPort": "پورت Clash API",
         "useXrayCoreWhenPossible": "استفاده از xray-core در صورت امکان",
-        "useXrayCoreWhenPossibleMsg": "هنگام پردازش لینک‌های اشتراک از xray-core استفاده شود. برای فعال‌سازی این گزینه باید لینک اشتراک را مجدداً وارد کنید."
+        "useXrayCoreWhenPossibleMsg": "هنگام پردازش لینک‌های اشتراک از xray-core استفاده شود. برای فعال‌سازی این گزینه باید لینک اشتراک را مجدداً وارد کنید.",
+        "debugMode": "حالت اشکال‌زدایی",
+        "debugModeMsg": "برای اعمال این تغییر، برنامه را مجدداً راه‌اندازی کنید",
+        "logLevel": "سطح گزارش‌گیری"
       },
       "routing": {
         "title": "مسیریابی",
         "routeRule": {
-          "empty": "هنوز هیچ قانونی اضافه نشده است\n\nبرای ایجاد قانون جدید یا انتخاب از قوانین پیش‌فرض، روی دکمه + ضربه بزنید",
+          "add": "افزودن قانون",
           "delete": "حذف قانون",
-          "create": "ایجاد قانون جدید",
           "options": {
             "import": {
               "clipboard": "وارد کردن قوانین از کلیپ‌بورد",
@@ -256,7 +292,7 @@
           "rule": {
             "title": "قانون",
             "onlyTunMode": "فقط در حالت TUN در دسترس است",
-            "notAvailabeInThisPlatform": "در این پلتفرم در دسترس نیست",
+            "notAvailableInThisPlatform": "در این پلتفرم در دسترس نیست",
             "canNotBeEmpty": "نمی‌تواند خالی باشد",
             "validUrlEx": "https://example.com",
             "validUrl": "\"URL\" معتبر مانند\n@:pages.settings.routing.routeRule.rule.validUrlEx",
@@ -309,14 +345,121 @@
               "stun": "STUN",
               "dns": "DNS",
               "bittorrent": "BitTorrent"
-            }
+            },
+            "notAvailabeInThisPlatform": "در این پلتفرم در دسترس نیست"
           },
           "genericList": {
             "addNew": "افزودن مقدار جدید",
             "update": "به‌روزرسانی مقدار",
             "clearList": "پاک کردن لیست",
             "clearListMsg": "تمام موارد حذف شدند"
+          },
+          "empty": "هنوز هیچ قانونی اضافه نشده است\n\nبرای ایجاد قانون جدید یا انتخاب از قوانین پیش‌فرض، روی دکمه + ضربه بزنید",
+          "create": "ایجاد قانون جدید"
+        },
+        "builtinRules": {
+          "tag": "توکار",
+          "bypassLan": "دور زدن LAN",
+          "blockAds": "مسدودسازی تبلیغات و بدافزار",
+          "bypassRegion": "دور زدن سایت‌های $region"
+        },
+        "appBasedRouting": {
+          "title": "مسیریابی بر اساس برنامه",
+          "hideSysApps": "پنهان کردن برنامه‌های سیستمی",
+          "listTitle": {
+            "bypass": "برنامه‌های بدون پروکسی",
+            "proxy": "برنامه‌های با پروکسی"
+          },
+          "chooseApps": "انتخاب برنامه‌ها",
+          "apps": {
+            "one": "برنامه",
+            "other": "برنامه‌ها"
+          },
+          "moreApps": {
+            "one": "+$n برنامه",
+            "other": "+$n برنامه"
+          },
+          "autoTag": "خودکار",
+          "outsideVpn": "خارج از VPN",
+          "ruleWontApply": "خارج از VPN · قانون اعمال نمی‌شود",
+          "notInstalled": "نصب نشده",
+          "share": {
+            "invite": "به بهبود انتخاب خودکار کمک کنید",
+            "removed": {
+              "one": "$n حذف‌شده",
+              "other": "$n حذف‌شده"
+            },
+            "added": {
+              "one": "$n اضافه‌شده",
+              "other": "$n اضافه‌شده"
+            },
+            "title": "تغییراتتان را به اشتراک بگذارید",
+            "where": "یک گزارش عمومی در GitHub باز می‌کند که از قبل با نام این برنامه‌ها پر شده است. برای اشتراک‌گذاری، آن را همان‌جا ثبت کنید. به حساب GitHub نیاز دارید.",
+            "action": "ادامه در GitHub"
+          },
+          "options": {
+            "import": {
+              "clipboard": "وارد کردن انتخاب‌ها از کلیپ‌بورد",
+              "file": "وارد کردن انتخاب‌ها از فایل",
+              "msg": "وارد کردن، انتخاب‌های فعلی شما را جایگزین می‌کند. ادامه می‌دهید؟"
+            },
+            "export": {
+              "clipboard": "کپی انتخاب‌ها به کلیپ‌بورد",
+              "file": "خروجی انتخاب‌ها به فایل"
+            },
+            "clearAllSelections": "پاک کردن تمام انتخاب‌ها"
+          },
+          "modes": {
+            "proxy": "فقط پروکسی",
+            "bypass": "دور زدن"
+          },
+          "autoSelection": {
+            "title": "انتخاب خودکار بر پایهٔ $region",
+            "performNow": "اکنون به‌روزرسانی کن",
+            "updated": {
+              "zero": "امروز به‌روزرسانی شد",
+              "one": "$n روز پیش به‌روزرسانی شد",
+              "other": "$n روز پیش به‌روزرسانی شد"
+            },
+            "noList": "برای این منطقه لیستی وجود ندارد",
+            "loadFailed": "دریافت لیست ناموفق بود",
+            "restore": {
+              "one": "بازگرداندن $n انتخاب خودکار",
+              "other": "بازگرداندن $n انتخاب خودکار"
+            },
+            "restored": {
+              "one": "$n انتخاب خودکار بازگردانده شد",
+              "other": "$n انتخاب خودکار بازگردانده شد"
+            }
           }
+        },
+        "region": "منطقه",
+        "regions": {
+          "ir": "ایران (ir)",
+          "cn": "چین (cn)",
+          "ru": "روسیه (ru)",
+          "af": "افغانستان (af)",
+          "id": "اندونزی (id)",
+          "tr": "ترکیه (tr)",
+          "br": "برزیل (br)",
+          "other": "سایر"
+        },
+        "balancerStrategy": {
+          "title": "استراتژی Balancer",
+          "roundRobin": "Round robin",
+          "consistentHash": "Consistent hash",
+          "stickySession": "Sticky session",
+          "roundRobinDescription": "هر اتصال از سرور بعدی استفاده می‌کند، پس سایت‌ها ممکن است تغییر IP شما را ببینند",
+          "consistentHashDescription": "هر سایت همیشه از همان سرور استفاده می‌کند",
+          "stickySessionDescription": "هر سایت تا اتصال دوباره، یک سرور تصادفی را نگه می‌دارد"
+        },
+        "resolveDestination": "تحلیل آدرس مقصد",
+        "ipv6Route": "مسیریابی IPv6",
+        "ipv6Modes": {
+          "disable": "غیرفعال",
+          "enable": "فعال",
+          "prefer": "ترجیحی",
+          "only": "انحصاری"
         },
         "generalOptions": {
           "title": "تنظیمات عمومی مسیریابی",
@@ -454,11 +597,12 @@
         "directPort": "پورت مستقیم",
         "redirectPort": "پورت تغییر مسیر",
         "lanSharing": "اشتراک VPN",
+        "qrCode": "کد QR",
+        "lanQrSubtitle": "پروکسی SOCKS5 برای همین وای‌فای",
+        "lanIPError": "خطا در دریافت آدرس IP محلی",
         "lanSharingPasswordNotSet": "رمز عبور تنظیم نشده",
         "lanSharingPassword": "رمز عبور اشتراک VPN",
-        "copyLink": "کپی لینک",
-        "qrCode": "کد QR",
-        "lanIPError": "خطا در دریافت آدرس IP محلی"
+        "copyLink": "کپی لینک"
       },
       "tlsTricks": {
         "title": "ترفندهای TLS",
@@ -579,11 +723,19 @@
       "expireDate": "تاریخ انقضا",
       "expired": "منقضی شده",
       "noTraffic": "حجم تمام شده",
-      "remainingTime": "زمان باقی‌مانده",
-      "remainingDuration": "${duration} روز باقی‌مانده",
-      "remainingDurationNew": "${duration} روز",
+      "remainingDuration(plural, param=days)": {
+        "one": "$days روز باقی‌مانده",
+        "other": "$days روز باقی‌مانده"
+      },
+      "remainingUnlimited": "نامحدود",
       "remainingTrafficSemanticLabel": "${consumed} از ${total} ترافیک مصرف شده",
       "remainingTraffic": "ترافیک باقی‌مانده",
+      "openWebPage": "باز کردن صفحه وب",
+      "support": "پشتیبانی",
+      "openLinkTitle": "این لینک باز شود؟",
+      "openLinkAction": "باز کردن",
+      "remainingTime": "زمان باقی‌مانده",
+      "remainingDurationNew": "${duration} روز",
       "remainingUsage": "باقی‌مانده",
       "profileSite": "سرویس‌دهنده",
       "profileSupport": "پشتیبانی"
@@ -595,6 +747,10 @@
       "sort": {
         "name": "بر اساس نام",
         "lastUpdate": "آخرین به‌روزرسانی"
+      },
+      "direction": {
+        "newestFirst": "جدیدترین اول",
+        "oldestFirst": "قدیمی‌ترین اول"
       }
     },
     "warpLicense": {
@@ -624,13 +780,9 @@
           "msg": "آیا از حذف دائمی این پروفایل مطمئن هستید؟"
         }
       },
-      "perAppProxy": {
-        "shareOnGithub": {
-          "title": "بهبود انتخاب خودکار",
-          "msg": "با اشتراک‌گذاری برنامه‌های انتخاب‌شده، به تکمیل لیست «انتخاب خودکار» کمک می‌کنید"
-        },
+      "appList": {
         "import": {
-          "msg": "این عمل تمام انتخاب‌های فعلی شما برای پروکسی برنامه‌ها را جایگزین خواهد کرد. آیا مطمئن هستید؟"
+          "msg": "این کار برنامه‌های «دور زدن» و «فقط پروکسی» شما را جایگزین می‌کند. ادامه می‌دهید؟"
         }
       },
       "routeRule": {
@@ -646,6 +798,15 @@
       "importRouteRuleByDeepLinkWarning": {
         "title": "وارد کردن قانون مسیریابی؟",
         "message": "وارد کردن قوانین مسیریابی از منابع غیرقابل اعتماد می‌تواند ریسک امنیتی باشد\nفقط در صورتی که به این لینک اعتماد دارید ادامه دهید"
+      },
+      "perAppProxy": {
+        "shareOnGithub": {
+          "title": "بهبود انتخاب خودکار",
+          "msg": "با اشتراک‌گذاری برنامه‌های انتخاب‌شده، به تکمیل لیست «انتخاب خودکار» کمک می‌کنید"
+        },
+        "import": {
+          "msg": "این عمل تمام انتخاب‌های فعلی شما برای پروکسی برنامه‌ها را جایگزین خواهد کرد. آیا مطمئن هستید؟"
+        }
       }
     },
     "experimentalNotice": {
@@ -663,6 +824,11 @@
     },
     "unknownDomainsWarning": {
       "title": "هشدار لینک خارجی",
+      "cannotVerify": "این لینک تأیید نشده است",
+      "avoidIfUnsure": "اگر کاملاً مطمئن نیستید، پرداخت نکنید و اطلاعات حساس به اشتراک نگذارید",
+      "ownResponsibility": "ادامه دادن با مسئولیت خودتان است",
+      "open": "باز کردن",
+      "openIn": "باز کردن (${seconds})",
       "youAreAboutToVisit": "شما در حال بازدید از این آدرس هستید:",
       "thisWebsiteIsNotInOurTrustedList": "این وب‌سایت در لیست مورد اعتماد ما نیست. لطفاً با احتیاط ادامه دهید."
     },
@@ -691,15 +857,28 @@
       "askEachTime": "هر بار بپرس",
       "alertMessage": "پنهان کردن یا خروج از برنامه؟",
       "remember": "انتخابم را به خاطر بسپار"
+    },
+    "qrCode": {
+      "copyFullLink": "کپی لینک کامل",
+      "copied": "کپی شد",
+      "ip": "IP",
+      "port": "پورت",
+      "username": "نام کاربری",
+      "password": "رمز عبور",
+      "showPassword": "نمایش رمز عبور",
+      "hidePassword": "پنهان کردن رمز عبور"
     }
   },
   "connection": {
     "tapToConnect": "برای اتصال ضربه بزنید",
     "connect": "اتصال",
     "connecting": "در حال اتصال...",
+    "hotReloading": "در حال اعمال تغییرات…",
     "connected": "متصل شد",
     "disconnect": "قطع اتصال",
     "disconnecting": "در حال قطع اتصال...",
+    "failed": "اتصال برقرار نشد",
+    "tapToRetry": "برای تلاش دوباره ضربه بزنید",
     "reconnect": "اتصال مجدد",
     "reconnectMsg": "در حال اتصال مجدد برای اعمال تغییرات..."
   },
@@ -729,6 +908,8 @@
       "serviceNotRunning": "سرویس در حال اجرا نیست",
       "missingPrivilege": "دسترسی وجود ندارد",
       "missingPrivilegeMsg": "حالت VPN به دسترسی ادمین نیاز دارد. یا برنامه را به عنوان ادمین مجدداً راه‌اندازی کنید یا حالت سرویس را تغییر دهید.",
+      "tunAddressInUse": "VPN دیگری فعال است",
+      "tunAddressInUseMsg": "حالت VPN نمی‌تواند شروع شود. VPN دیگر را خاموش کنید یا حالت سرویس را تغییر دهید.",
       "invalidConfigOptions": "گزینه‌های پیکربندی نامعتبر",
       "invalidConfig": "پیکربندی نامعتبر"
     },
