@@ -416,50 +416,37 @@ jobs:
         run: ls -R
         working-directory: ./out
 
-      - name: Delete Current Release Assets
-        uses: 8Mi-Tech/delete-release-assets-action@main
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: 'draft'
-          deleteOnlyFromDrafts: false
-          
-      - name: prepare_release_message
-        continue-on-error: true
-        run: |
-          set +e 
-          sed 's|RELEASE_TAG|${{ env.TAG_NAME }}|g' ./.github/release_message.md > release.md
-          pip install gitchangelog pystache mustache markdown
-          prelease=$(curl --silent "https://api.github.com/repos/hiddify/hiddify-app/releases/latest" | grep -Po '"tag_name": "\K([^"]*)') 
-          echo -e "\n\n<details markdown=1><summary>All changes from $current to the latest commit:</summary>\n\n">>release.md
-          gitchangelog "${prelease}.." >> release.md  2>&1 || echo "Error in gitchangelog"
-          echo -e "\n\n</details>">>release.md
-      - name: Create or Update Draft Release
-        uses: softprops/action-gh-release@v2
+      - name: Publish the draft release
+        # The two softprops/action-gh-release steps this replaces went through the
+        # update-a-release path and 403'd on this fork ("Resource not accessible by
+        # integration") even though the token holds Contents: write. They also
+        # deleted the previous assets *before* creating the new release, so a
+        # failure there emptied the draft. Upload in place with --clobber, and only
+        # fall back to recreating the release when that does not work.
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          files: ./out/*
-          name: 'draft'
-          tag_name: 'draft'
-          body_path: './release.md'
-          prerelease: true
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
 
-      - name: Create or Update Draft Release
-        uses: softprops/action-gh-release@v3
-        # env:
-          #GITHUB_TOKEN: ${{ secrets.TOKEN_FOR_HIDDIFY_APP_REPO }}
-          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          if [ -z "$(ls -A out)" ]; then
+            echo "out/ is empty; leaving the draft release untouched"
+            exit 0
+          fi
 
-#          GITHUB_REPOSITORY: hiddify/hiddify-app
-        with:
-          files: ./out/*
-          name: 'draft'
-          tag_name: 'draft'
-          body_path: './release.md'
-          target_commitish: ${{ github.sha }}
-          # target_commitish: '530bf77839a74d4f13847ba244a20734ac7ab119'
-          prerelease: true
-          # repository: hiddify/hiddify-app
+          notes=(--generate-notes)
+          [ -s release.md ] && notes=(--notes-file release.md)
+
+          if gh release view draft >/dev/null 2>&1; then
+            if gh release upload draft out/* --clobber; then
+              gh release edit draft --prerelease "${notes[@]}" 2>/dev/null || true
+              echo "refreshed the existing draft release"
+              exit 0
+            fi
+            echo "upload to the existing release failed; recreating it instead"
+          fi
+
+          gh release delete draft --yes --cleanup-tag 2>/dev/null || true
+          gh release create draft --prerelease --title draft "${notes[@]}" out/*
 
   upload-release:
     permissions: write-all
