@@ -468,10 +468,10 @@ class JsonEditor extends StatefulWidget {
   final List expandedObjects;
 
   @override
-  State<JsonEditor> createState() => _JsonEditorState();
+  State<JsonEditor> createState() => JsonEditorState();
 }
 
-class _JsonEditorState extends State<JsonEditor> {
+class JsonEditorState extends State<JsonEditor> {
   Timer? _timer;
   Timer? _searchTimer;
   late dynamic _data;
@@ -512,6 +512,48 @@ class _JsonEditorState extends State<JsonEditor> {
     _timer = Timer(widget.duration, () {
       widget.onChanged(jsonDecode(jsonEncode(_data)));
     });
+  }
+
+  /// Commits the current editor content to [JsonEditor.onChanged] immediately,
+  /// without waiting for the debounce timer.
+  ///
+  /// Returns `false` when the text editor holds invalid JSON, in which case
+  /// nothing is emitted and the caller should abort whatever it was about to do
+  /// with the content (e.g. saving it).
+  bool flush() {
+    if (_timer?.isActive ?? false) _timer?.cancel();
+    _timer = null;
+
+    if (_editor == Editors.text) {
+      try {
+        _data = jsonDecode(_controller.text);
+        if (_onError) setState(() => _onError = false);
+      } catch (_) {
+        if (!_onError) setState(() => _onError = true);
+        return false;
+      }
+    } else {
+      // Tree fields only write on focus loss, so a field that still has focus
+      // would be left out of `_data` when saving straight from it.
+      _commitFocusedFields();
+      if (_timer?.isActive ?? false) _timer?.cancel();
+      _timer = null;
+    }
+
+    widget.onChanged(jsonDecode(jsonEncode(_data)));
+    return true;
+  }
+
+  void _commitFocusedFields() {
+    void visit(BuildContext context) {
+      context.visitChildElements((child) {
+        final state = child is StatefulElement ? child.state : null;
+        if (state is _ReplaceTextWithFieldState) state.commit();
+        visit(child);
+      });
+    }
+
+    visit(context);
   }
 
   void parseData(String value) {
@@ -1239,18 +1281,26 @@ class _ReplaceTextWithFieldState extends State<_ReplaceTextWithField> {
 
   void handleChange() {
     if (!_focusNode.hasFocus) {
-      _text = _text.trim();
-      final val = num.tryParse(_text);
-      if (val == null) {
-        widget.onChanged(_text);
-      } else {
-        widget.onChanged(val);
-      }
-
-      setState(() {
-        _isFocused = false;
-      });
+      commit();
     }
+  }
+
+  /// Writes the typed value into the data tree, even while the field still has
+  /// focus. Used when saving without leaving the field.
+  void commit() {
+    if (!_isFocused) return;
+
+    _text = _text.trim();
+    final val = num.tryParse(_text);
+    if (val == null) {
+      widget.onChanged(_text);
+    } else {
+      widget.onChanged(val);
+    }
+
+    setState(() {
+      _isFocused = false;
+    });
   }
 
   Widget wrapWithColoredBox(String keyName) {
