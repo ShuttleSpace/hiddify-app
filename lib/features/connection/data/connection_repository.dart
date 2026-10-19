@@ -21,7 +21,8 @@ abstract interface class ConnectionRepository {
   TaskEither<ConnectionFailure, Unit> setup();
   Stream<ConnectionStatus> watchConnectionStatus();
 
-  /// Whether the core is swapping its config without dropping the tunnel.
+  /// Whether the core is applying a new config without a restart; the connection stays up
+  /// (watchConnectionStatus keeps reporting it as connected).
   Stream<bool> watchHotReloading();
   TaskEither<ConnectionFailure, Unit> connect(ProfileEntity activeProfile, bool disableMemoryLimit);
   TaskEither<ConnectionFailure, Unit> disconnect();
@@ -99,15 +100,16 @@ class ConnectionRepositoryImpl with ExceptionHandler, InfraLogger implements Con
   @override
   TaskEither<ConnectionFailure, Unit> disconnect() => singbox.stop().mapLeft(UnexpectedConnectionFailure.new);
 
-@override
-TaskEither<ConnectionFailure, Unit> releaseSystemProxy() =>
-singbox.releaseSystemProxy().mapLeft(UnexpectedConnectionFailure.new);
+  @override
+  TaskEither<ConnectionFailure, Unit> releaseSystemProxy() =>
+      singbox.releaseSystemProxy().mapLeft(UnexpectedConnectionFailure.new);
 
   @override
   TaskEither<ConnectionFailure, Unit> reconnect(ProfileEntity activeProfile, bool disableMemoryLimit) =>
       applyConfigOption(activeProfile).flatMap(
+        // hot reload when possible, restart otherwise
         (_) => singbox
-            .restart(profilePathResolver.file(activeProfile.id).path, activeProfile.name, disableMemoryLimit)
+            .reload(profilePathResolver.file(activeProfile.id).path, activeProfile.name, disableMemoryLimit)
             .mapLeft(UnexpectedConnectionFailure.new),
       );
 

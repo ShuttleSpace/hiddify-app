@@ -40,8 +40,6 @@ class ConnectionNotifier extends _$ConnectionNotifier with AppLogger {
       if (previous == next) return;
       if (previous case AsyncData(:final value) when !value.isConnected) {
         if (next case AsyncData(value: final Connected _)) {
-          await ref.read(hapticServiceProvider.notifier).heavyImpact();
-
           if (Platform.isAndroid && !ref.read(Preferences.storeReviewedByUser)) {
             if (await InAppReview.instance.isAvailable()) {
               InAppReview.instance.requestReview();
@@ -71,16 +69,24 @@ class ConnectionNotifier extends _$ConnectionNotifier with AppLogger {
       if (event case Disconnected(connectionFailure: final _?) when PlatformUtils.isDesktop) {
         Future.microtask(() => ref.read(Preferences.startedByUser.notifier).update(false));
       }
-      loggy.info("connection status: ${event.format()}");
+      // One call for every status buried failures at info, next to the ordinary
+      // comings and goings. A failure carries the core's own panic text, which
+      // is the last thing that should need hunting for.
+      final status = "connection status: ${event.format()}";
+      if (event case Disconnected(connectionFailure: final _?)) {
+        loggy.error(status);
+      } else {
+        loggy.info(status);
+      }
     });
   }
 
   ConnectionRepository get _connectionRepo => ref.read(connectionRepositoryProvider);
 
   /// Reconnects only if the last run ended with the tunnel up. The previous
-/// `mayConnect` fired on any disconnected state, which meant a user who had
-/// deliberately turned the tunnel off got it back on the next launch.
-Future<void> restoreConnectionOnStartup() async {
+  /// `mayConnect` fired on any disconnected state, which meant a user who had
+  /// deliberately turned the tunnel off got it back on the next launch.
+  Future<void> restoreConnectionOnStartup() async {
     final startedByUser = ref.read(Preferences.startedByUser);
     final activeProfile = await ref.read(activeProfileProvider.future);
     final shouldRestore = shouldRestoreConnectionOnStartup(
@@ -168,22 +174,27 @@ Future<void> restoreConnectionOnStartup() async {
       loggy.info("no active profile, not connecting");
       return;
     }
-
+    // Read before connecting: a failed start sends the core restart signal, which marks this
+    // notifier out of date until the next frame, and debug builds refuse any ref call until then.
+    final dialogs = ref.read(dialogNotifierProvider.notifier);
+    final t = ref.read(translationsProvider).requireValue;
+    final startedByUser = ref.read(Preferences.startedByUser.notifier);
     final disableMemoryLimit = ref.read(Preferences.disableMemoryLimit);
-    final dialogNotifier = ref.read(dialogNotifierProvider.notifier);
-    final translations = ref.read(translationsProvider);
-    final startedByUserNotifier = ref.read(Preferences.startedByUser.notifier);
-    await _connectionRepo.connect(activeProfile, disableMemoryLimit).mapLeft((
-      ConnectionFailure err,
-    ) async {
+    // The core reports Starting only once the config is built, about a second
+    // later; the app is connecting from here on.
+    state = const AsyncData(Connecting());
+    await _connectionRepo.connect(activeProfile, disableMemoryLimit).mapLeft((ConnectionFailure err) async {
       loggy.warning("error connecting", err);
-      await dialogNotifier.showCustomAlertFromErr(err.present(translations.requireValue));
+      // Before the dialog: a status the core sends while it is open, such as a
+      // late Started, must win over this error, not be overwritten by it.
+      state = AsyncError(err, StackTrace.current);
+      //Go err is not normal object to see the go errors are string and need to be dumped
+      await dialogs.showCustomAlertFromErr(err.present(t));
       loggy.warning(err);
       if (err.toString().contains("panic")) {
         await Sentry.captureException(Exception(err.toString()));
       }
-      await startedByUserNotifier.update(false);
-      state = AsyncError(err, StackTrace.current);
+      await startedByUser.update(false);
     }).run();
   }
 
@@ -291,6 +302,4 @@ class SingleCall {
 }
 
 /// Whether the core is hot reloading; only the connection button shows it.
-final hotReloadingProvider = StreamProvider<bool>(
-  (ref) => ref.watch(connectionRepositoryProvider).watchHotReloading(),
-);
+final hotReloadingProvider = StreamProvider<bool>((ref) => ref.watch(connectionRepositoryProvider).watchHotReloading());
