@@ -15,7 +15,7 @@ on:
 env:
   IS_GITHUB_ACTIONS: 1
   CHANNEL: "${{ inputs.channel }}"
-  FLUTTER_VERSION: '3.38.5'
+  FLUTTER_VERSION: '3.44.4'
   NDK_VERSION: r28c
   UPLOAD_ARTIFACT: "${{ inputs.upload-artifact }}"
   TAG_NAME: "${{ inputs.tag-name }}"
@@ -60,6 +60,13 @@ jobs:
     needs: test
     permissions: write-all
     continue-on-error: true
+    # Secrets are per-repository: a fork cannot read the upstream repo's signing
+    # material. Gate every signing step on these so the artifact still builds
+    # (unsigned, or with gradle's debug keystore) instead of failing outright.
+    env:
+      HAS_ANDROID_SIGNING: ${{ secrets.ANDROID_SIGNING_KEY != '' }}
+      HAS_APPLE_SIGNING: ${{ secrets.APPLE_CERTIFICATE_P12 != '' }}
+      HAS_WINDOWS_SIGNING: ${{ secrets.WINDOWS_SIGNING_KEY != '' }}
 
     strategy:
       fail-fast: false
@@ -119,14 +126,14 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Import Apple Codesign Certificates
-        if: ${{ inputs.upload-artifact && startsWith(matrix.os,'macos') }}
+        if: ${{ inputs.upload-artifact && startsWith(matrix.os,'macos') && env.HAS_APPLE_SIGNING == 'true' }}
         uses: apple-actions/import-codesign-certs@v6
         with: 
             p12-file-base64: "${{ secrets.APPLE_CERTIFICATE_P12 }}"
             p12-password: "${{ secrets.APPLE_CERTIFICATE_P12_PASSWORD }}"
 
       - name: Import Apple Mobile Provisioning Profile
-        if: ${{ inputs.upload-artifact && startsWith(matrix.os,'macos') }}
+        if: ${{ inputs.upload-artifact && startsWith(matrix.os,'macos') && env.HAS_APPLE_SIGNING == 'true' }}
         run: |
            mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
            echo "${{secrets.APPLE_MOBILE_PROVISIONING_PROFILES_TARGZ_BASE64}}"|base64 --decode | tar xz -C ~/Library/MobileDevice/Provisioning\ Profiles
@@ -220,7 +227,7 @@ jobs:
           echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
 
       - name: Setup Android Signing Properties
-        if: ${{ inputs.upload-artifact && startsWith(matrix.platform,'android') }}
+        if: ${{ inputs.upload-artifact && startsWith(matrix.platform,'android') && env.HAS_ANDROID_SIGNING == 'true' }}
         run: |
           echo "${{ secrets.ANDROID_SIGNING_KEY }}" | base64 --decode > android/key.jks
           echo "storeFile=$(pwd)/android/key.jks" > android/key.properties
@@ -229,7 +236,7 @@ jobs:
           echo "keyAlias=${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}" >> android/key.properties
 
       - name: Setup Windows Signing Properties
-        if: ${{ inputs.upload-artifact && startsWith(matrix.platform,'windows') }}
+        if: ${{ inputs.upload-artifact && startsWith(matrix.platform,'windows') && env.HAS_WINDOWS_SIGNING == 'true' }}
         run: |
             [IO.File]::WriteAllBytes("windows\sign.pfx", [Convert]::FromBase64String("${{ secrets.WINDOWS_SIGNING_KEY }}"))
             (Get-Content "windows\packaging\msix\make_config.yaml") -replace '^certificate_password:.*$', 'certificate_password: ${{ secrets.WINDOWS_SIGNING_PASSWORD }}' | Set-Content "windows\packaging\msix\make_config.yaml"
@@ -263,7 +270,7 @@ jobs:
           make ${{ matrix.platform }}-release
 
       - name: Code Sign
-        if: ${{ inputs.upload-artifact && startsWith(matrix.platform,'windows') }}
+        if: ${{ inputs.upload-artifact && startsWith(matrix.platform,'windows') && env.HAS_WINDOWS_SIGNING == 'true' }}
         # signtool-code-sign actions hardcode an SDK path (10.0.17763.0) missing on current runners,
         # so locate signtool from whichever Windows SDK is installed.
         env:
@@ -377,7 +384,7 @@ jobs:
         with:
           name: ${{matrix.platform}}
           path: ./out
-          retention-days: 1
+          retention-days: 30
 
       - name: Clean up keychain and provisioning profile
         if: ${{ always() && startsWith(matrix.os,'macos')}}
