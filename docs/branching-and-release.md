@@ -17,12 +17,17 @@ upstream project.
 sync upstream deliberately rather than merging `main` into `dev` on a schedule:
 
 ```bash
-git remote add upstream git@github.com:veto9292/hiddify-app.git   # once
-git fetch upstream
+git remote add hiddify-upstream https://github.com/hiddify/hiddify-app.git   # once
+git fetch hiddify-upstream
 
 git checkout dev
-git merge upstream/main        # resolve, test, then push to origin/dev
+git merge hiddify-upstream/main     # resolve, test, then push to origin/dev
 ```
+
+The remote is called `hiddify-upstream` and not `upstream` on purpose. The GitHub CLI
+resolves a repository from the git remotes and prefers one named `upstream` over
+`origin`, so with that name every `gh` command without an explicit `-R` would go to
+`hiddify/hiddify-app` instead of this fork. With this name they land here.
 
 The same shape applies to the two submodule repositories, which are separate forks:
 
