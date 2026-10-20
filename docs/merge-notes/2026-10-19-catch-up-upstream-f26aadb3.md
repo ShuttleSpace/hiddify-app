@@ -230,6 +230,14 @@ git merge-file --diff3 -L upstream -L base -L fork /tmp/cur.dart /tmp/base.dart 
 - 想根治：让 `dev` 发布到自己的 tag（要连带处理 `upload-release` 和 `upload-to-testflight`，
   它们靠 `tag-name != 'draft'` 才跳过）——本次没做，记在这里
 
+> **已根治（2026-10-20）**：fork 的滚动 release 改用 `dev` 这个 tag
+> （`releases/tag/dev`），上游 `main` 分支的 workflow 仍然写 `draft`，两边不再抢。
+> 顺带发现上游 `build.yml` 里 `tag-name` 不只是标签，还当开关用：
+> `if: inputs.upload-artifact && inputs.tag-name != 'draft'` 门着「上传 Sentry 调试符号」
+> 那一步。换成 `dev` 之后这一步开始执行，而 fork 没有 Sentry 项目，上传返回 404，
+> 四条 build 腿全挂。已改成缺凭据就跳过（并且在 windows 上要用 `shell: bash`，
+> 那个 runner 默认是 PowerShell）。
+
 ### 6.5 上游删掉的代码不等于要保留
 
 上游在 269 个提交里删掉了连接成功时的强震动反馈（`hapticServiceProvider.heavyImpact()`）。
@@ -240,8 +248,10 @@ git merge-file --diff3 -L upstream -L base -L fork /tmp/cur.dart /tmp/base.dart 
 
 ## 7. 遗留
 
-1. `draft` release 与上游 `main` 的 CI 抢同一个发布位（见 §6.4），本次未根治
-2. `upload-release` job 仍用 `softprops/action-gh-release`，将来打正式 tag 会撞同一个 403
+1. ~~`draft` release 与上游 `main` 的 CI 抢同一个发布位~~ —— **2026-10-20 已解决**：
+   fork 的滚动 release 改成 `releases/tag/dev`，见 §6.4
+2. ~~`upload-release` job 仍用 `softprops/action-gh-release`~~ —— **2026-10-20 已解决**：
+   三个发布 job 合并成一个 `publish-release`，用 `gh` CLI 发布
 3. `main` 的 CI 在 fork 上必然红（缺上游的签名密钥），这是上游 workflow 的前提，不是 fork 的问题
 4. fork 的 `main` 这次才第一次跟上上游；以后同步上游要走
    「fetch → ff 到 `main` → 逐文件补回上游被丢的内容 → 落到 `dev`」这套流程
