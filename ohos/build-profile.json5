@@ -1,0 +1,57 @@
+
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "material": {
+          "storeFile": "signature/hiddify-debug.p12",
+          "storePassword": "0000003661e94e00571c9e0137d3ce35a5c52bc25e63b2c1616897284d44cec7510b86642d316a5e3bded6d7faa646087a8c9d085c74255e0289b70559af781c806fe4d2c702",
+          "keyAlias": "hiddify_debug",
+          "keyPassword": "0000003661e94e00571c9e0137d3ce35a5c52bc25e63b2c1616897284d44cec7510b86642d316a5e3bded6d7faa646087a8c9d085c74255e0289b70559af781c806fe4d2c702",
+          "profile": "signature/hiddify-debug.p7b",
+          "certpath": "signature/app-cert.cer",
+          "signAlg": "SHA256withECDSA"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "compatibleSdkVersion": "5.1.0(18)",
+        "runtimeOS": "HarmonyOS",
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug"
+      },
+      {
+        "name": "profile"
+      },
+      {
+        "name": "release",
+        "buildOption": {
+          "packOptions": {
+            "appWithSignedPkg": true
+          }
+        }
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

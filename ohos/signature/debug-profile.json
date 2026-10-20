@@ -1,0 +1,24 @@
+{
+  "version-name": "1.0.0",
+  "version-code": 1,
+  "uuid": "545d448b-b7a4-462a-952f-8cb5f9bf815e",
+  "validity": {
+    "not-before": 1792510194,
+    "not-after": 2107870194
+  },
+  "type": "debug",
+  "bundle-info": {
+    "developer-id": "Hiddify",
+    "development-certificate": "-----BEGIN CERTIFICATE-----\nMIIB4DCCAYegAwIBAgIEIgf8hzAKBggqhkjOPQQDAjBNMQswCQYDVQQGEwJDTjEQ\nMA4GA1UECgwHSGlkZGlmeTENMAsGA1UECwwET0hPUzEdMBsGA1UEAwwUSGlkZGlm\neSBPSE9TIFJvb3QgQ0EwHhcNMjYxMDIwMTUyOTU0WhcNMzYxMDE3MTUyOTU0WjBL\nMQswCQYDVQQGEwJDTjEQMA4GA1UECgwHSGlkZGlmeTENMAsGA1UECwwET0hPUzEb\nMBkGA1UEAwwSSGlkZGlmeSBPSE9TIERlYnVnMFkwEwYHKoZIzj0CAQYIKoZIzj0D\nAQcDQgAEUFG+NP8Pxu0Ya2dOZe7VT+FjCRrvgO2x/j+OCI511vV8f1ydI3wbsIp7\nA9pu/+Z7ZdWyCNMNkbX2yggAbDx9sqNXMFUwHQYDVR0OBBYEFDjSl8eRbdUkTBXR\nTWNHJ8LWXjdOMA8GA1UdEwQIMAYBAf8CAQAwCwYDVR0PBAQDAgeAMBYGA1UdJQEB\n/wQMMAoGCCsGAQUFBwMDMAoGCCqGSM49BAMCA0cAMEQCIHUDwsWPche+PFwrbb99\nQCNGZoQ89CgHHTZLBXeXs378AiA7aHbq+MpLRrXPI5y4gpI2NSGQTYADcVxjQnFk\nGrfo6A==\n-----END CERTIFICATE-----\n",
+    "bundle-name": "app.hiddify.com",
+    "app-feature": "hos_normal_app",
+    "apl": "normal"
+  },
+  "permissions": {
+    "restricted-permissions": []
+  },
+  "debug-info": {
+    "device-ids": []
+  },
+  "issuer": "pki_internal"
+}
