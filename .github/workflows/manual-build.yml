@@ -6,7 +6,7 @@ on:
       version:
         description: Version or artifact label (for example, v4.1.2-alpha1)
         required: true
-        default: draft
+        default: dev
         type: string
       publish-prerelease:
         description: Sign packages and publish a GitHub prerelease

@@ -392,7 +392,7 @@ jobs:
         run: |
           security delete-keychain $RUNNER_TEMP/app-signing.keychain-db ||echo ok
           rm ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision ||echo ok
-  update-draft:
+  publish-release:
     permissions: write-all
     if: ${{ inputs.upload-artifact }}
     needs: [build]
@@ -401,148 +401,63 @@ jobs:
       - name: checkout
         uses: actions/checkout@v6
         with:
-          # by default, it uses a depth of 1
-          # this fetches all history so that we can read each commit
+          # the whole history and the tags: the note lists the commits since the
+          # previous release, and that release is found by its tag
           fetch-depth: 0
+
       - name: Download Artifact
         uses: actions/download-artifact@v7
         with:
           merge-multiple: true
           pattern: "*"
           path: ./out/
-          
 
       - name: Display Files Structure
         run: ls -R
         working-directory: ./out
 
-      - name: Publish the draft release
+      - name: Write the release note
+        run: |
+          scripts/release_note.sh out "${{ env.TAG_NAME }}" "${{ github.repository }}" "${{ github.sha }}" "${{ env.CHANNEL }}" > release.md
+          cat release.md
+
+      - name: Publish the release
         # The two softprops/action-gh-release steps this replaces went through the
         # update-a-release path and 403'd on this fork ("Resource not accessible by
         # integration") even though the token holds Contents: write. They also
         # deleted the previous assets *before* creating the new release, so a
-        # failure there emptied the draft. Upload in place with --clobber, and only
-        # fall back to recreating the release when that does not work.
+        # failure there emptied it. Update in place and only recreate the release
+        # when that does not work.
+        #
+        # This is the only place the fork publishes: the artifacts go to this
+        # repository's release, and nothing goes to an app store.
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ env.TAG_NAME }}
+          SHA: ${{ github.sha }}
         run: |
           set -uo pipefail
 
           if [ -z "$(ls -A out)" ]; then
-            echo "out/ is empty; leaving the draft release untouched"
+            echo "out/ is empty; leaving the release untouched"
             exit 0
           fi
 
-          notes=(--generate-notes)
-          [ -s release.md ] && notes=(--notes-file release.md)
+          # the note's first line is the title, so the two cannot drift apart
+          title="$(head -1 release.md | sed 's/^# //')"
 
-          if gh release view draft >/dev/null 2>&1; then
-            if gh release upload draft out/* --clobber; then
-              gh release edit draft --prerelease "${notes[@]}" 2>/dev/null || true
-              echo "refreshed the existing draft release"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            if gh release edit "$TAG" --prerelease --title "$title" --notes-file release.md &&
+               gh release upload "$TAG" out/* --clobber; then
+              # the tag follows the build, so the next note starts from here
+              git tag -f "$TAG" "$SHA" >/dev/null 2>&1 && git push --force origin "refs/tags/$TAG" >/dev/null 2>&1 || true
+              echo "refreshed the existing release $TAG"
               exit 0
             fi
-            echo "upload to the existing release failed; recreating it instead"
+            echo "the existing release could not be updated; recreating it"
+            gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
           fi
 
-          gh release delete draft --yes --cleanup-tag 2>/dev/null || true
-          gh release create draft --prerelease --title draft "${notes[@]}" out/*
-
-  upload-release:
-    permissions: write-all
-    if: ${{ inputs.upload-artifact && inputs.tag-name != 'draft' }}
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v6
-
-      - name: Download Artifact
-        uses: actions/download-artifact@v7
-        with:
-          merge-multiple: true
-          pattern: "*"
-          path: ./out/
-
-      - name: Display Files Structure
-        run: |
-          ls -R ./out
-          ls -R ./.github/
-          ls -R ./.git/
-          mv out/hiddify-android-market.aab  hiddify-android-market.aab
-
-      - name: prepare_release_message
-        run: |
-          sed 's|RELEASE_TAG|${{ env.TAG_NAME }}|g' ./.github/release_message.md >> release.md
-
-      - name: Upload Release
-        uses: softprops/action-gh-release@v2
-        if: ${{ success() }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          # prerelease: ${{ env.CHANNEL == 'dev' }}
-          prerelease: true
-          tag_name: ${{ env.TAG_NAME }}
-          body_path: './release.md'
-          files: ./out/*
-
-      - name: Create service_account.json
-        run: echo '${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}' > service_account.json
-
-      - name: Deploy to Google Play Internal Testers
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJson: service_account.json
-          packageName: app.hiddify.com
-          releaseName: ${{ env.TAG_NAME }}
-          releaseFiles: ./hiddify-android-market.aab
-          track: 'beta'
-
-
-  upload-to-testflight:
-    needs: [build]
-    if: ${{ inputs.upload-artifact &&  inputs.tag-name != 'draft' }}
-    #if: ${{ inputs.upload-artifact }}
-    runs-on: macOS-latest
-    timeout-minutes: 30
-    steps:
-      - name: Download Artifact
-        uses: actions/download-artifact@v7
-        with:
-          merge-multiple: true
-          pattern: "*ios*"
-          path: ./out/
-
-      - uses: Apple-Actions/import-codesign-certs@v6
-        with:
-          p12-file-base64: ${{ secrets.APPLE_UPLOAD_CERTIFICATE_P12 }}
-          p12-password: ${{ secrets.APPLE_CERTIFICATE_P12_PASSWORD }}
-
-      - uses: Apple-Actions/download-provisioning-profiles@v1
-        with:
-          bundle-id: app.hiddify.com
-          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
-          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
-          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
-      - uses: Apple-Actions/download-provisioning-profiles@v1
-        with:
-          bundle-id: app.hiddify.com.SingBoxPacketTunnel
-          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
-          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
-          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
-  
-
-
-      - name: Import Apple Mobile Provisioning Profile
-        run: |
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{secrets.APPLE_DIST_PROVISIONING_PROFILES_TARGZ_BASE64}}"|base64 --decode | tar xz -C ~/Library/MobileDevice/Provisioning\ Profiles
-        #echo "${{secrets.NEW_APPLE_STORE_PROVISIONING_PROFILES_TARXZ_BASE64}}"|base64 --decode | tar xJ -C ~/Library/MobileDevice/Provisioning\ Profiles
-
-      - uses: Apple-Actions/upload-testflight-build@v4
-        with:
-          app-path: 'out/Hiddify-iOS.ipa' 
-          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
-          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
-          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          # --target: without it the tag is created at the default branch's head
+          # rather than at the commit that was built
+          gh release create "$TAG" --prerelease --title "$title" --notes-file release.md --target "$SHA" out/*
