@@ -324,6 +324,12 @@ jobs:
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
           SENTRY_DIST: ${{ matrix.platform == 'android-aab' && 'google-play' || 'general' }}
         run: |
+          # The fork has no Sentry project, and the upload answers 404 without
+          # one. Skip it rather than fail the build over it.
+          if [ -z "$SENTRY_AUTH_TOKEN" ] || [ -z "$SENTRY_PROJECT" ]; then
+            echo "no Sentry credentials; skipping the debug symbols upload"
+            exit 0
+          fi
           dart pub global activate sentry_dart_plugin
           dart run sentry_dart_plugin 
       
@@ -413,8 +419,9 @@ jobs:
           path: ./out/
 
       - name: Display Files Structure
-        run: ls -R
-        working-directory: ./out
+        # out/ is missing when the build legs failed; that is not this job's
+        # problem to fail on
+        run: ls -R ./out || true
 
       - name: Write the release note
         run: |
