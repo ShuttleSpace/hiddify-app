@@ -1,5 +1,9 @@
 # Hiddify App — Claude project instructions
 
+## Language
+
+Reply to the user in Chinese. Code, identifiers, and commit messages stay in English.
+
 ## Controlling the app
 
 flutter_driver can drive the running app, but only when the `driver` flag is set. Debug builds only.
