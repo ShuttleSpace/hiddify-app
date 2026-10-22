@@ -15,6 +15,17 @@ dependency_overrides:
     path: packages/simple_icons-10.1.3-fixed
   tray_manager:
     path: packages/tray_manager
+  # flutter_secure_storage_ohos 1.0.0 是按 interface 1.x 写的，这里统一到 2.x。
+  # ohos 包的 Dart 侧不会被注册（没有 dartPluginClass），只有原生侧接管
+  # plugins.it_nomads.com/flutter_secure_storage 这个 channel，所以不受影响。
+  flutter_secure_storage_platform_interface: ^2.1.1
+  # 连带把 Windows 实现钉在 4.1.0：4.2.0 起要求 win32 6.x，和本项目的
+  # win32 5.x 冲突（HLOCAL 在 win32 6 里才改名）。
+  flutter_secure_storage_windows: 4.1.0
+  # file_picker_ohos 1.0.1 是照着 file_picker 8.0.x 写的，还锁着 win32 4.x；
+  # 8.1.7 之后 file_picker 自己就要 win32 5.x 了。ohos 侧不用 win32
+  # （它只在 lib/src/windows/ 里用），所以统一到 5.x 不影响鸿蒙构建。
+  win32: ^5.12.0
 
 dependencies:
   flutter:
@@ -50,7 +61,8 @@ dependencies:
   mobile_scanner: ^7.2.0
   # protocol_handler: ^0.2.0
   flutter_native_splash: ^2.3.10
-  share_plus: ^10.1.0
+  # 13.x 才用 share_plus_platform_interface 7.x，share_plus_ohos 要求 ^7.0.0
+  share_plus: ^13.3.1
   window_manager: ^0.5.0
   tray_manager: ^0.5.0
   # get list of connected monitors (on Desktops), including their size and position
@@ -133,6 +145,21 @@ dependencies:
   flutter_secure_storage: ^10.3.1
   hotkey_manager: ^0.2.3
   cupertino_icons: ^1.0.8
+
+  # OpenHarmony (ohos) 平台的插件实现，来自 Flutter OHOS 社区
+  # (OpenHarmony-SIG / harmonycandies，发布在 pub.flutter-io.cn 镜像上)。
+  # 同一个包在其它平台不受影响，flutter 只会为 ohos 平台注册它们。
+  # 凡是原生侧接管同名 MethodChannel 的插件（file_picker / package_info_plus 等），
+  # 都不需要改主包，主包的 Dart 侧照常工作。
+  path_provider_ohos: ^2.2.1
+  shared_preferences_ohos: ^2.2.0
+  url_launcher_ohos: ^6.3.0
+  file_picker_ohos: ^1.0.1
+  package_info_plus_ohos: ^0.0.7
+  app_links_ohos: ^0.2.0
+  flutter_secure_storage_ohos: ^1.0.0
+  share_plus_ohos: ^1.0.0
+  flutter_native_splash_ohos: ^1.0.0
 
 dev_dependencies:
   flutter_test:

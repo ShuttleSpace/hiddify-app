@@ -20,4 +20,7 @@ abstract class PlatformUtils {
   static bool get isIOS => !kIsWeb && Platform.isIOS;
 
   static bool get isAndroid => !kIsWeb && Platform.isAndroid;
+
+  /// OpenHarmony / HarmonyOS. `Platform.operatingSystem` is "ohos" there.
+  static bool get isOhos => !kIsWeb && Platform.operatingSystem == 'ohos';
 }

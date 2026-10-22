@@ -32,7 +32,7 @@ abstract class UriUtils {
     try {
       loggy.debug("sharing [$uri]");
       final file = XFile(uri.path, mimeType: mimeType);
-      final result = await Share.shareXFiles([file]);
+      final result = await SharePlus.instance.share(ShareParams(files: [file]));
       loggy.debug("share result: ${result.raw}");
       return result.status == ShareResultStatus.success;
     } catch (e, stackTrace) {
