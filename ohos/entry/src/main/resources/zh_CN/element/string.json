@@ -11,6 +11,10 @@
     {
       "name": "EntryAbility_label",
       "value": "hiddify"
+    },
+    {
+      "name": "reason_read_write_download_directory",
+      "value": "用于导入和导出订阅配置文件。"
     }
   ]
 }

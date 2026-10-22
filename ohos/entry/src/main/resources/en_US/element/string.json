@@ -11,6 +11,10 @@
     {
       "name": "EntryAbility_label",
       "value": "hiddify"
+    },
+    {
+      "name": "reason_read_write_download_directory",
+      "value": "Used to import and export subscription configuration files."
     }
   ]
 }
