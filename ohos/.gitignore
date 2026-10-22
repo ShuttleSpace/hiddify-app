@@ -19,6 +19,5 @@
 **/libs/**/libflutter.so
 **/libs/**/libvmservice_snapshot.so
 
-# 签名私钥（本地生成，勿提交）
-signature/*.p12
-signature/*.jks
+# 签名机密材料：私钥库、CSR、证书链、hvigor 密码 material（勿提交）
+/secrets

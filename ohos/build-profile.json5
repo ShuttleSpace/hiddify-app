@@ -3,14 +3,31 @@
   "app": {
     "signingConfigs": [
       {
+        // AGC 正式签名：装真机 HarmonyOS（含 2in1 / 鸿蒙 PC）用这套。
+        // certpath = AGC 签发的证书链（叶子 + Huawei CBG 中间 CA + 根 CA）
+        // profile  = AGC 签发的 Provision Profile
         "name": "default",
         "material": {
-          "storeFile": "signature/hiddify-debug.p12",
-          "storePassword": "0000003661e94e00571c9e0137d3ce35a5c52bc25e63b2c1616897284d44cec7510b86642d316a5e3bded6d7faa646087a8c9d085c74255e0289b70559af781c806fe4d2c702",
-          "keyAlias": "hiddify_debug",
-          "keyPassword": "0000003661e94e00571c9e0137d3ce35a5c52bc25e63b2c1616897284d44cec7510b86642d316a5e3bded6d7faa646087a8c9d085c74255e0289b70559af781c806fe4d2c702",
-          "profile": "signature/hiddify-debug.p7b",
-          "certpath": "signature/app-cert.cer",
+          "storeFile": "secrets/hiddify-app.p12",
+          "storePassword": "00000025e9e0800bdf8c10be3bf8bce94aedd19628a237c249fc7c16499af23a5aa947fe41017bce54bc0defdf3a4b3960dc496342",
+          "keyAlias": "hiddify-app",
+          "keyPassword": "00000025e9e0800bdf8c10be3bf8bce94aedd19628a237c249fc7c16499af23a5aa947fe41017bce54bc0defdf3a4b3960dc496342",
+          "profile": "secrets/hiddify-app-agc.p7b",
+          "certpath": "secrets/hiddify-app-agc.cer",
+          "signAlg": "SHA256withECDSA"
+        }
+      },
+      {
+        // 本地自签名：只装 OpenHarmony 设备/模拟器，真机会因为 profile 与
+        // 签名证书不匹配而拒装。用 ohos/signature/use-signing.sh local-debug 切换。
+        "name": "local-debug",
+        "material": {
+          "storeFile": "secrets/hiddify-app.p12",
+          "storePassword": "00000025e9e0800bdf8c10be3bf8bce94aedd19628a237c249fc7c16499af23a5aa947fe41017bce54bc0defdf3a4b3960dc496342",
+          "keyAlias": "hiddify-app",
+          "keyPassword": "00000025e9e0800bdf8c10be3bf8bce94aedd19628a237c249fc7c16499af23a5aa947fe41017bce54bc0defdf3a4b3960dc496342",
+          "profile": "secrets/hiddify-app.p7b",
+          "certpath": "secrets/hiddify-app.cer",
           "signAlg": "SHA256withECDSA"
         }
       }
@@ -21,6 +38,7 @@
         "signingConfig": "default",
         "compatibleSdkVersion": "5.1.0(18)",
         "runtimeOS": "HarmonyOS",
+        "targetSdkVersion": "26.0.0"
       }
     ],
     "buildModeSet": [
