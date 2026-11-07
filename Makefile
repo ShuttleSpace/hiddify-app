@@ -49,10 +49,18 @@ CORE_PRODUCT_NAME=hiddify-core
 CORE_NAME=hiddify-lib
 LIB_NAME=hiddify-core
 
+# Android's Kotlin bindings (PlatformInterfaceWrapper.kt, VPNService.kt) target
+# newer libbox APIs than the desktop libs. Pin its core separately so prod
+# builds keep the desktop on core.version while Android gets a matching AAR.
+# Align back to $(core.version) once the desktop core is upgraded past 5.0.0.
+ANDROID_CORE_VERSION=5.0.0
+
 ifeq ($(CHANNEL),prod)
 	CORE_URL=https://github.com/hiddify/hiddify-core/releases/download/v$(core.version)
+	ANDROID_CORE_URL=https://github.com/hiddify/hiddify-core/releases/download/v$(ANDROID_CORE_VERSION)
 else
 	CORE_URL=https://github.com/hiddify/hiddify-core/releases/download/draft
+	ANDROID_CORE_URL=$(CORE_URL)
 endif
 
 ifeq ($(CHANNEL),prod)
@@ -404,6 +412,8 @@ linux-appimage-release:
 	rm *.AppImage; \
 	$(BLUE)Deleting bundled libstdc++ to fix Arch Linux compatibility...$(DONE); \
 	find squashfs-root/usr/lib -name "libstdc++.so.6" -delete; \
+	$(BLUE)Fixing AppDir permissions for appimagetool validation$(DONE); \
+	chmod -R a+rX squashfs-root; \
 	$(BLUE)Rebuilding AppImage$(DONE); \
 	ARCH=x86_64 appimagetool --no-appstream squashfs-root Hiddify.AppImage > /dev/null; \
 	$(BLUE)Cleaning up squashfs$(DONE); \
@@ -480,7 +490,7 @@ ios-release: #not tested
 
 android-libs:
 	$(MKDIR) $(ANDROID_OUT) || echo Folder already exists. Skipping...
-	curl -L $(CORE_URL)/$(CORE_NAME)-android.tar.gz | tar xz -C $(ANDROID_OUT)/
+	curl -L $(ANDROID_CORE_URL)/$(CORE_NAME)-android.tar.gz | tar xz -C $(ANDROID_OUT)/
 
 android-apk-libs: android-libs
 android-aab-libs: android-libs
