@@ -27,6 +27,7 @@ import 'package:hiddify/features/settings/overview/sections/general_page.dart';
 import 'package:hiddify/features/settings/overview/sections/inbound_options_page.dart';
 import 'package:hiddify/features/settings/overview/sections/routing_options_page.dart';
 import 'package:hiddify/features/settings/overview/sections/tls_tricks_page.dart';
+import 'package:hiddify/features/settings/overview/sections/mcp_options_page.dart';
 import 'package:hiddify/features/settings/overview/settings_page.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hiddify/features/stats/overview/traffic_stats_page.dart';
@@ -320,6 +321,12 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
                       path: 'tls-tricks',
                       pageBuilder: (_, state) =>
                           customTransition(TransitionType.slide, state.pageKey, const TlsTricksPage()),
+                    ),
+                    GoRoute(
+                      name: 'mcpOptions',
+                      path: 'mcp-options',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const McpOptionsPage()),
                     ),
                     GoRoute(
                       name: 'chainOptions',

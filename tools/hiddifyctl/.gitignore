@@ -1,0 +1,6 @@
+# build output
+/hiddifyctl
+/hiddifyctl.exe
+
+# editor / OS
+.DS_Store
