@@ -93,6 +93,14 @@ func (c *Client) Status(ctx context.Context) (*Status, error) {
 	if err != nil {
 		return nil, err
 	}
+	// GetSystemProxyStatus is optional on older cores; a failure or a hang
+	// must not break the whole status command, so bound it with a short timeout.
+	systemProxy := false
+	spCtx, spCancel := context.WithTimeout(ctx, 2*time.Second)
+	if sp, spErr := c.SystemProxyEnabled(spCtx); spErr == nil {
+		systemProxy = sp
+	}
+	spCancel()
 	return &Status{
 		State:            state.String(),
 		CurrentProfile:   unescape(sys.CurrentProfile),
@@ -102,6 +110,7 @@ func (c *Client) Status(ctx context.Context) (*Status, error) {
 		UplinkTotal:      sys.UplinkTotal,
 		DownlinkTotal:    sys.DownlinkTotal,
 		TrafficAvailable: sys.TrafficAvailable,
+		SystemProxy:      systemProxy,
 	}, nil
 }
 

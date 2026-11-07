@@ -1,7 +1,8 @@
 # hiddifyctl
 
-命令行（CLI）与 MCP server，用于控制本机 Hiddify 网络连接：连接 / 断开 / 查询状态。
+纯命令行工具（CLI），用于控制本机 Hiddify 网络连接：连接 / 断开 / 查询状态 / 切换服务模式。
 底层统一通过 hiddify-core 的本地 gRPC 控制面（`127.0.0.1:17078`，明文无鉴权）工作。
+MCP 能力由 Hiddify 桌面 app 内嵌提供（见下文），本 CLI 不再包含 MCP server。
 
 ## 工作原理
 
@@ -14,7 +15,7 @@ Hiddify 桌面 app 的所有连接 / 切换动作，最终都经过本机 gRPC �
   独立的 `HiddifyCli` 进程（不依赖 GUI app），或直接对接已运行的独立 core。
 
 > 安全：本机 `17078` 是明文、无鉴权的回环端口——本机任意进程都能完整控制 VPN。
-> `hiddifyctl` 仅本地使用（MCP 走 stdio），风险与「本机运行 Hiddify」同级。
+> `hiddifyctl` 仅本地使用，风险与「本机运行 Hiddify」同级。
 > 不要在不可信的多用户主机上暴露它。
 
 ## 构建
@@ -32,12 +33,39 @@ go build -o hiddifyctl .
 
 | 命令 | 说明 |
 |------|------|
-| `hiddifyctl status [--json]` | 连接状态、当前 profile / 节点、上下行流量 |
+| `hiddifyctl status [--json]` | 连接状态、当前 profile / 节点、上下行流量、系统代理状态 |
 | `hiddifyctl connect [--config <path\|url>]` | 连接。默认用 app 数据库中 `active=1` 的 profile；也可显式指定 config |
 | `hiddifyctl disconnect` | 断开 |
 | `hiddifyctl toggle` | 按当前状态切换 |
+| `hiddifyctl service-mode <proxy\|system-proxy\|vpn>` | 切换服务模式（见下） |
 | `hiddifyctl run -c <url\|path>` | Headless：启动独立 hiddify-core（阻塞运行） |
 | `hiddifyctl locate` | 调试：打印探测到的 app 目录 / 数据库 / 当前 active profile |
+
+### 切换服务模式
+
+三种模式对应 app「设置 → 入站 / 服务模式」：
+
+| 参数 | 含义 | HiddifyOptions |
+|------|------|----------------|
+| `proxy` | 仅代理服务：只有本地 mixed/socks，不改系统代理、不开 TUN | 都为 false |
+| `system-proxy` | 设置系统代理：本地代理 + 接管 OS 系统代理 | `set-system-proxy=true` |
+| `vpn` | VPN：TUN 虚拟网卡 | `enable-tun=true` |
+
+两种目标都支持，但机制不同：
+
+- **默认（app 模式）**：通过 gRPC `changeHiddifySettings` + `Restart` 驱动正在运行的桌面 app，
+  与 app 自己切换模式的路径一致。连接会短暂中断；**其他 Hiddify 选项会被重置为 core 默认值**
+  （app 下次修改设置时会恢复其完整选项集）——这是 `changeHiddifySettings` 每次重置默认的行为所致。
+- **`--headless`**：停掉此前由 `connect --headless` 启动的独立 core，并用对应的
+  `--tun` / `--system-proxy` 启动标志重启它。standalone core 在启动时用这些标志生成 config，
+  **不会重置其他选项**。没有正在运行的独立 core 时可传 `--config` 直接以新模式启动一个。
+
+```bash
+hiddifyctl service-mode vpn                              # app 模式：切到 VPN
+hiddifyctl service-mode system-proxy                     # app 模式：切到系统代理
+hiddifyctl service-mode proxy --headless                 # headless：重启独立 core 为仅代理
+hiddifyctl service-mode vpn --headless -c /path/x.json  # 无 core 时以 VPN 模式新起一个
+```
 
 全局参数：
 
@@ -47,8 +75,10 @@ go build -o hiddifyctl .
 --db-path <file>          覆盖 drift 数据库 db.sqlite 路径
 --core-bin <path>         headless 模式下 HiddifyCli 二进制路径
 --headless               17078 不可达时自动启动独立内核
---config <path|url>       显式配置（connect / run 用）
+--config <path|url>       显式配置（connect / run / service-mode 用）
 --timeout 5s             gRPC 拨号超时
+--tun                    headless 启动时开 TUN
+--system-proxy           headless 启动时接管系统代理
 ```
 
 ### 示例
@@ -76,7 +106,9 @@ app 内 MCP 工具：`hiddify_connect` / `hiddify_disconnect` / `hiddify_toggle`
 ## 已知限制 / 后续可扩展
 
 - `connect`（app 模式）默认连接 app 数据库里标记为 `active` 的 profile；要连其它 profile 请传
-  `--config <configs/<id>.json>`。列出 profile / 按名选择 / 切换节点 /
-  服务模式 / 测速 等能力可复用同一 gRPC 客户端平滑添加（见 `internal/grpc`）。
+  `--config <configs/<id>.json>`。列出 profile / 按名选择 / 切换节点 / 测速 等能力
+  可复用同一 gRPC 客户端平滑添加（见 `internal/grpc`）。
+- `service-mode`（app 模式）通过 `changeHiddifySettings` 会把其余 Hiddify 选项重置为默认；
+  需要零副作用切换请用 `--headless`（重启独立 core 换启动标志）。
 - headless 模式启动依赖外部 `HiddifyCli` 二进制（仓库 `hiddify-core/bin` 或 `PATH` 中），
   可通过 `--core-bin` 指定；也可自行 `docker` 运行 hiddify-core 后让本工具直连其 `17078`。

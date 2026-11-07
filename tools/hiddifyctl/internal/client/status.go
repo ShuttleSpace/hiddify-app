@@ -16,6 +16,7 @@ type Status struct {
 	UplinkTotal      int64  `json:"uplink_total"`
 	DownlinkTotal    int64  `json:"downlink_total"`
 	TrafficAvailable bool   `json:"traffic_available"`
+	SystemProxy      bool   `json:"system_proxy"`
 }
 
 // IsConnected reports whether the core is (or is becoming) connected.
@@ -53,6 +54,7 @@ func (s *Status) String() string {
 	fmt.Fprintf(&b, "State:            %s\n", s.State)
 	fmt.Fprintf(&b, "Current profile:  %s\n", orNA(s.CurrentProfile))
 	fmt.Fprintf(&b, "Current node:     %s\n", orNA(s.CurrentOutbound))
+	fmt.Fprintf(&b, "System proxy:     %t\n", s.SystemProxy)
 	if s.TrafficAvailable {
 		fmt.Fprintf(&b, "Traffic (up/down): %s / %s\n", humanBytes(s.Uplink), humanBytes(s.Downlink))
 		fmt.Fprintf(&b, "Total  (up/down): %s / %s\n", humanBytes(s.UplinkTotal), humanBytes(s.DownlinkTotal))

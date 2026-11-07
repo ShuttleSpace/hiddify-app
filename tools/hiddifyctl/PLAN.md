@@ -118,11 +118,13 @@ MCP server 用 `mark3labs/mcp-go`，`stdio` 传输，工具结果返回人类可
 
 1. 桌面 Hiddify 已运行 → `hiddifyctl status` 显示 STARTED + 当前 profile/节点/流量。
 2. `hiddifyctl disconnect` 后 app 托盘/界面变断开；`hiddifyctl connect` 重新连上 active profile。
-3. `hiddifyctl mcp` 被本地 agent 拉起后能调用 `hiddify_status`/`hiddify_connect`/`hiddify_disconnect`。
+3. MCP 能力由 app 内嵌提供（见 README）：app 启动后在 `127.0.0.1:<port>/mcp` 暴露 Streamable HTTP。
 4. headless：`hiddifyctl run --config <订阅url>` 起独立 core，`status` 显示 STARTED。
-5. `cd tools/hiddifyctl && go vet ./... && go build ./...` 通过（无 sing-box 编译）。
+5. `hiddifyctl service-mode <proxy|system-proxy|vpn>` 切换服务模式（app 模式走 gRPC；`--headless` 重启独立 core 换标志）。
+6. `cd tools/hiddifyctl && go vet ./... && go build ./...` 通过（无 sing-box 编译）。
 
 ## 后续可扩展（不在首批）
 
-切换节点 `SelectOutbound`、切换 profile（读 app 多 profile + HotReload）、服务模式、
+切换节点 `SelectOutbound`、切换 profile（读 app 多 profile + HotReload）、
 测速 `UrlTest`、导入订阅 `Parse`。这些均可复用同一 gRPC client 平滑添加。
+服务模式已由 `service-mode` 命令实现。

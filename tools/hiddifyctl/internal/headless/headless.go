@@ -48,6 +48,11 @@ func Start(ctx context.Context, config, bin string, tun, systemProxy, detach boo
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("start core: %w", err)
 	}
+	if detach {
+		// Record the detached core so `service-mode --headless` can restart it
+		// with different startup flags later.
+		_ = writeRecord(cmd.Process.Pid, config)
+	}
 	return cmd, nil
 }
 
