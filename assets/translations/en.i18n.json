@@ -281,7 +281,8 @@
       "sourceCode": "Source code",
       "telegramChannel": "Telegram channel",
       "termsAndConditions": "Terms and conditions",
-      "privacyPolicy": "Privacy policy"
+      "privacyPolicy": "Privacy policy",
+      "releaseNotes": "Release notes"
     },
     "settings": {
       "title": "Settings",

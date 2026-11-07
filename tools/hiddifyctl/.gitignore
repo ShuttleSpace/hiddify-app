@@ -1,6 +1,7 @@
 # build output
 /hiddifyctl
 /hiddifyctl.exe
+/dist/
 
 # editor / OS
 .DS_Store

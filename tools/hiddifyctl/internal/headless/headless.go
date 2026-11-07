@@ -6,8 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
-	"syscall"
 	"time"
 
 	"github.com/hiddify/hiddify-app/tools/hiddifyctl/internal/client"
@@ -44,8 +42,8 @@ func Start(ctx context.Context, config, bin string, tun, systemProxy, detach boo
 	cmd := exec.CommandContext(ctx, bin, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	if detach && runtime.GOOS != "windows" {
-		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	if detach {
+		setDetachAttrs(cmd)
 	}
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("start core: %w", err)
