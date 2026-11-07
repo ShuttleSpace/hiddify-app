@@ -269,6 +269,11 @@ class SettingsPage extends HookConsumerWidget {
               icon: Icons.content_cut_rounded,
               namedLocation: context.namedLocation('tlsTricks'),
             ),
+            SettingsSection(
+              title: 'MCP 控制服务',
+              icon: Icons.api_rounded,
+              namedLocation: context.namedLocation('mcpOptions'),
+            ),
             if (PlatformUtils.isIOS)
               Material(
                 child: ListTile(

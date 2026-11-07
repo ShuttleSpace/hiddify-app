@@ -105,6 +105,7 @@ dependencies:
   # # then add path to "environment variable" e.g. -> C:\Users\%USERPROFILE%\AppData\Local\Pub\Cache\global_packages\protoc_plugin\bin
   protobuf: ^5.0.0
   grpc: ^4.0.1
+  mcp_dart: ^2.4.3
   dynamic_color: ^1.7.0
   flutter_typeahead: ^5.0.1
   # flutter_platform_widgets: ^7.0.1

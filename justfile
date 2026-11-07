@@ -120,6 +120,12 @@ core-windows:
 
 core: core-macos core-linux core-windows
 
+# --- tools (standalone CLI) -----------------------------------------------
+
+# Build the hiddifyctl CLI (Go single binary) into tools/hiddifyctl/.
+hiddifyctl:
+    cd tools/hiddifyctl && go build -o hiddifyctl .
+
 # Sentry's DSN is a compile-time define (`String.fromEnvironment` in
 # lib/core/model/environment.dart). Always passing it keeps a local build the
 # same shape as CI's; unset it becomes an empty string and Sentry stays off,

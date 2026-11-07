@@ -204,4 +204,11 @@ abstract class Preferences {
     },
     mapTo: (value) => "${value.by.name}:${value.mode.name}",
   );
+
+  static final enableMcpServer =
+      PreferencesNotifier.create<bool, bool>("enable-mcp-server", false);
+  static final mcpPort =
+      PreferencesNotifier.create<int, int>("mcp-port", 17079);
+  static final mcpToken =
+      PreferencesNotifier.create<String, String>("mcp-token", "");
 }
