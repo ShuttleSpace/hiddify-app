@@ -28,6 +28,7 @@ import 'package:hiddify/features/settings/overview/sections/inbound_options_page
 import 'package:hiddify/features/settings/overview/sections/routing_options_page.dart';
 import 'package:hiddify/features/settings/overview/sections/tls_tricks_page.dart';
 import 'package:hiddify/features/settings/overview/sections/mcp_options_page.dart';
+import 'package:hiddify/features/about/widget/release_notes_page.dart';
 import 'package:hiddify/features/settings/overview/settings_page.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hiddify/features/stats/overview/traffic_stats_page.dart';
@@ -346,6 +347,17 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
                         path: 'about',
                         pageBuilder: (_, state) =>
                             customTransition(TransitionType.slide, state.pageKey, const AboutPage()),
+                        routes: <GoRoute>[
+                          GoRoute(
+                            name: 'releaseNotes',
+                            path: 'release-notes',
+                            pageBuilder: (_, state) => customTransition(
+                              TransitionType.slide,
+                              state.pageKey,
+                              const ReleaseNotesPage(),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ],
@@ -368,6 +380,13 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
                     name: 'about',
                     path: '/about',
                     builder: (_, _) => FocusScope(node: branchesScope['about'], child: const AboutPage()),
+                    routes: <GoRoute>[
+                      GoRoute(
+                        name: 'releaseNotes',
+                        path: 'release-notes',
+                        builder: (_, _) => const ReleaseNotesPage(),
+                      ),
+                    ],
                   ),
                 ],
               ),

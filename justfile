@@ -126,6 +126,19 @@ core: core-macos core-linux core-windows
 hiddifyctl:
     cd tools/hiddifyctl && go build -o hiddifyctl .
 
+# Cross-compile hiddifyctl for the common desktop/server targets into
+# tools/hiddifyctl/dist/. Pure-Go, so no CGO is needed.
+hiddifyctl-cross:
+    cd tools/hiddifyctl && \
+        GOOS=windows GOARCH=amd64 go build -o dist/hiddifyctl-windows-amd64.exe . && \
+        GOOS=linux   GOARCH=amd64 go build -o dist/hiddifyctl-linux-amd64 . && \
+        GOOS=darwin  GOARCH=arm64 go build -o dist/hiddifyctl-darwin-arm64 . && \
+        GOOS=darwin  GOARCH=amd64 go build -o dist/hiddifyctl-darwin-amd64 .
+
+# Install hiddifyctl into $GOPATH/bin (go install honors GOBIN when set).
+hiddifyctl-install:
+    cd tools/hiddifyctl && go install .
+
 # Sentry's DSN is a compile-time define (`String.fromEnvironment` in
 # lib/core/model/environment.dart). Always passing it keeps a local build the
 # same shape as CI's; unset it becomes an empty string and Sentry stays off,
