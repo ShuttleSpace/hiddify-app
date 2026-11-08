@@ -49,10 +49,18 @@ CORE_PRODUCT_NAME=hiddify-core
 CORE_NAME=hiddify-lib
 LIB_NAME=hiddify-core
 
+# Android's Kotlin bindings (PlatformInterfaceWrapper.kt, VPNService.kt) target
+# newer libbox APIs than the desktop libs. Pin its core separately so prod
+# builds keep the desktop on core.version while Android gets a matching AAR.
+# Align back to $(core.version) once the desktop core is upgraded past 5.0.0.
+ANDROID_CORE_VERSION=5.0.0
+
 ifeq ($(CHANNEL),prod)
 	CORE_URL=https://github.com/hiddify/hiddify-core/releases/download/v$(core.version)
+	ANDROID_CORE_URL=https://github.com/hiddify/hiddify-core/releases/download/v$(ANDROID_CORE_VERSION)
 else
 	CORE_URL=https://github.com/hiddify/hiddify-core/releases/download/draft
+	ANDROID_CORE_URL=$(CORE_URL)
 endif
 
 ifeq ($(CHANNEL),prod)
@@ -294,7 +302,16 @@ ifneq ($(WINDOWS_SIGN_BACKEND),)
 WINDOWS_PACKAGE_HOOK=--hook-pre=windows/scripts/sign_release_tree.sh
 endif
 
-windows-release: windows-zip-release windows-exe-release windows-msix-release
+# msix needs windows/sign.pfx. When WINDOWS_SIGNING=false (the fork's CI has no
+# Windows signing secret) skip it, so the portable zip and the installer still
+# get built instead of the whole target dying at this step. Unset = unchanged.
+ifeq ($(WINDOWS_SIGNING),false)
+WINDOWS_MSIX_TARGET :=
+else
+WINDOWS_MSIX_TARGET := windows-msix-release
+endif
+
+windows-release: windows-zip-release windows-exe-release $(WINDOWS_MSIX_TARGET)
 
 windows-validate:
 	flutter build windows --release --target $(TARGET) $(BUILD_ARGS)
@@ -411,6 +428,8 @@ linux-appimage-release:
 	rm *.AppImage; \
 	$(BLUE)Deleting bundled libstdc++ to fix Arch Linux compatibility...$(DONE); \
 	find squashfs-root/usr/lib -name "libstdc++.so.6" -delete; \
+	$(BLUE)Fixing AppDir permissions for appimagetool validation$(DONE); \
+	chmod -R a+rX squashfs-root; \
 	$(BLUE)Rebuilding AppImage$(DONE); \
 	ARCH=x86_64 appimagetool --no-appstream squashfs-root Hiddify.AppImage > /dev/null || exit 1; \
 	$(BLUE)Cleaning up squashfs$(DONE); \
@@ -493,7 +512,7 @@ ios-simulator-validate:
 
 android-libs:
 	$(MKDIR) $(ANDROID_OUT) || echo Folder already exists. Skipping...
-	curl -L $(CORE_URL)/$(CORE_NAME)-android.tar.gz | tar xz -C $(ANDROID_OUT)/
+	curl -L $(ANDROID_CORE_URL)/$(CORE_NAME)-android.tar.gz | tar xz -C $(ANDROID_OUT)/
 
 android-apk-libs: android-libs
 android-aab-libs: android-libs

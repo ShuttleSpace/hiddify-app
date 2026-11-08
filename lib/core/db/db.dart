@@ -9,7 +9,7 @@ import 'package:hiddify/utils/custom_loggers.dart';
 
 part 'db.g.dart';
 
-@DriftDatabase(tables: [ProfileEntries, AppProxyEntries])
+@DriftDatabase(tables: [ProfileEntries, AppProxyEntries, DailyTrafficEntries])
 class Db extends _$Db with InfraLogger {
   Db([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
@@ -17,7 +17,7 @@ class Db extends _$Db with InfraLogger {
   // below, and regenerate — full checklist in `README.md` next to this file.
   // Migrations run on every user's device on update; a wrong one can lose data.
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 9;
 
   static QueryExecutor _openConnection() {
     return LazyDatabase(
@@ -77,6 +77,27 @@ class Db extends _$Db with InfraLogger {
         from6To7: (m, schema) async {
           await m.addColumn(schema.profileEntries, schema.profileEntries.pinned);
         },
+        from7To8: (m, schema) async {
+          // A build from the fork already carried this table at v7, so creating
+          // it blindly would abort the whole upgrade on those devices.
+          if (!await _tableExists(schema.dailyTrafficEntries.actualTableName)) {
+            await m.createTable(schema.dailyTrafficEntries);
+          }
+        },
+        from8To9: (m, schema) async {
+          // v7 is two different schemas: upstream added `pinned` in its own 7,
+          // and the fork shipped a 7 without it. A database either build made
+          // reports 7, so the 6 to 7 step never runs on it and the column is
+          // simply missing - which reads back as a null on a non-nullable
+          // field. Add it wherever it turned out to be absent.
+          final pinnedExists = await _columnExists(
+            schema.profileEntries.actualTableName,
+            schema.profileEntries.pinned.name,
+          );
+          if (!pinnedExists) {
+            await m.addColumn(schema.profileEntries, schema.profileEntries.pinned);
+          }
+        },
       ),
     );
   }
@@ -84,6 +105,14 @@ class Db extends _$Db with InfraLogger {
   Future<bool> _columnExists(String table, String column) async {
     final result = await customSelect('PRAGMA table_info($table);').get();
     return result.any((row) => row.data['name'] == column);
+  }
+
+  Future<bool> _tableExists(String table) async {
+    final result = await customSelect(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+      variables: [Variable<String>(table)],
+    ).get();
+    return result.isNotEmpty;
   }
 }
 
@@ -118,4 +147,15 @@ class AppProxyEntries extends Table {
 
   @override
   Set<Column> get primaryKey => {mode, pkgName};
+}
+
+@DataClassName('DailyTrafficEntry')
+class DailyTrafficEntries extends Table {
+  TextColumn get day => text()();
+  IntColumn get upload => integer().withDefault(const Constant(0))();
+  IntColumn get download => integer().withDefault(const Constant(0))();
+  TextColumn get profileId => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {day, profileId};
 }

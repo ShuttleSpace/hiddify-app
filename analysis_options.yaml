@@ -15,6 +15,9 @@ analyzer:
     - "third_party/**"
     - "build/**"
     - "dist/**"
+    # vendored third-party packages: each carries its own pubspec and its own
+    # dev_dependencies, which the root `flutter pub get` never installs
+    - "packages/**"
   errors:
     invalid_annotation_target: ignore
 
