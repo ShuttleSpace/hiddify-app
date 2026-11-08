@@ -1,15 +1,20 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:gap/gap.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
 import 'package:hiddify/core/widget/adaptive_icon.dart';
 import 'package:hiddify/features/connection/notifier/connection_notifier.dart';
+import 'package:hiddify/features/proxy/domain/proxy_search.dart';
 import 'package:hiddify/features/proxy/keep_top/keep_top_widgets.dart';
 import 'package:hiddify/features/proxy/model/proxy_entity.dart';
+import 'package:hiddify/features/proxy/model/proxy_search_result.dart';
 import 'package:hiddify/features/proxy/overview/proxies_overview_notifier.dart';
+import 'package:hiddify/features/proxy/widget/proxy_search_overlay.dart';
 import 'package:hiddify/features/proxy/widget/proxy_tile.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -23,6 +28,76 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
 
     final proxies = ref.watch(proxiesOverviewNotifierProvider);
     final sortBy = ref.watch(proxiesSortNotifierProvider);
+
+    final searchQuery = useState('');
+    final searchController = useMemoized(TextEditingController.new);
+    // ignore: no_leading_underscores_for_local_identifiers
+    final _highlightedNode = useState<String?>(null);
+    final pendingSearchTarget = useState<ProxySearchResult?>(null);
+    final didAutoLocate = useState(false);
+    final scrollController = useScrollController();
+
+    final displayedGroup = proxies.valueOrNull;
+    // The page shows one group (the core's main group); search runs over its rows.
+    final results = displayedGroup == null
+        ? const <ProxySearchResult>[]
+        : searchProxyGroups([displayedGroup], searchQuery.value);
+
+    int crossAxisCountForWidth(double width) =>
+        PlatformUtils.isMobile && width < 600 ? 1 : max(1, (width / 420).floor());
+
+    // ignore: no_leading_underscores_for_local_identifiers
+    void _scrollToNode(String nodeTag) {
+      final group = ref.read(proxiesOverviewNotifierProvider).valueOrNull;
+      if (group == null || !scrollController.hasClients) return;
+      final index = group.items.indexWhere((item) => item.tag == nodeTag);
+      if (index < 0) return;
+      final width = MediaQuery.sizeOf(context).width;
+      final row = index ~/ crossAxisCountForWidth(width);
+      scrollController.animateTo(row * 72.0, duration: const Duration(milliseconds: 260), curve: Curves.easeOutCubic);
+    }
+
+    void onSearchResultSelected(ProxySearchResult result) {
+      searchController.clear();
+      searchQuery.value = '';
+      pendingSearchTarget.value = result;
+    }
+
+    useEffect(() => searchController.dispose, []);
+
+    // Jump to a node picked from the search overlay once its group is shown.
+    useEffect(() {
+      final target = pendingSearchTarget.value;
+      if (target == null) return null;
+      final group = displayedGroup;
+      if (group == null || group.tag != target.groupTag) return null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToNode(target.nodeTag);
+        _highlightedNode.value = target.nodeTag;
+      });
+      pendingSearchTarget.value = null;
+      return null;
+    }, [displayedGroup?.tag, pendingSearchTarget.value]);
+
+    // On first load, bring the selected node into view.
+    useEffect(() {
+      if (didAutoLocate.value || displayedGroup == null || displayedGroup.selected.isEmpty) return null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToNode(displayedGroup.selected);
+        didAutoLocate.value = true;
+      });
+      return null;
+    }, [displayedGroup]);
+
+    // The highlight fades a moment after a jump.
+    useEffect(() {
+      final nodeTag = _highlightedNode.value;
+      if (nodeTag == null) return null;
+      final timer = Timer(const Duration(milliseconds: 1400), () {
+        _highlightedNode.value = null;
+      });
+      return timer.cancel;
+    }, [_highlightedNode.value]);
 
     // final selectActiveProxyMutation = useMutation(
     //   initialOnFailure: (error) => CustomToast.error(t.presentShortError(error)).show(context),
@@ -93,71 +168,110 @@ class ProxiesOverviewPage extends HookConsumerWidget with PresLogger {
           ),
         ],
       ),
-      body: proxies.when(
-        data: (group) => group != null
-            ? LayoutBuilder(
-                builder: (context, constraints) {
-                  final width = constraints.maxWidth;
-                  // columns wide enough for a proxy's name: two on a usual window, more only when wider
-                  final crossAxisCount = PlatformUtils.isMobile && width < 600 ? 1 : max(1, (width / 420).floor());
-                  final listed = group.items.where((e) => e.tag != lowestGroupTag && e.tag != balanceGroupTag).length;
-                  return CustomScrollView(
-                    slivers: [
-                      SliverGrid.builder(
-                        itemCount: group.items.length,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          mainAxisExtent: 72,
-                        ),
-                        itemBuilder: (context, index) {
-                          final proxy = group.items[index];
-                          return ProxyTile(
-                            proxy,
-                            // a row keeps its own proxy when the list re-sorts, so a pop plays only on arrival
-                            key: ValueKey(proxy.tag),
-                            selected: group.selected == proxy.tag,
-                            onTap: () async {
-                              await ref
-                                  .read(proxiesOverviewNotifierProvider.notifier)
-                                  .changeProxy(group.tag, proxy.tag);
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            child: TextField(
+              controller: searchController,
+              onChanged: (value) => searchQuery.value = value,
+              decoration: InputDecoration(
+                hintText: t.common.filter,
+                prefixIcon: const Icon(Icons.search),
+                isDense: true,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: proxies.when(
+                    data: (group) => group != null
+                        ? LayoutBuilder(
+                            builder: (context, constraints) {
+                              final width = constraints.maxWidth;
+                              // columns wide enough for a proxy's name: two on a usual window, more only when wider
+                              final crossAxisCount = PlatformUtils.isMobile && width < 600
+                                  ? 1
+                                  : max(1, (width / 420).floor());
+                              final listed = group.items
+                                  .where((e) => e.tag != lowestGroupTag && e.tag != balanceGroupTag)
+                                  .length;
+                              return CustomScrollView(
+                                controller: scrollController,
+                                slivers: [
+                                  SliverGrid.builder(
+                                    itemCount: group.items.length,
+                                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: crossAxisCount,
+                                      mainAxisExtent: 72,
+                                    ),
+                                    itemBuilder: (context, index) {
+                                      final proxy = group.items[index];
+                                      return ProxyTile(
+                                        proxy,
+                                        // a row keeps its own proxy when the list re-sorts, so a pop plays only on arrival
+                                        key: ValueKey(proxy.tag),
+                                        selected: group.selected == proxy.tag,
+                                        highlight: _highlightedNode.value == proxy.tag,
+                                        onTap: () async {
+                                          await ref
+                                              .read(proxiesOverviewNotifierProvider.notifier)
+                                              .changeProxy(group.tag, proxy.tag);
+                                        },
+                                      );
+                                    },
+                                  ),
+                                  // a big profile: how many of its proxies run, and the button to run all or the fastest
+                                  SliverToBoxAdapter(child: KeepTopFooter(listed: listed)),
+                                  // room for the buttons over the list's end
+                                  const SliverPadding(padding: EdgeInsets.only(bottom: 140)),
+                                ],
+                              );
                             },
-                          );
-                        },
+                          )
+                        : Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Text(
+                                ref.watch(serviceRunningProvider)
+                                    ? t.pages.proxies.empty
+                                    : t.pages.proxies.connectToSeeProxies,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                    error: (error, stackTrace) => Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(t.pages.proxies.loadFailed, textAlign: TextAlign.center),
+                            const Gap(12),
+                            TextButton(
+                              onPressed: () => ref.invalidate(proxiesOverviewNotifierProvider),
+                              child: Text(t.connection.tapToRetry),
+                            ),
+                          ],
+                        ),
                       ),
-                      // a big profile: how many of its proxies run, and the button to run all or the fastest
-                      SliverToBoxAdapter(child: KeepTopFooter(listed: listed)),
-                      // room for the buttons over the list's end
-                      const SliverPadding(padding: EdgeInsets.only(bottom: 140)),
-                    ],
-                  );
-                },
-              )
-            : Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    ref.watch(serviceRunningProvider) ? t.pages.proxies.empty : t.pages.proxies.connectToSeeProxies,
-                    textAlign: TextAlign.center,
+                    ),
+                    loading: () => const Center(child: CircularProgressIndicator()),
                   ),
                 ),
-              ),
-        error: (error, stackTrace) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(t.pages.proxies.loadFailed, textAlign: TextAlign.center),
-                const Gap(12),
-                TextButton(
-                  onPressed: () => ref.invalidate(proxiesOverviewNotifierProvider),
-                  child: Text(t.connection.tapToRetry),
-                ),
+                if (searchQuery.value.isNotEmpty && results.isEmpty)
+                  Center(child: Text(t.pages.proxies.empty))
+                else if (results.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 86),
+                    child: ProxySearchOverlay(results: results, onSelected: onSearchResultSelected),
+                  ),
               ],
             ),
           ),
-        ),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        ],
       ),
     );
   }
