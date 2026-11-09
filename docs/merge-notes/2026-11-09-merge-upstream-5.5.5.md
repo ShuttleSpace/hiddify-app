@@ -61,7 +61,7 @@ core `5.5.5`（含系统代理释放补丁）。
 
 ---
 
-## 2. core 子模块：`hiddify-core` → `ffba087`
+## 2. core 子模块：`hiddify-core` → `9b2b37f`
 
 分支 `merge/upstream-5.5.5`：fork 线（`baf504f` 一侧）三方合并上游 `ad83d757`（v5.5.5 的 core），
 保留 fork 功能（系统代理释放、admin 后台服务、grpc-web、OpenWrt 打包、更新的 ray2sing /
@@ -97,9 +97,9 @@ fork 相对上游在 sing-box 上有 131 fork-only / 530 upstream-only 提交（
 
 `ShuttleSpace/hiddify-core` 的 `release.yml` 在 `push: tags: 'v*'` 时触发，调用
 `build.yml`（`tag-name=v5.5.5`，channel=prod），为各平台构建并把
-`hiddify-lib-*.tar.gz` 上传到 `v5.5.5` 发布。`v5.5.5` 标签最终打在 `ffba087` 并推到
+`hiddify-lib-*.tar.gz` 上传到 `v5.5.5` 发布。`v5.5.5` 标签最终打在 `9b2b37f` 并推到
 `ShuttleSpace/hiddify-core`（**覆盖**了原先指向 `ad83d757` 的本地 `v5.5.5` 标签，使
-fork 的 core `v5.5.5` 指向本次合并；中间两次重推是为了修 CI，见 §2.4 / §2.5）。
+fork 的 core `v5.5.5` 指向本次合并；中间三次重推是为了修 CI，见 §2.4 / §2.5 / §2.6）。
 `release.yml` 传 `upload-artifact: true`，故同一次构建也会刷新 `draft` 发布
 （`upload-prerelease`），dev-channel 的 app 构建从 `releases/download/draft` 拉到的
 也是打了补丁的 core。app 的 `Makefile` 在 prod 下从
@@ -154,13 +154,41 @@ CI 能 fetch。**同样在 core 仓修，app 不掩盖。**
 > 与 CI 逐字相同的错误，`ed1a4b1` 的显式转换编译通过；`common/settings` 另在
 > windows/linux 交叉编译通过。
 
+### 2.6 prod 发布被上游的 distro 打包门槛挡住（已修）+ macOS runner 容量
+
+`release.yml` 给 `v5.5.5` 传 `channel=prod`，`build-binary` 因此启用 24 个
+`Build binary` leg（含 musl / riscv / mips / s390x / ppc64le 等）。其中 10 个在
+`Package DEB` 失败——该步要 `GPG_KEY` / `GPG_KEY_ID` / `GPG_PASSPHRASE` secrets
+和 gitlab.com 的 debsigs 补丁，fork 没有这些；app 也从不消费 `.deb` / `.rpm` / `.ipk`。
+**根因是三方合并把 fork 父提交的 `upload-release.needs: [build]` 换成了上游的
+`[build,build-binary]`**，于是每次 prod 发布都被这些永远失败的打包 leg 挡掉
+（`upload-release` / `upload-prerelease` 全被 skip，`v5.5.5` 发布无资产）。此前 fork 的
+prod run 都是 `*.dev` 标签（channel=dev，`build-binary` 整体跳过），所以一直没暴露。
+
+`9b2b37f` 在 **core 仓**把 `needs` 改回 `[build]`，并注明 fork 只发布
+`hiddify-lib-*.tar.gz`。`build-binary` 仍以 `fail-fast: false` 运行，10 个
+`Package DEB` 失败在 run 里**照常可见、run 照常报 failure**，只是不再挡住 app 要的
+库；没有吞掉任何步骤、错误或加重试。AGENTS.md 要求 core 的问题在 core 修，不在 app 掩盖。
+
+> 另外，`hiddify-lib-macos`（`macos-15`）连续两次被 GitHub 取消：
+> annotation 原文 *"The job was not acquired by Runner of type hosted even after
+> multiple attempts"* / *"Due to capacity constraints, jobs targeting macOS arm64
+> runners may experience longer queue times"*，`runner_id: 0`、0 个 step、排队约
+> 15 分钟后取消。这是 **GitHub 托管 macOS arm64 runner 容量**，不是代码或 core 缺陷
+> （同一 label 的 `hiddify-lib-ios` 成功）。`needs: [build]` 因此不满足，两个
+> upload job 被 skip——这也正好避免发布缺 macOS 库的不完整 `draft`。**没有**放宽
+> `needs` 或加 `continue-on-error`；只重触发一次干净 run。本机 `gh` 未登录、
+> `HOMEBREW_GITHUB_API_TOKEN` 返回 401，无法用 API 精确 rerun，故用删除+重建
+> 同一个 tag 触发（不改 sha、不造空提交）。
+
 ---
 
 ## 3. 已知 / 待办
 
-- **core 5.5.5 发布**：`v5.5.5` 标签已重推到 `ffba087`，`release.yml` 运行
-  `42645550107` 已展开 job 并在跑；等它跑完并确认 `v5.5.5` 与 `draft` 两个发布的
-  `hiddify-lib-*.tar.gz` 资产就绪，app CI 才能下载到打了补丁的 core。
+- **core 5.5.5 发布**：`v5.5.5` 标签已重推到 `9b2b37f`（`release.yml` run #7
+  `42667773806`）。等它跑完并确认 `v5.5.5` 与 `draft` 两个发布的
+  `hiddify-lib-*.tar.gz` 资产就绪且时间戳刷新，app CI 才能下载到打了补丁的 core。
+  若 macOS arm64 runner 容量仍导致 `build` 少一个库，需择时重跑；不得放宽 `needs`。
 - **app 推 `dev`**：`refs/heads/dev` 已快进并加上 core gitlink 更新；
   推 `dev` 与 `merge/v5.5.5` 到 `ShuttleSpace/hiddify-app`。
 - **OHOS 原生包**：本机未出，按计划在需要时用鸿蒙工具链单独构建。
