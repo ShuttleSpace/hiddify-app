@@ -61,7 +61,7 @@ core `5.5.5`（含系统代理释放补丁）。
 
 ---
 
-## 2. core 子模块：`hiddify-core` → `0255c8f`
+## 2. core 子模块：`hiddify-core` → `ffba087`
 
 分支 `merge/upstream-5.5.5`：fork 线（`baf504f` 一侧）三方合并上游 `ad83d757`（v5.5.5 的 core），
 保留 fork 功能（系统代理释放、admin 后台服务、grpc-web、OpenWrt 打包、更新的 ray2sing /
@@ -72,10 +72,10 @@ Xray / 分享链接处理）。
 | 子模块 | 指针 | 说明 |
 |---|---|---|
 | `hiddify-sing-box` | `3af69e250` | 上游 `1614c5edb` + 系统代理释放的 targeted port；在 `ShuttleSpace/hiddify-sing-box` 的 `h/proxy-release-5.5.5` 分支 |
-| `ray2sing` | `505d8c6` | fork 固定版本，已在 `hiddify/ray2sing` 上游 main 历史中（含 `MoveLegacyWireGuardOutbounds` / `MoveAmneziaWireGuardFields`） |
+| `ray2sing` | `ed1a4b1` | **上游 5.5.5 自己的 pin**，与 sing-box `1614c5edb` 配套；含 parser 要的两个 `Move*` helper，且在 `hiddify/ray2sing` main 历史中可 fetch（见 §2.5） |
 
 `.gitmodules` 的 `hiddify-sing-box` URL 改为 `git@github.com:ShuttleSpace/hiddify-sing-box.git`
-（port 只存在于 ShuttleSpace）；`ray2sing` 保留上游 URL（`505d8c6` 可在上游 fetch）。
+（port 只存在于 ShuttleSpace）；`ray2sing` 保留上游 URL（`ed1a4b1` 可在上游 fetch）。
 
 ### 2.2 core 策略：Targeted port（不是全量 merge）
 
@@ -97,19 +97,20 @@ fork 相对上游在 sing-box 上有 131 fork-only / 530 upstream-only 提交（
 
 `ShuttleSpace/hiddify-core` 的 `release.yml` 在 `push: tags: 'v*'` 时触发，调用
 `build.yml`（`tag-name=v5.5.5`，channel=prod），为各平台构建并把
-`hiddify-lib-*.tar.gz` 上传到 `v5.5.5` 发布。已在 `0255c8f` 上打 `v5.5.5` 标签并推到
+`hiddify-lib-*.tar.gz` 上传到 `v5.5.5` 发布。`v5.5.5` 标签最终打在 `ffba087` 并推到
 `ShuttleSpace/hiddify-core`（**覆盖**了原先指向 `ad83d757` 的本地 `v5.5.5` 标签，使
-fork 的 core `v5.5.5` 指向本次合并）。`release.yml` 传 `upload-artifact: true`，故同一
-次构建也会刷新 `draft` 发布（`upload-prerelease`），dev-channel 的 app 构建从
-`releases/download/draft` 拉到的也是打了补丁的 core。app 的 `Makefile` 在 prod 下从
+fork 的 core `v5.5.5` 指向本次合并；中间两次重推是为了修 CI，见 §2.4 / §2.5）。
+`release.yml` 传 `upload-artifact: true`，故同一次构建也会刷新 `draft` 发布
+（`upload-prerelease`），dev-channel 的 app 构建从 `releases/download/draft` 拉到的
+也是打了补丁的 core。app 的 `Makefile` 在 prod 下从
 `https://github.com/ShuttleSpace/hiddify-core/releases/download/v5.5.5` 拉预编译库；
 gitlink 不被 CI 用于构建。
 
-> core 仓的 `replace/` 子模块本机不可完整克隆（网络受限），**核心编译以 CI 为准**。
-> 本地已用 Go 1.27.3 验证：`common/settings` 在 darwin/linux 编译通过、5 个单测通过，
-> 且 `core/v2/hcore` 在替换了缺失 `replace/` 行后用 alt-mod 编译通过（仅 `masterdnsvpn-go`
-> 桩缺源，与本次改动无关）。CI 里 `release.yml` 已成功展开 31 个 job、
-> `Calculate version` 通过（`read_tag` + Go 1.27.3 正常）；完整平台构建在 CI 跑。
+> core 仓的 `replace/` 子模块本机只有 4/11 有内容，**完整核心编译以 CI 为准**。
+> 本地已用 Go 1.27.3 验证：`common/settings` 在 darwin/linux/windows 编译通过、
+> 5 个单测通过；`core/v2/hcore` 用 alt-mod 编译通过（仅 `masterdnsvpn-go` 桩缺源，
+> 与本次改动无关）。CI 里 `release.yml` 已成功展开 31 个 job、`Calculate version`
+> 通过（`read_tag` + Go 1.27.3 正常）；完整平台构建在 CI 跑。
 
 ### 2.4 合并带进来的一个 core CI 错误（已修）
 
@@ -126,14 +127,41 @@ GitHub 以「工作流文件无法解析」拒绝，运行记录 **0 个 job、c
 > 验证：本地对三个 workflow 做严格 YAML 解析（修前 `build.yml` 报错、修后全通过），
 > 并确认 `run:` 块仍解析为 `cd` + 两次 `git fetch` + `go run read_tag` 四条命令。
 
+### 2.5 上一步 CI 跑起来后暴露的子模块配对错误（已修）
+
+YAML 修好后 CI 真的编译了，check-run annotation 给出真正的构建错误（11 个 job
+同一处，包括 `hiddify-lib-windows-amd64` 和各 exotic-arch 的 `Build binary`）：
+
+```
+ray2sing/ray2sing/awg.go:185,339
+cannot use peer.AllowedIPs (badoption.Listable[netip.Prefix])
+       as option.LegacyListable[netip.Prefix] value in struct literal
+```
+
+原因：合并时**用 fork 的 `ray2sing` `505d8c6` 配上游 sing-box `1614c5edb`**。
+上游 sing-box 里 `WireGuardPeer.AllowedIPs` 是 `LegacyListable`，而
+`AwgPeerOptions.AllowedIPs` 是 `badoption.Listable`；上游 5.5.5 配套的
+`ed1a4b1` 写了显式转换 `T.LegacyListable[...](peer.AllowedIPs)`，`505d8c6` 直接赋值，
+且后者还删掉了 `MoveAmneziaWireGuardFields`（`v2/config/parser.go` 第 163/271 行要调用）。
+三方合并把 gitlink 自动解成上游的 `ed1a4b1` 是对的，我误判成需要 fork 的 pin 而覆盖错了。
+
+`ffba087` 把 `ray2sing` 改回 `ed1a4b1`（上游 5.5.5 与 `1614c5edb` 的原配）。合并后的
+`parser.go` 与上游 5.5.5 **逐字节一致**，所以 fork 没有 ray2sing 专属需求；`ed1a4b1`
+两个 `Move*` helper 都在，且在 `.gitmodules` 保留的 `hiddify/ray2sing` main 历史里，
+CI 能 fetch。**同样在 core 仓修，app 不掩盖。**
+
+> 验证：本地用 Go 1.27.3 对两种写法做最小 A/B 编译——`505d8c6` 的直接赋值复现出
+> 与 CI 逐字相同的错误，`ed1a4b1` 的显式转换编译通过；`common/settings` 另在
+> windows/linux 交叉编译通过。
+
 ---
 
 ## 3. 已知 / 待办
 
-- **core 5.5.5 发布**：`v5.5.5` 标签已重推到 `0255c8f`，`release.yml` 已展开 31 个 job
-  并在运行；等它跑完并确认 `v5.5.5` 与 `draft` 两个发布的 `hiddify-lib-*.tar.gz` 资产
-  就绪，app CI 才能下载到打了补丁的 core。
-- **app 推 `dev`**：`refs/heads/dev` 已快进到 `a199b85d` 并加上 core gitlink 更新；
+- **core 5.5.5 发布**：`v5.5.5` 标签已重推到 `ffba087`，`release.yml` 运行
+  `42645550107` 已展开 job 并在跑；等它跑完并确认 `v5.5.5` 与 `draft` 两个发布的
+  `hiddify-lib-*.tar.gz` 资产就绪，app CI 才能下载到打了补丁的 core。
+- **app 推 `dev`**：`refs/heads/dev` 已快进并加上 core gitlink 更新；
   推 `dev` 与 `merge/v5.5.5` 到 `ShuttleSpace/hiddify-app`。
 - **OHOS 原生包**：本机未出，按计划在需要时用鸿蒙工具链单独构建。
 - **flutter pub get 镜像**：默认 `pub.flutter-io.cn` 缺 `image_picker_ios`；CI 若用该镜像
