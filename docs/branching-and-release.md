@@ -39,6 +39,12 @@ The same shape applies to the two submodule repositories, which are separate for
 Keep the fork-specific commits on top so that upstream merges stay resolvable; do not
 rebase the fork branches onto upstream.
 
+> 本 fork 的 `hiddify-core` 把 `hiddify-sing-box` 的 `.gitmodules` URL 指向
+> `git@github.com:ShuttleSpace/hiddify-sing-box.git`（系统代理释放的 targeted port 只发布在
+> ShuttleSpace 的 `h/proxy-release-5.5.5` 分支），而非上表中的上游 `hiddify` org。拉取时从
+> ShuttleSpace fork 取。core 的 `v5.5.5` 发布标签打在 `ShuttleSpace/hiddify-core` 的合并提交上，
+> 触发 `release.yml` 出 `hiddify-lib-*.tar.gz`，app 的 `Makefile` 从对应 release 下载。
+
 ## Why tag pushes are used to trigger builds
 
 `manual-build.yml` exists only on `dev`, and `gh workflow run` resolves
