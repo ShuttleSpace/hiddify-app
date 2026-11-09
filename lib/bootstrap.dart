@@ -27,8 +27,10 @@ import 'package:hiddify/features/proxy/active/active_proxy_notifier.dart';
 import 'package:hiddify/features/settings/data/config_option_repository.dart';
 import 'package:hiddify/features/system_tray/notifier/system_tray_notifier.dart';
 import 'package:hiddify/features/window/notifier/window_notifier.dart';
+import 'package:hiddify/features/mcp/mcp_server.dart';
 import 'package:hiddify/hiddifycore/hiddify_core_service_provider.dart';
 import 'package:hiddify/riverpod_observer.dart';
+import 'package:uuid/uuid.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -127,6 +129,22 @@ Future<void> lazyBootstrap(WidgetsBinding widgetsBinding, Environment env) async
         timeout: 5000,
       );
       await _safeInit("system tray", () => container.read(systemTrayNotifierProvider.future), timeout: 1000);
+      await _safeInit(
+        "mcp server",
+        () async {
+          if (container.read(Preferences.enableMcpServer)) {
+            var token = container.read(Preferences.mcpToken);
+            if (token.isEmpty) {
+              token = const Uuid().v4();
+              await container.read(Preferences.mcpToken.notifier).update(token);
+            }
+            await container
+                .read(mcpServerProvider.notifier)
+                .start(port: container.read(Preferences.mcpPort), token: token);
+          }
+        },
+        timeout: 2000,
+      );
     }
 
     if (PlatformUtils.isAndroid) {

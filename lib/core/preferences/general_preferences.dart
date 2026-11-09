@@ -6,6 +6,7 @@ import 'package:hiddify/core/preferences/actions_at_closing.dart';
 import 'package:hiddify/core/utils/preferences_utils.dart';
 import 'package:hiddify/features/app_based_routing/model/per_app_proxy_mode.dart';
 import 'package:hiddify/features/profile/model/profile_sort_enum.dart';
+import 'package:hiddify/features/system_tray/model/tray_speed_layout.dart';
 import 'package:hiddify/features/window/notifier/window_notifier.dart';
 import 'package:hiddify/utils/platform_utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -128,6 +129,53 @@ abstract class Preferences {
 
   static final psiphonConsentGiven = PreferencesNotifier.create<bool, bool>("psiphon-consent-given", false);
 
+  /// Whether per-day upload and download totals are written to the database.
+  /// On by default, but it is a growing table on someone's phone, so it stays
+  /// switchable.
+  static final recordTrafficHistory = PreferencesNotifier.create<bool, bool>("record-traffic-history", true);
+
+  /// How many months of daily totals to keep. Older months are pruned on write,
+  /// so this is also the bound on how much history can be shown.
+  static final trafficHistoryRetentionMonths = PreferencesNotifier.create<int, int>(
+    "traffic-history-retention-months",
+    12,
+    validator: (value) => value >= 1 && value <= 36,
+  );
+
+  static final showTraySpeedIndicator = PreferencesNotifier.create<bool, bool>("show-tray-speed-indicator", false);
+
+  static final traySpeedLayout = PreferencesNotifier.create<TraySpeedLayout, String>(
+    "tray-speed-layout",
+    TraySpeedLayout.horizontal,
+    mapFrom: TraySpeedLayout.values.byName,
+    mapTo: (value) => value.name,
+  );
+
+  static final enableGlobalHotkeys = PreferencesNotifier.create<bool, bool>("enable-global-hotkeys", false);
+
+  /// Null means unbound rather than empty, so a key the user cleared stops
+  /// firing instead of matching every keypress.
+  static final globalHotkeyToggleConnection = PreferencesNotifier.create<String?, String?>(
+    "global-hotkey-toggle-connection",
+    null,
+    mapFrom: (value) => value == null || value.isEmpty ? null : value,
+    mapTo: (value) => value ?? '',
+  );
+
+  static final globalHotkeyShowWindow = PreferencesNotifier.create<String?, String?>(
+    "global-hotkey-show-window",
+    null,
+    mapFrom: (value) => value == null || value.isEmpty ? null : value,
+    mapTo: (value) => value ?? '',
+  );
+
+  static final globalHotkeyCycleServiceMode = PreferencesNotifier.create<String?, String?>(
+    "global-hotkey-cycle-service-mode",
+    null,
+    mapFrom: (value) => value == null || value.isEmpty ? null : value,
+    mapTo: (value) => value ?? '',
+  );
+
   /// How many records the in-memory log ring keeps. Saved, so a size picked
   /// once while chasing a bug is still there on the next run.
   static final logBufferSize = PreferencesNotifier.create<int, int>("log-buffer-size", 1000);
@@ -162,4 +210,11 @@ abstract class Preferences {
     },
     mapTo: (value) => "${value.by.name}:${value.mode.name}",
   );
+
+  static final enableMcpServer =
+      PreferencesNotifier.create<bool, bool>("enable-mcp-server", false);
+  static final mcpPort =
+      PreferencesNotifier.create<int, int>("mcp-port", 17079);
+  static final mcpToken =
+      PreferencesNotifier.create<String, String>("mcp-token", "");
 }

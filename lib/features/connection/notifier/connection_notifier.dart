@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:hiddify/core/haptic/haptic_service.dart';
 import 'package:hiddify/core/localization/translations.dart';
+import 'package:hiddify/core/notification/in_app_notification_controller.dart';
 import 'package:hiddify/core/preferences/general_preferences.dart';
 import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
 import 'package:hiddify/features/connection/data/connection_data_providers.dart';
@@ -9,10 +11,13 @@ import 'package:hiddify/features/connection/data/connection_repository.dart';
 import 'package:hiddify/features/connection/model/connection_failure.dart';
 import 'package:hiddify/features/connection/model/connection_status.dart';
 import 'package:hiddify/features/connection/model/startup_connection.dart';
+import 'package:hiddify/features/platform_specific/shell_proxy_env.dart';
 import 'package:hiddify/features/profile/model/profile_entity.dart';
 import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
+import 'package:hiddify/features/settings/data/config_option_repository.dart';
 import 'package:hiddify/hiddifycore/hiddify_core_service_provider.dart';
 import 'package:hiddify/singbox/model/core_status.dart';
+import 'package:hiddify/singbox/model/singbox_config_enum.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:in_app_review/in_app_review.dart';
@@ -53,6 +58,12 @@ class ConnectionNotifier extends _$ConnectionNotifier with AppLogger {
         await reconnect(next);
       }
     });
+
+    ref.listen(ConfigOptions.serviceMode, (previous, next) {
+      if (previous != ServiceMode.systemProxy || next == ServiceMode.systemProxy) return;
+      unawaited(_releaseSystemProxyForModeChange());
+    });
+
     // Do not watch coreRestartSignal here. A mid-connect client switch (macOS stop-before-start)
     // increments that signal, rebuilds this stream to Disconnected, and leaves SingleCall locked so
     // further taps are ignored with no error. Proxy/stats notifiers already watch the signal.
@@ -75,14 +86,9 @@ class ConnectionNotifier extends _$ConnectionNotifier with AppLogger {
 
   ConnectionRepository get _connectionRepo => ref.read(connectionRepositoryProvider);
 
-  Future<void> mayConnect() async {
-    if (state case AsyncData(:final value)) {
-      if (value case Disconnected()) return _connect();
-    }
-  }
-
-  /// Restores the tunnel on desktop start when the user had it running before quitting,
-  /// so a session started manually survives a reboot or an autostart login.
+  /// Reconnects only if the last run ended with the tunnel up. The previous
+  /// `mayConnect` fired on any disconnected state, which meant a user who had
+  /// deliberately turned the tunnel off got it back on the next launch.
   Future<void> restoreConnectionOnStartup() async {
     final startedByUser = ref.read(Preferences.startedByUser);
     final activeProfile = await ref.read(activeProfileProvider.future);
@@ -138,13 +144,14 @@ class ConnectionNotifier extends _$ConnectionNotifier with AppLogger {
         return _disconnect();
       }
       loggy.info("active profile changed, reconnecting");
+      final disableMemoryLimit = ref.read(Preferences.disableMemoryLimit);
+      final dialogNotifier = ref.read(dialogNotifierProvider.notifier);
+      final translations = ref.read(translationsProvider);
       await ref.read(Preferences.startedByUser.notifier).update(true);
-      await _connectionRepo.reconnect(profile, ref.read(Preferences.disableMemoryLimit)).mapLeft((err) async {
+      await _connectionRepo.reconnect(profile, disableMemoryLimit).mapLeft((err) async {
         loggy.warning("error reconnecting", err);
         state = AsyncError(err, StackTrace.current);
-        await ref
-            .read(dialogNotifierProvider.notifier)
-            .showCustomAlertFromErr(err.present(ref.read(translationsProvider).requireValue));
+        await dialogNotifier.showCustomAlertFromErr(err.present(translations.requireValue));
       }).run();
     }
   }
@@ -199,12 +206,11 @@ class ConnectionNotifier extends _$ConnectionNotifier with AppLogger {
     final dialogs = ref.read(dialogNotifierProvider.notifier);
     final t = ref.read(translationsProvider).requireValue;
     final startedByUser = ref.read(Preferences.startedByUser.notifier);
+    final disableMemoryLimit = ref.read(Preferences.disableMemoryLimit);
     // The core reports Starting only once the config is built, about a second
     // later; the app is connecting from here on.
     state = const AsyncData(Connecting());
-    await _connectionRepo.connect(activeProfile, ref.read(Preferences.disableMemoryLimit)).mapLeft((
-      ConnectionFailure err,
-    ) async {
+    await _connectionRepo.connect(activeProfile, disableMemoryLimit).mapLeft((ConnectionFailure err) async {
       if (epoch != _connectEpoch) return;
       loggy.warning("error connecting", err);
       // Prefer Disconnected(failure) over AsyncError so the button shows failed + details,
@@ -227,13 +233,84 @@ class ConnectionNotifier extends _$ConnectionNotifier with AppLogger {
     // button would hold green "connected" until then. Mirror connect: show
     // disconnecting from the tap.
     state = const AsyncData(Disconnecting());
+    final dialogNotifier = ref.read(dialogNotifierProvider.notifier);
+    final translations = ref.read(translationsProvider);
+    final wasSystemProxy = ref.read(ConfigOptions.serviceMode) == ServiceMode.systemProxy;
     await _connectionRepo.disconnect().mapLeft((err) {
-      loggy.warning("error disconnecting", err);
-      ref
-          .read(dialogNotifierProvider.notifier)
-          .showCustomAlertFromErr(err.present(ref.read(translationsProvider).requireValue));
+      dialogNotifier.showCustomAlertFromErr(err.present(translations.requireValue));
       state = AsyncError(err, StackTrace.current);
     }).run();
+    unawaited(_announceDisconnect(translations));
+    if (wasSystemProxy) unawaited(_releaseSystemProxy());
+  }
+
+  /// Hands the OS proxy back without waiting for the inbound's own cleanup.
+  ///
+  /// Closing the core is supposed to unwind into the listener's Disable, but that
+  /// path only runs when the listener is still holding a proxy it believes it
+  /// enabled, and on macOS the setting outlives it. Going through the release RPC
+  /// also covers being turned off from the outside: System Settings switching the
+  /// service mode to VPN-only does not come through this app at all, and the
+  /// inbound that owned the proxy is gone with the old core process.
+  Future<void> _releaseSystemProxy() async {
+    if (!Platform.isMacOS) return;
+    loggy.info("releasing the system proxy on disconnect");
+    await _connectionRepo.releaseSystemProxy().mapLeft((err) {
+      loggy.warning("failed to release the system proxy on disconnect", err);
+    }).run();
+  }
+
+  /// Leaving system-proxy mode while connected has to reach the OS by hand. The
+  /// tunnel stays up, so nothing is closed and the inbound that owns the proxy
+  /// never gets to clean up after itself, yet the mode the user just picked says
+  /// the OS should not be proxied. Nothing to do when we were never proxying.
+  Future<void> _releaseSystemProxyForModeChange() async {
+    if (state case AsyncData(:final value) when !value.isConnected) return;
+    loggy.info("leaving system proxy mode while connected, releasing the os proxy");
+    await _connectionRepo.releaseSystemProxy().mapLeft((err) {
+      loggy.warning("failed to release the system proxy after a mode change", err);
+    }).run();
+  }
+
+  /// Releasing the macOS system proxy changes nothing the user can see: no window
+  /// closes, no tray badge clears, the toggle they flipped just goes back. Say it
+  /// happened instead of leaving them to check System Settings for it.
+  ///
+  /// Nothing here dismisses what is already on screen. The shell hint is a second
+  /// thing to say about the same event, and replacing the first with it would hide
+  /// the first.
+  Future<void> _announceDisconnect(AsyncValue<Translations> translations) async {
+    if (!Platform.isMacOS) return;
+    // The core has already stopped by now. A toast that cannot be worded is not
+    // worth failing the disconnect over, and requiring here would do exactly that.
+    final t = translations.valueOrNull;
+    if (t == null) return;
+    final notifications = ref.read(inAppNotificationControllerProvider);
+    if (ref.read(ConfigOptions.serviceMode) == ServiceMode.systemProxy) {
+      notifications.showInfoToast(t.connection.systemProxyReleased, replaceExisting: false);
+    }
+    await _warnAboutShellProxyEnv(t);
+  }
+
+  bool _warnedAboutShellProxyEnv = false;
+
+  /// Shells that exported HTTP_PROXY keep pointing at the mixed port after we
+  /// stop, and nothing we do can reach into a process we do not own. Say what to
+  /// run instead. Once per session is enough, and only when a profile shows the
+  /// user actually set one up.
+  Future<void> _warnAboutShellProxyEnv(Translations translations) async {
+    if (_warnedAboutShellProxyEnv) return;
+    if (!await ShellProxyEnv.anyProfileExportsProxy()) return;
+    _warnedAboutShellProxyEnv = true;
+    final mixedPort = ref.read(ConfigOptions.mixedPort);
+    loggy.info("shell proxy env detected on disconnect, hinting cleanup for port $mixedPort");
+    ref
+        .read(inAppNotificationControllerProvider)
+        .showInfoToast(
+          translations.connection.shellProxyEnv(port: mixedPort),
+          duration: const Duration(seconds: 10),
+          replaceExisting: false,
+        );
   }
 }
 
@@ -271,4 +348,4 @@ class SingleCall {
   }
 }
 
-/// Whether the core is hot reloading; only the connection button shows it.
+

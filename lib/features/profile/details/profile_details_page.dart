@@ -38,6 +38,7 @@ class ProfileDetailsPage extends HookConsumerWidget with PresLogger {
     final theme = Theme.of(context);
     final t = ref.watch(translationsProvider).requireValue;
     final formKey = useMemoized(() => GlobalKey<FormState>());
+    final editorKey = useMemoized(() => GlobalKey<JsonEditorState>());
     final provider = profileDetailsNotifierProvider(id);
 
     return ref
@@ -67,12 +68,17 @@ class ProfileDetailsPage extends HookConsumerWidget with PresLogger {
                     onPressed: isLoading || !data.isDetailsChanged
                         ? null
                         : () async {
+                            // Fields commit on focus loss and emit through a
+                            // debounce timer, so saving straight from an editor
+                            // would otherwise persist the pre-edit content.
+                            if (!(editorKey.currentState?.flush() ?? true)) return;
                             if (formKey.currentState!.validate()) {
                               await ref.read(provider.notifier).save().then((success) {
+                                if (!success) return;
                                 ref
                                     .read(inAppNotificationControllerProvider)
                                     .showSuccessToast(t.pages.profiles.msg.save.success);
-                                if (success && context.mounted) context.pop();
+                                if (context.mounted) context.pop();
                               });
                             }
                           },
@@ -291,6 +297,7 @@ class ProfileDetailsPage extends HookConsumerWidget with PresLogger {
                         AsyncData(value: final config) =>
                           config.isJson
                               ? JsonEditor(
+                                  key: editorKey,
                                   expandedObjects: const ["outbounds", "endpoints"],
                                   onChanged: (value) {
                                     if (value == null) return;

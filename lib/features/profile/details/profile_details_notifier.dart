@@ -6,6 +6,7 @@ import 'package:hiddify/core/model/failures.dart';
 import 'package:hiddify/core/notification/in_app_notification_controller.dart';
 import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
 import 'package:hiddify/features/profile/data/profile_data_providers.dart';
+import 'package:hiddify/features/profile/data/profile_outbounds.dart';
 import 'package:hiddify/features/profile/data/profile_repository.dart';
 import 'package:hiddify/features/profile/details/profile_details_state.dart';
 import 'package:hiddify/features/profile/model/profile_entity.dart';
@@ -130,15 +131,10 @@ EditableConfig _editableConfig(String content) {
   try {
     final jsonObject = jsonDecode(content);
     final List<Map<String, dynamic>> outbounds = [];
-    if (jsonObject is Map<String, dynamic> && jsonObject['outbounds'] is List) {
-      for (final outbound in jsonObject['outbounds'] as List<dynamic>) {
-        if (outbound is Map<String, dynamic> &&
-            outbound['type'] != null &&
-            !['selector', 'urltest', 'dns', 'block'].contains(outbound['type']) &&
-            !['direct', 'bypass', 'direct-fragment'].contains(outbound['tag'])) {
-          outbounds.add(outbound);
-        }
-      }
+    if (jsonObject is Map<String, dynamic>) {
+      // fork: the core's own groups (incl. balancer) and its "§hide§" outbounds are not
+      // the user's nodes; the editor must leave them out so a save does not write them back.
+      outbounds.addAll(userOutbounds(jsonObject));
     }
     // ignore: avoid_dynamic_calls
     final endpoints = jsonObject['endpoints'] as List? ?? [];

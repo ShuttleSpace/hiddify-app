@@ -179,7 +179,7 @@ class ConnectionButton extends HookConsumerWidget {
   /// Connected, but the traffic does not get through: amber, between connected and failed.
   static const _degradedColor = Color(0xFFE3A63A);
 
-  static String _hopLabel(TranslationsConnectionHealthEn h, ConnectionHealth health) => switch (health.hopState) {
+  static String _hopLabel(Translations$connection$health$en h, ConnectionHealth health) => switch (health.hopState) {
     HealthState.ok => h.hopReady,
     HealthState.pending => h.hopConnecting,
     HealthState.blocked => h.hopBlocked,

@@ -26,11 +26,17 @@ class ProxyTile extends HookConsumerWidget with PresLogger {
     required this.onTap,
     this.testable = true,
     this.showPing = true,
+    this.highlight = false,
+    this.disabled = false,
+    this.blacklistReason,
   });
 
   final OutboundInfo proxy;
   final bool selected;
   final GestureTapCallback? onTap;
+  final bool highlight;
+  final bool disabled;
+  final String? blacklistReason;
 
   /// Whether a tap on the ping or the speeds tests the proxy; else a tap anywhere is the row's.
   final bool testable;
@@ -68,98 +74,126 @@ class ProxyTile extends HookConsumerWidget with PresLogger {
       _ => null,
     };
 
-    return ListTile(
-      title: Text(
-        proxy.nameWithDetour,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontFamily: PlatformUtils.isWindows ? FontFamily.emoji : null,
-          color: faded ? theme.colorScheme.onSurface.withValues(alpha: _fadedAlpha) : null,
-        ),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+      decoration: BoxDecoration(
+        color: highlight
+            ? theme.colorScheme.tertiaryContainer.withValues(alpha: 0.45)
+            : disabled
+            ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45)
+            : Colors.transparent,
+        border: Border.all(color: highlight ? theme.colorScheme.primary : Colors.transparent, width: 2),
+        borderRadius: BorderRadius.circular(12),
       ),
-      leading: Padding(
-        padding: const EdgeInsetsDirectional.only(end: 8),
-        child: Opacity(
-          opacity: faded ? _fadedAlpha : 1,
-          child: _FlagSlot(
-            proxy,
-            reconnectingBadge: state == ProxyRowState.reconnecting && style == ProxyPingStyle.number,
-            popIn: previousHasIp == false,
+      child: ListTile(
+        title: Text(
+          proxy.nameWithDetour,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontFamily: PlatformUtils.isWindows ? FontFamily.emoji : null,
+            color: disabled
+                ? theme.disabledColor
+                : faded
+                ? theme.colorScheme.onSurface.withValues(alpha: _fadedAlpha)
+                : null,
           ),
         ),
-      ),
-      // the state word stays whole; a long type gives way first
-      subtitle: Row(
-        children: [
-          Flexible(
-            child: ProxyTypeLabel(
-              proxy.typeWithoutStatus,
-              suffix: [
-                if (proxy.isGroup)
-                  TextSpan(text: ' (${proxy.groupSelectedTagDisplay.trim()})', style: theme.textTheme.bodySmall),
-              ],
-              style: faded ? TextStyle(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: _fadedAlpha)) : null,
+        leading: Padding(
+          padding: const EdgeInsetsDirectional.only(end: 8),
+          child: Opacity(
+            opacity: faded || disabled ? _fadedAlpha : 1,
+            child: _FlagSlot(
+              proxy,
+              reconnectingBadge: state == ProxyRowState.reconnecting && style == ProxyPingStyle.number,
+              popIn: previousHasIp == false,
             ),
           ),
-          if (word != null) Text('  ·  $word', maxLines: 1, style: TextStyle(color: colors.accent)),
-        ],
-      ),
-      trailing: SizedBox(
-        width: 88,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
+        ),
+        // the state word stays whole; a long type gives way first
+        subtitle: Row(
           children: [
-            Semantics(
-              button: true,
-              label: t.pages.proxies.testDelay,
-              // the tap area hugs the ping; the rest of the row keeps its own tap and long press
-              child: InkWell(
-                borderRadius: BorderRadius.circular(8),
-                // a tap tests this proxy's ping, a long press its upload speed
-                onTap: testable ? () => ref.read(proxiesOverviewNotifierProvider.notifier).urlTest(proxy.tag) : null,
-                onLongPress: testable
-                    ? () => ref.read(proxiesOverviewNotifierProvider.notifier).uploadTest(proxy.tag)
+            Flexible(
+              child: ProxyTypeLabel(
+                proxy.typeWithoutStatus,
+                suffix: [
+                  if (proxy.isGroup)
+                    TextSpan(text: ' (${proxy.groupSelectedTagDisplay.trim()})', style: theme.textTheme.bodySmall),
+                  if (blacklistReason != null)
+                    TextSpan(text: ' · $blacklistReason', style: theme.textTheme.bodySmall),
+                ],
+                style: faded || disabled
+                    ? TextStyle(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: _fadedAlpha))
                     : null,
-                child: Padding(
-                  padding: uploaded ? const EdgeInsets.symmetric(horizontal: 6, vertical: 2) : const EdgeInsets.all(6),
-                  child: AnimatedSwitcher(
-                    layoutBuilder: uniqueKeysLayout(),
-                    duration: const Duration(milliseconds: 250),
-                    child: KeyedSubtree(
-                      key: ValueKey((state, style)),
-                      child: showPing
-                          ? _ping(context, state, style, colors, t, arrived: arrived)
-                          : const SizedBox.shrink(),
-                    ),
-                  ),
-                ),
               ),
             ),
-            if (uploaded)
-              // a tap tests the upload again, a long press the download
-              IgnorePointer(
-                ignoring: !testable,
-                child: UploadSpeedChip(
-                  speed: proxy.uploadSpeed.toInt(),
-                  testing: proxy.uploadTesting,
-                  cached: proxy.uploadSpeedCached,
-                  onTest: () => ref.read(proxiesOverviewNotifierProvider.notifier).uploadTest(proxy.tag),
-                  downloadSpeed: proxy.downloadSpeed.toInt(),
-                  downloadTesting: proxy.downloadTesting,
-                  downloadCached: proxy.downloadSpeedCached,
-                  onDownloadTest: () => ref.read(proxiesOverviewNotifierProvider.notifier).downloadTest(proxy.tag),
-                  dense: true,
-                ),
-              ),
+            if (word != null) Text('  ·  $word', maxLines: 1, style: TextStyle(color: colors.accent)),
           ],
         ),
+        trailing: disabled
+            ? const Icon(Icons.block_rounded, size: 18, color: Colors.grey)
+            : SizedBox(
+                width: 88,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Semantics(
+                      button: true,
+                      label: t.pages.proxies.testDelay,
+                      // the tap area hugs the ping; the rest of the row keeps its own tap and long press
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        // a tap tests this proxy's ping, a long press its upload speed
+                        onTap: testable
+                            ? () => ref.read(proxiesOverviewNotifierProvider.notifier).urlTest(proxy.tag)
+                            : null,
+                        onLongPress: testable
+                            ? () => ref.read(proxiesOverviewNotifierProvider.notifier).uploadTest(proxy.tag)
+                            : null,
+                        child: Padding(
+                          padding: uploaded
+                              ? const EdgeInsets.symmetric(horizontal: 6, vertical: 2)
+                              : const EdgeInsets.all(6),
+                          child: AnimatedSwitcher(
+                            layoutBuilder: uniqueKeysLayout(),
+                            duration: const Duration(milliseconds: 250),
+                            child: KeyedSubtree(
+                              key: ValueKey((state, style)),
+                              child: showPing
+                                  ? _ping(context, state, style, colors, t, arrived: arrived)
+                                  : const SizedBox.shrink(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (uploaded)
+                      // a tap tests the upload again, a long press the download
+                      IgnorePointer(
+                        ignoring: !testable,
+                        child: UploadSpeedChip(
+                          speed: proxy.uploadSpeed.toInt(),
+                          testing: proxy.uploadTesting,
+                          cached: proxy.uploadSpeedCached,
+                          onTest: () => ref.read(proxiesOverviewNotifierProvider.notifier).uploadTest(proxy.tag),
+                          downloadSpeed: proxy.downloadSpeed.toInt(),
+                          downloadTesting: proxy.downloadTesting,
+                          downloadCached: proxy.downloadSpeedCached,
+                          onDownloadTest: () =>
+                              ref.read(proxiesOverviewNotifierProvider.notifier).downloadTest(proxy.tag),
+                          dense: true,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+        selected: selected,
+        selectedTileColor: theme.colorScheme.primaryContainer,
+        onTap: onTap,
+        onLongPress: () async => await ref.read(dialogNotifierProvider.notifier).showProxyInfo(outboundInfo: proxy),
+        horizontalTitleGap: 4,
       ),
-      selected: selected,
-      selectedTileColor: theme.colorScheme.primaryContainer,
-      onTap: onTap,
-      onLongPress: () async => await ref.read(dialogNotifierProvider.notifier).showProxyInfo(outboundInfo: proxy),
-      horizontalTitleGap: 4,
     );
   }
 

@@ -27,8 +27,16 @@ import 'package:hiddify/features/settings/overview/sections/general_page.dart';
 import 'package:hiddify/features/settings/overview/sections/inbound_options_page.dart';
 import 'package:hiddify/features/settings/overview/sections/routing_options_page.dart';
 import 'package:hiddify/features/settings/overview/sections/tls_tricks_page.dart';
+import 'package:hiddify/features/settings/overview/sections/mcp_options_page.dart';
+import 'package:hiddify/features/about/widget/release_notes_page.dart';
 import 'package:hiddify/features/settings/overview/settings_page.dart';
 import 'package:hiddify/utils/utils.dart';
+import 'package:hiddify/features/stats/overview/traffic_stats_page.dart';
+import 'package:hiddify/features/shortcut/overview/shortcuts_page.dart';
+import 'package:hiddify/features/settings/overview/sections/network_identity_page.dart';
+import 'package:hiddify/features/settings/overview/sections/appearance_page.dart';
+import 'package:hiddify/features/proxy/overview/node_blacklist_management_page.dart';
+import 'package:hiddify/features/backup/overview/backup_page.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'routing_config_notifier.g.dart';
@@ -133,6 +141,26 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
                       path: 'proxies',
                       pageBuilder: (_, state) =>
                           customTransition(TransitionType.fade, state.pageKey, const ProxiesOverviewPage()),
+                      routes: <GoRoute>[
+                        GoRoute(
+                          name: 'nodeBlacklist',
+                          path: 'node-blacklist',
+                          pageBuilder: (_, state) => customTransition(
+                            TransitionType.slide,
+                            state.pageKey,
+                            const NodeBlacklistManagementPage(),
+                          ),
+                        ),
+                        GoRoute(
+                          name: 'providerNodeBlacklist',
+                          path: 'provider-node-blacklist/:id',
+                          pageBuilder: (_, state) => customTransition(
+                            TransitionType.slide,
+                            state.pageKey,
+                            NodeBlacklistManagementPage(profileId: state.pathParameters['id']),
+                          ),
+                        ),
+                      ],
                     ),
                     if (isMobileBreakpoint)
                       GoRoute(
@@ -181,6 +209,36 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
                       path: 'general',
                       pageBuilder: (_, state) =>
                           customTransition(TransitionType.slide, state.pageKey, const GeneralPage()),
+                    ),
+                    GoRoute(
+                      name: 'appearance',
+                      path: 'appearance',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const AppearancePage()),
+                    ),
+                    GoRoute(
+                      name: 'trafficStats',
+                      path: 'traffic-stats',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const TrafficStatsPage()),
+                    ),
+                    GoRoute(
+                      name: 'networkIdentity',
+                      path: 'network-identity',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const NetworkIdentityPage()),
+                    ),
+                    GoRoute(
+                      name: 'backup',
+                      path: 'backup',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const BackupPage()),
+                    ),
+                    GoRoute(
+                      name: 'shortcuts',
+                      path: 'shortcuts',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const ShortcutsPage()),
                     ),
                     GoRoute(
                       name: 'routingOptions',
@@ -266,6 +324,12 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
                           customTransition(TransitionType.slide, state.pageKey, const TlsTricksPage()),
                     ),
                     GoRoute(
+                      name: 'mcpOptions',
+                      path: 'mcp-options',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const McpOptionsPage()),
+                    ),
+                    GoRoute(
                       name: 'chainOptions',
                       path: 'chain-options',
                       pageBuilder: (_, state) =>
@@ -283,6 +347,17 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
                         path: 'about',
                         pageBuilder: (_, state) =>
                             customTransition(TransitionType.slide, state.pageKey, const AboutPage()),
+                        routes: <GoRoute>[
+                          GoRoute(
+                            name: 'releaseNotes',
+                            path: 'release-notes',
+                            pageBuilder: (_, state) => customTransition(
+                              TransitionType.slide,
+                              state.pageKey,
+                              const ReleaseNotesPage(),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ],
@@ -305,6 +380,13 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
                     name: 'about',
                     path: '/about',
                     builder: (_, _) => FocusScope(node: branchesScope['about'], child: const AboutPage()),
+                    routes: <GoRoute>[
+                      GoRoute(
+                        name: 'releaseNotes',
+                        path: 'release-notes',
+                        builder: (_, _) => const ReleaseNotesPage(),
+                      ),
+                    ],
                   ),
                 ],
               ),

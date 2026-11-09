@@ -36,6 +36,10 @@ abstract interface class ConnectionRepository {
   TaskEither<ConnectionFailure, Unit> connect(ProfileEntity activeProfile, bool disableMemoryLimit);
   TaskEither<ConnectionFailure, Unit> disconnect();
   TaskEither<ConnectionFailure, Unit> reconnect(ProfileEntity activeProfile, bool disableMemoryLimit);
+
+  /// Hands the OS proxy back while the tunnel keeps running. Closing the core would
+  /// do it too, but that is not what a service mode change should cost.
+  TaskEither<ConnectionFailure, Unit> releaseSystemProxy();
 }
 
 class ConnectionRepositoryImpl with ExceptionHandler, InfraLogger implements ConnectionRepository {
@@ -87,13 +91,12 @@ class ConnectionRepositoryImpl with ExceptionHandler, InfraLogger implements Con
         CoreWaiting() => const Waiting(),
         CoreNoAvailableProxies() => const NoAvailableProxies(),
         CoreStarted() => const Connected(),
-        CoreStopping() => const Disconnecting(),
         CoreHotReloading() => const HotReloading(),
+        CoreStopping() => const Disconnecting(),
       },
     );
   }
 
-  @override
   @override
   TaskEither<ConnectionFailure, Unit> connect(ProfileEntity activeProfile, bool disableMemoryLimit) => setup().flatMap(
     (_) => applyConfigOption(activeProfile).flatMap(
@@ -260,6 +263,10 @@ class ConnectionRepositoryImpl with ExceptionHandler, InfraLogger implements Con
   /// (proxy → VPN removed the system proxy and started no TUN), so the connection is stopped and
   /// made again, which also asks for admin consent.
   @override
+  TaskEither<ConnectionFailure, Unit> releaseSystemProxy() =>
+      singbox.releaseSystemProxy().mapLeft(UnexpectedConnectionFailure.new);
+
+  @override
   TaskEither<ConnectionFailure, Unit> reconnect(ProfileEntity activeProfile, bool disableMemoryLimit) {
     final before = _configOptionsSnapshot;
     return applyConfigOption(activeProfile).flatMap((_) {
@@ -316,7 +323,7 @@ class ConnectionRepositoryImpl with ExceptionHandler, InfraLogger implements Con
               }
 
               _configOptionsSnapshot = overridedOptions;
-              final optionsResult = await singbox.changeOptions(overridedOptions).run();
+              final optionsResult = await singbox.changeOptions(overridedOptions, profileId: prof.id).run();
               optionsResult.match((error) => throw ConnectionFailure.unexpected(error), (_) {});
               return unit;
             }, (err, st) => err is ConnectionFailure ? err : ConnectionFailure.unexpected(err, st)),

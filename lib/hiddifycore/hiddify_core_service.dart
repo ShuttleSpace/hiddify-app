@@ -10,6 +10,10 @@ import 'package:hiddify/core/logger/core_logger.dart';
 import 'package:hiddify/core/notification/in_app_notification_controller.dart';
 import 'package:hiddify/features/connection/model/connection_failure.dart';
 import 'package:hiddify/features/log/model/log_level.dart' as config_log_level;
+import 'package:hiddify/features/profile/data/profile_data_providers.dart';
+import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
+import 'package:hiddify/features/proxy/data/node_blacklist_engine.dart';
+import 'package:hiddify/features/proxy/notifier/node_blacklist_controller.dart';
 import 'package:hiddify/features/settings/data/config_option_repository.dart';
 import 'package:hiddify/hiddifycore/core_interface/core_interface_wrapper_stub.dart'
     if (dart.library.io) 'package:hiddify/hiddifycore/core_interface/core_interface_wrapper.dart';
@@ -48,6 +52,8 @@ class HiddifyCoreService with InfraLogger {
   // core stopping; the new listener reports the core's real state first thing.
   int _statusListener = 0;
 
+  List<String> lastBlacklistedTags = [];
+
   Future<void> init() async {
     await setup()
         .mapLeft((e) {
@@ -75,9 +81,18 @@ class HiddifyCoreService with InfraLogger {
         final response = await core.fgClient.parse(ParseRequest(tempPath: tempPath, configPath: path, debug: false));
         if (response.responseCode != ResponseCode.OK) return left("${response.responseCode} ${response.message}");
       } catch (e) {
+        // The core may not be set up yet: set it up and try once more.
         await setup().run();
-        final response = await core.fgClient.parse(ParseRequest(tempPath: tempPath, configPath: path, debug: false));
-        if (response.responseCode != ResponseCode.OK) return left("${response.responseCode} ${response.message}");
+        try {
+          final response = await core.fgClient.parse(ParseRequest(tempPath: tempPath, configPath: path, debug: false));
+          if (response.responseCode != ResponseCode.OK) return left("${response.responseCode} ${response.message}");
+        } catch (e) {
+          // The second attempt failed too. Reporting it as a failure keeps the
+          // error in the flow that asked for the config, instead of letting it
+          // escape as an unhandled platform error with nothing on screen.
+          loggy.error('failed to validate config', e);
+          return left(e.toString());
+        }
       }
       return right(unit);
     });
@@ -131,7 +146,7 @@ class HiddifyCoreService with InfraLogger {
     });
   }
 
-  TaskEither<String, Unit> changeOptions(SingboxConfigOption options) {
+  TaskEither<String, Unit> changeOptions(SingboxConfigOption options, {String? profileId}) {
     return TaskEither(() async {
       loggy.debug("changing options");
       // latestOptions = options;
@@ -140,12 +155,34 @@ class HiddifyCoreService with InfraLogger {
           await core.setOptions(options);
           return right(unit);
         }
+        final optionsJson = options.toJson();
+        final effectiveProfileId =
+            profileId ?? (await ref.read(activeProfileProvider.future).catchError((Object _) => null))?.id;
+        final blacklistDoc = ref.read(nodeBlacklistControllerProvider);
+        final rules = effectiveRules(blacklistDoc, effectiveProfileId);
+        var blacklistedTags = lastBlacklistedTags;
+        if (effectiveProfileId != null) {
+          final rawTags = await _loadRawOutboundTags(effectiveProfileId);
+          loggy.info("node blacklist profile: $effectiveProfileId, raw tags: ${rawTags.length}");
+          loggy.info("node blacklist rules: ${rules.length}, names: ${rules.map((rule) => rule.name).join(', ')}");
+          final candidates = <OutboundInfo>{
+            for (final tag in rawTags) OutboundInfo(tag: tag, tagDisplay: _trimTagName(tag)),
+          };
+          blacklistedTags = candidates
+              .where((node) => isNodeBlacklisted(node, rules))
+              .map((node) => node.tag)
+              .toSet()
+              .toList();
+          loggy.info("node blacklist tags: $blacklistedTags");
+          lastBlacklistedTags = blacklistedTags;
+        }
+        optionsJson['blacklisted-tags'] = blacklistedTags;
         final res = await core.fgClient.changeHiddifySettings(
-          ChangeHiddifySettingsRequest(hiddifySettingsJson: jsonEncode(options.toJson())),
+          ChangeHiddifySettingsRequest(hiddifySettingsJson: jsonEncode(optionsJson)),
         );
         if (res.messageType != MessageType.EMPTY) return left("${res.messageType} ${res.message}");
         await core.bgClient.changeHiddifySettings(
-          ChangeHiddifySettingsRequest(hiddifySettingsJson: jsonEncode(options.toJson())),
+          ChangeHiddifySettingsRequest(hiddifySettingsJson: jsonEncode(optionsJson)),
         );
       } on GrpcError catch (e) {
         if (e.code == StatusCode.unavailable) {
@@ -158,6 +195,31 @@ class HiddifyCoreService with InfraLogger {
       return right(unit);
     });
   }
+
+  Future<Set<String>> _loadRawOutboundTags(String? profileId) async {
+    if (profileId == null) return const {};
+    try {
+      final file = ref.read(profilePathResolverProvider).file(profileId);
+      final content = await file.readAsString();
+      final decoded = jsonDecode(content);
+      if (decoded is! Map<String, dynamic>) return const {};
+      final tags = <String>{};
+      for (final key in const ['outbounds', 'endpoints']) {
+        final items = decoded[key];
+        if (items is! List) continue;
+        for (final item in items) {
+          if (item is Map && item['tag'] is String) {
+            tags.add(item['tag'] as String);
+          }
+        }
+      }
+      return tags;
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  String _trimTagName(String tag) => tag.split('§').first.trim();
 
   TaskEither<ConnectionFailure, Unit> start(String path, String name, bool disableMemoryLimit) {
     return TaskEither(() async {
@@ -371,6 +433,25 @@ class HiddifyCoreService with InfraLogger {
     });
   }
 
+  /// Hands the macOS system proxy back without stopping the box. Nothing else
+  /// covers the case where the user leaves system-proxy mode while connected: the
+  /// tunnel carries on, so the inbound holding the proxy is never closed and its
+  /// own cleanup never runs.
+  TaskEither<String, Unit> releaseSystemProxy() {
+    return TaskEither(() async {
+      try {
+        final res = await core.bgClient.setSystemProxyEnabled(SetSystemProxyEnabledRequest(isEnabled: false));
+        if (res.code != ResponseCode.OK) {
+          return left(res.message.isEmpty ? "failed to release the system proxy" : res.message);
+        }
+      } on GrpcError catch (e) {
+        loggy.error("failed to release system proxy: $e");
+        return left("${e.message}");
+      }
+      return right(unit);
+    });
+  }
+
   TaskEither<String, Unit> restart(String path, String name, bool disableMemoryLimit) {
     return TaskEither(() async {
       loggy.debug("restarting");
@@ -473,6 +554,22 @@ class HiddifyCoreService with InfraLogger {
           .startWith(latest);
     } catch (e) {
       loggy.error("error watching active groups: $e");
+      rethrow;
+    }
+  }
+
+  Stream<List<OutboundGroup>> watchAllGroups() async* {
+    loggy.info("watching all proxy groups");
+
+    if (!core.isInitialized()) {
+      loggy.debug("core is not initialized, returning empty all-groups stream");
+      return;
+    }
+
+    try {
+      yield* core.bgClient.outboundsInfo(Empty()).map((event) => event.items.toList());
+    } catch (e) {
+      loggy.error("error watching all proxy groups: $e");
       rethrow;
     }
   }
@@ -767,11 +864,6 @@ class HiddifyCoreService with InfraLogger {
     return subscriptions[key] as StreamSubscription<T>?;
   }
 
-  /// Six engine levels onto six logging levels, nothing merged.
-  ///
-  /// TRACE used to have no case here and fell into the default, so trace lines
-  /// arrived looking as important as info and could not be filtered out. FATAL
-  /// used to collapse into error because loggy had nothing above it.
   logging.Level getLogLevel(LogLevel level) {
     return switch (level) {
       LogLevel.TRACE => logging.Level.FINEST,
