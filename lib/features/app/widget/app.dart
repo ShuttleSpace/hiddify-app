@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:accessibility_tools/accessibility_tools.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +33,6 @@ import 'package:hiddify/core/theme/appearance_options.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:upgrader/upgrader.dart';
 
-bool _debugAccessibility = false;
 bool isOnPauseCalled = false;
 
 class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
@@ -150,9 +148,6 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
                             child: child ?? const SizedBox(),
                           ),
                   );
-                  if (kDebugMode && _debugAccessibility) {
-                    return AccessibilityTools(checkFontOverflows: true, child: child);
-                  }
                   return AnnotatedRegion<SystemUiOverlayStyle>(
                     value: SystemUiOverlayStyle(
                       statusBarColor: theme.scaffoldBackgroundColor,

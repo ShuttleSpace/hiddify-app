@@ -1,0 +1,75 @@
+
+{
+  "app": {
+    "signingConfigs": [
+      {
+        // AGC 正式签名：装真机 HarmonyOS（含 2in1 / 鸿蒙 PC）用这套。
+        // certpath = AGC 签发的证书链（叶子 + Huawei CBG 中间 CA + 根 CA）
+        // profile  = AGC 签发的 Provision Profile
+        "name": "default",
+        "material": {
+          "storeFile": "secrets/hiddify-app.p12",
+          "storePassword": "00000025e9e0800bdf8c10be3bf8bce94aedd19628a237c249fc7c16499af23a5aa947fe41017bce54bc0defdf3a4b3960dc496342",
+          "keyAlias": "hiddify-app",
+          "keyPassword": "00000025e9e0800bdf8c10be3bf8bce94aedd19628a237c249fc7c16499af23a5aa947fe41017bce54bc0defdf3a4b3960dc496342",
+          "profile": "secrets/hiddify-app-agc.p7b",
+          "certpath": "secrets/hiddify-app-agc.cer",
+          "signAlg": "SHA256withECDSA"
+        }
+      },
+      {
+        // 本地自签名：只装 OpenHarmony 设备/模拟器，真机会因为 profile 与
+        // 签名证书不匹配而拒装。用 ohos/signature/use-signing.sh local-debug 切换。
+        "name": "local-debug",
+        "material": {
+          "storeFile": "secrets/hiddify-app.p12",
+          "storePassword": "00000025e9e0800bdf8c10be3bf8bce94aedd19628a237c249fc7c16499af23a5aa947fe41017bce54bc0defdf3a4b3960dc496342",
+          "keyAlias": "hiddify-app",
+          "keyPassword": "00000025e9e0800bdf8c10be3bf8bce94aedd19628a237c249fc7c16499af23a5aa947fe41017bce54bc0defdf3a4b3960dc496342",
+          "profile": "secrets/hiddify-app.p7b",
+          "certpath": "secrets/hiddify-app.cer",
+          "signAlg": "SHA256withECDSA"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "compatibleSdkVersion": "5.1.0(18)",
+        "runtimeOS": "HarmonyOS",
+        "targetSdkVersion": "26.0.0"
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug"
+      },
+      {
+        "name": "profile"
+      },
+      {
+        "name": "release",
+        "buildOption": {
+          "packOptions": {
+            "appWithSignedPkg": true
+          }
+        }
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

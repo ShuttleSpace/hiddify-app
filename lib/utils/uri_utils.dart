@@ -32,11 +32,8 @@ abstract class UriUtils {
   static Future<bool> tryShareFile(Uri uri, {String? mimeType}) async {
     try {
       loggy.debug("sharing [$uri]");
-      // the file's own path: uri.path keeps the percent-encoding, so a name with a space or a
-      // non-ASCII letter pointed at a file that does not exist
-      final path = uri.scheme.isEmpty || uri.isScheme('file') ? uri.toFilePath() : uri.path;
-      final file = XFile(path, mimeType: mimeType);
-      final result = await Share.shareXFiles([file], sharePositionOrigin: _shareOrigin());
+      final file = XFile(uri.path, mimeType: mimeType);
+      final result = await SharePlus.instance.share(ShareParams(files: [file]));
       loggy.debug("share result: ${result.raw}");
       return result.status == ShareResultStatus.success;
     } catch (e, stackTrace) {

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
@@ -38,6 +39,15 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 Future<void> lazyBootstrap(WidgetsBinding widgetsBinding, Environment env) async {
   if (!kIsWeb) {
     FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+    // On OpenHarmony the generated plugin registrant has no file_picker entry:
+    // file_picker_ohos only ships the native side, and file_picker's Dart side
+    // is a `late` singleton with no default, so FilePicker.platform would throw
+    // a LateInitializationError. FilePickerIO is the same MethodChannel
+    // implementation the other platforms use, and file_picker_ohos serves the
+    // very same channel name ("miguelruivo.flutter.plugins.filepicker").
+    if (PlatformUtils.isOhos) {
+      FilePicker.platform = FilePickerIO();
+    }
   }
   // phase 1 — console and the in-memory history, before the folders are known
   logStart();
