@@ -61,7 +61,7 @@ core `5.5.5`（含系统代理释放补丁）。
 
 ---
 
-## 2. core 子模块：`hiddify-core` → `f54cb178`
+## 2. core 子模块：`hiddify-core` → `0255c8f`
 
 分支 `merge/upstream-5.5.5`：fork 线（`baf504f` 一侧）三方合并上游 `ad83d757`（v5.5.5 的 core），
 保留 fork 功能（系统代理释放、admin 后台服务、grpc-web、OpenWrt 打包、更新的 ray2sing /
@@ -97,24 +97,43 @@ fork 相对上游在 sing-box 上有 131 fork-only / 530 upstream-only 提交（
 
 `ShuttleSpace/hiddify-core` 的 `release.yml` 在 `push: tags: 'v*'` 时触发，调用
 `build.yml`（`tag-name=v5.5.5`，channel=prod），为各平台构建并把
-`hiddify-lib-*.tar.gz` 上传到 `v5.5.5` 发布。已在 `f54cb178` 上打 `v5.5.5` 标签并推到
+`hiddify-lib-*.tar.gz` 上传到 `v5.5.5` 发布。已在 `0255c8f` 上打 `v5.5.5` 标签并推到
 `ShuttleSpace/hiddify-core`（**覆盖**了原先指向 `ad83d757` 的本地 `v5.5.5` 标签，使
-fork 的 core `v5.5.5` 指向本次合并）。app 的 `Makefile` 从
+fork 的 core `v5.5.5` 指向本次合并）。`release.yml` 传 `upload-artifact: true`，故同一
+次构建也会刷新 `draft` 发布（`upload-prerelease`），dev-channel 的 app 构建从
+`releases/download/draft` 拉到的也是打了补丁的 core。app 的 `Makefile` 在 prod 下从
 `https://github.com/ShuttleSpace/hiddify-core/releases/download/v5.5.5` 拉预编译库；
 gitlink 不被 CI 用于构建。
 
 > core 仓的 `replace/` 子模块本机不可完整克隆（网络受限），**核心编译以 CI 为准**。
 > 本地已用 Go 1.27.3 验证：`common/settings` 在 darwin/linux 编译通过、5 个单测通过，
 > 且 `core/v2/hcore` 在替换了缺失 `replace/` 行后用 alt-mod 编译通过（仅 `masterdnsvpn-go`
-> 桩缺源，与本次改动无关）。
+> 桩缺源，与本次改动无关）。CI 里 `release.yml` 已成功展开 31 个 job、
+> `Calculate version` 通过（`read_tag` + Go 1.27.3 正常）；完整平台构建在 CI 跑。
+
+### 2.4 合并带进来的一个 core CI 错误（已修）
+
+fork 父提交 `737f287` 把 ``# `read_tag` …`` 注释写成了 **列 0**，落在
+`build.yml` 的 `run: |-` 块中间，提前结束了 YAML 块标量；随后的缩进行成了游离标量，
+GitHub 以「工作流文件无法解析」拒绝，运行记录 **0 个 job、created/started/updated 同一秒**，
+且 run 名回退成 `.github/workflows/build.yml` 路径。三方合并保留了这行，`v5.5.5` 首次
+打在 `f54cb178` 时 `release.yml`（`workflow_call` 调 `build.yml`）因此失败。
+
+`0255c8f` 只把该注释缩进 10 空格（对比 `73225d0d` 那份曾跑绿的版本），不动任何 shell
+命令。重推标签后，`Release` 运行正确展开 31 个 job。**core 的错误在 core 仓修**，app 未
+加任何掩盖逻辑（AGENTS.md 硬规则）。
+
+> 验证：本地对三个 workflow 做严格 YAML 解析（修前 `build.yml` 报错、修后全通过），
+> 并确认 `run:` 块仍解析为 `cd` + 两次 `git fetch` + `go run read_tag` 四条命令。
 
 ---
 
 ## 3. 已知 / 待办
 
-- **core 5.5.5 发布**：标签已推，等 `release.yml` CI 跑完并确认 `v5.5.5` 发布资产就绪，
-  app CI 才能下载到 core。
-- **app 推 `dev`**：`refs/heads/dev`（`ce6d5898`）是 `HEAD` 的祖先，`--ff-only` 可快进；
+- **core 5.5.5 发布**：`v5.5.5` 标签已重推到 `0255c8f`，`release.yml` 已展开 31 个 job
+  并在运行；等它跑完并确认 `v5.5.5` 与 `draft` 两个发布的 `hiddify-lib-*.tar.gz` 资产
+  就绪，app CI 才能下载到打了补丁的 core。
+- **app 推 `dev`**：`refs/heads/dev` 已快进到 `a199b85d` 并加上 core gitlink 更新；
   推 `dev` 与 `merge/v5.5.5` 到 `ShuttleSpace/hiddify-app`。
 - **OHOS 原生包**：本机未出，按计划在需要时用鸿蒙工具链单独构建。
 - **flutter pub get 镜像**：默认 `pub.flutter-io.cn` 缺 `image_picker_ios`；CI 若用该镜像
