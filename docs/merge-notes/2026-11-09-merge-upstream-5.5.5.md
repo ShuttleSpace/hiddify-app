@@ -170,27 +170,44 @@ prod run 都是 `*.dev` 标签（channel=dev，`build-binary` 整体跳过），
 `Package DEB` 失败在 run 里**照常可见、run 照常报 failure**，只是不再挡住 app 要的
 库；没有吞掉任何步骤、错误或加重试。AGENTS.md 要求 core 的问题在 core 修，不在 app 掩盖。
 
-> 另外，`hiddify-lib-macos`（`macos-15`）连续两次被 GitHub 取消：
+> 另外，`hiddify-lib-macos`（`macos-15`）在 run #5/#6/#7 连续被 GitHub 取消：
 > annotation 原文 *"The job was not acquired by Runner of type hosted even after
 > multiple attempts"* / *"Due to capacity constraints, jobs targeting macOS arm64
 > runners may experience longer queue times"*，`runner_id: 0`、0 个 step、排队约
 > 15 分钟后取消。这是 **GitHub 托管 macOS arm64 runner 容量**，不是代码或 core 缺陷
-> （同一 label 的 `hiddify-lib-ios` 成功）。`needs: [build]` 因此不满足，两个
-> upload job 被 skip——这也正好避免发布缺 macOS 库的不完整 `draft`。**没有**放宽
-> `needs` 或加 `continue-on-error`；只重触发一次干净 run。本机 `gh` 未登录、
-> `HOMEBREW_GITHUB_API_TOKEN` 返回 401，无法用 API 精确 rerun，故用删除+重建
-> 同一个 tag 触发（不改 sha、不造空提交）。
+> （同一 label 的 `hiddify-lib-ios` 在另两次 run 成功）。`needs: [build]` 因此不满足，
+> 两个 upload job 被 skip。
+
+### 2.7 放宽 iOS 构建腿（fork 决策，已修）
+
+`v5.5.5` 的 `build` 矩阵有两个 `macos-15` 腿：`macos` 与 `ios`。GitHub 每次 run 只能
+供给其中一个（run #5/#6 给 ios、#7 两者都取消、#8 ios 取消）。而 **fork 的 app 并不构建
+iOS**（app 的 build 矩阵里 `ios` 被注释掉了，`Makefile` 也只给 macOS 平台下载
+`hiddify-lib-macos.tar.gz`），所以 iOS 库从不被任何 fork 发布/下载消费。
+
+按用户决定，在 **core 仓**把 `hiddify-lib-ios` 矩阵组合标 `continue-on-error: true`
+（`d4101ea`）：该腿**仍然运行、失败仍然可见**（run #9 里它甚至成功了），但不再 gate
+`upload-prerelease`/`upload-release`。这样既不会因 GitHub 容量把 macOS+Android+Windows+
+Linux 这几个 app 真正需要的库卡在门外，也没把任何 core 缺陷藏起来（core 在 macOS 上编译
+通过，见 run #8）；10 个 `build-binary` 的 `Package DEB` 失败和 Docker push 也照常可见。
+
+> run #9（`42726245859`，sha `d4101ea`）：这次 GitHub 同时给了 macos 与 ios runner，
+> 两个腿都成功；`upload-prerelease` 与 `upload-release` 均成功，`draft`（20 资产,
+> 2026-11-10）与 `v5.5.5`（50 资产）两个发布都被刷新为打了补丁的 5.5.5
+> `hiddify-lib-*.tar.gz`。app CI 现在能下到带 system-proxy patch 的 5.5.5 core。
+> run 整体仍报 `failure`，只因为 `build-binary` 的 DEB 腿与 `make-upload-docker`（ghcr
+> 镜像）仍失败——两者都不影响 app 的库下载。
 
 ---
 
 ## 3. 已知 / 待办
 
-- **core 5.5.5 发布**：`v5.5.5` 标签已重推到 `9b2b37f`（`release.yml` run #7
-  `42667773806`）。等它跑完并确认 `v5.5.5` 与 `draft` 两个发布的
-  `hiddify-lib-*.tar.gz` 资产就绪且时间戳刷新，app CI 才能下载到打了补丁的 core。
-  若 macOS arm64 runner 容量仍导致 `build` 少一个库，需择时重跑；不得放宽 `needs`。
-- **app 推 `dev`**：`refs/heads/dev` 已快进并加上 core gitlink 更新；
-  推 `dev` 与 `merge/v5.5.5` 到 `ShuttleSpace/hiddify-app`。
+- **core 5.5.5 发布（已完成）**：`v5.5.5` 标签最终在 `d4101ea`。run #9 `42726245859`
+  刷新了 `draft`（20 资产，2026-11-10）与 `v5.5.5`（50 资产）两个发布；app 需要的 6 个
+  `hiddify-lib-*.tar.gz`（android/windows/linux-amd64/linux-arm64/macos/ios）都已就位。
+  app gitlink 已指向 `d4101ea`。
+- **app 推 `dev`**：`refs/heads/dev` 已快进并加上 core gitlink 更新（`7b3ab786`）；
+  `merge/v5.5.5` 已 FF 到同一提交；推 `dev` 与 `merge/v5.5.5` 到 `ShuttleSpace/hiddify-app`。
 - **OHOS 原生包**：本机未出，按计划在需要时用鸿蒙工具链单独构建。
 - **flutter pub get 镜像**：默认 `pub.flutter-io.cn` 缺 `image_picker_ios`；CI 若用该镜像
   需确认该包可用，或在 `PUB_HOSTED_URL=https://pub.dev` 下解析（提交的 `pubspec.lock` 即以此生成）。
