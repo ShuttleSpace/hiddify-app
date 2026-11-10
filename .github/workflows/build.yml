@@ -427,8 +427,19 @@ jobs:
         run: ls -R ./out || true
 
       - name: Write the release note
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          scripts/release_note.sh out "${{ env.TAG_NAME }}" "${{ github.repository }}" "${{ github.sha }}" "${{ env.CHANNEL }}" > release.md
+          # Assets already published on this tag, so the download table still
+          # lists a platform whose build leg did not run this time (e.g. macOS
+          # arm64 runner capacity) while its artifact remains downloadable.
+          if gh release view "${{ env.TAG_NAME }}" --json assets \
+               -q '.assets[] | [.name, .size] | @tsv' > existing_assets.tsv 2>/dev/null; then
+            :
+          else
+            : > existing_assets.tsv
+          fi
+          scripts/release_note.sh out "${{ env.TAG_NAME }}" "${{ github.repository }}" "${{ github.sha }}" "${{ env.CHANNEL }}" existing_assets.tsv > release.md
           cat release.md
 
       - name: Publish the release
