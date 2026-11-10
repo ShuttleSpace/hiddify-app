@@ -53,6 +53,11 @@ describe() {
     Hiddify-MacOS-Installer.pkg) echo "macOS · 安装包 (PKG)" ;;
     Hiddify-Windows-Portable-x64.zip) echo "Windows · 便携版 (ZIP)" ;;
     Hiddify-Windows-Setup-x64.exe) echo "Windows · 安装版 (EXE)" ;;
+    hiddifyctl-linux-amd64) echo "hiddifyctl · Linux x64 (CLI)" ;;
+    hiddifyctl-linux-arm64) echo "hiddifyctl · Linux ARM64 (CLI)" ;;
+    hiddifyctl-darwin-amd64) echo "hiddifyctl · macOS Intel (CLI)" ;;
+    hiddifyctl-darwin-arm64) echo "hiddifyctl · macOS Apple Silicon (CLI)" ;;
+    hiddifyctl-windows-amd64.exe) echo "hiddifyctl · Windows x64 (CLI)" ;;
     *) echo "$1" ;;
   esac
 }

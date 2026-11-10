@@ -56,6 +56,40 @@ jobs:
         run: echo "::set-output name=datetime::$(date +'%d.%H.%M')"
 
 
+  # hiddifyctl is a standalone, pure-Go CLI (tools/hiddifyctl, its own module).
+  # Build it for the desktop/server targets and publish the binaries on the same
+  # release as the app, in parallel with the Flutter build. CGO is off, so a plain
+  # Go cross-compile works on the ubuntu runner. Non-fatal: a CLI failure must not
+  # block shipping the app.
+  hiddifyctl:
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: tools/hiddifyctl
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: tools/hiddifyctl/go.mod
+          cache-dependency-path: tools/hiddifyctl/go.sum
+      - name: Cross-compile hiddifyctl
+        run: |
+          set -euo pipefail
+          cd tools/hiddifyctl
+          mkdir -p dist
+          GOOS=linux   GOARCH=amd64 go build -trimpath -o dist/hiddifyctl-linux-amd64 .
+          GOOS=linux   GOARCH=arm64 go build -trimpath -o dist/hiddifyctl-linux-arm64 .
+          GOOS=darwin  GOARCH=arm64 go build -trimpath -o dist/hiddifyctl-darwin-arm64 .
+          GOOS=darwin  GOARCH=amd64 go build -trimpath -o dist/hiddifyctl-darwin-amd64 .
+          GOOS=windows GOARCH=amd64 go build -trimpath -o dist/hiddifyctl-windows-amd64.exe .
+          ls -lh dist
+      - uses: actions/upload-artifact@v6
+        with:
+          name: hiddifyctl
+          path: tools/hiddifyctl/dist/*
+          retention-days: 30
+
+
   build:
     needs: test
     permissions: write-all
@@ -404,7 +438,7 @@ jobs:
   publish-release:
     permissions: write-all
     if: ${{ inputs.upload-artifact }}
-    needs: [build]
+    needs: [build, hiddifyctl]
     runs-on: ubuntu-latest
     steps:
       - name: checkout
