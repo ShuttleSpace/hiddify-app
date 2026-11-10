@@ -58,6 +58,8 @@ describe() {
     hiddifyctl-darwin-amd64) echo "hiddifyctl · macOS Intel (CLI)" ;;
     hiddifyctl-darwin-arm64) echo "hiddifyctl · macOS Apple Silicon (CLI)" ;;
     hiddifyctl-windows-amd64.exe) echo "hiddifyctl · Windows x64 (CLI)" ;;
+    Hiddify-OpenHarmony.hap) echo "OpenHarmony / HarmonyOS · HAP" ;;
+    Hiddify-OpenHarmony-Installer.app) echo "OpenHarmony / HarmonyOS · 安装包 (APP)" ;;
     *) echo "$1" ;;
   esac
 }
