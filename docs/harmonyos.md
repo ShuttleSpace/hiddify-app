@@ -37,6 +37,35 @@ cp ohos/entry/build/default/outputs/default/entry-default-signed.hap build/ohos/
 The `all-signed` variant exists because `app.buildModeSet[release].buildOption.packOptions.appWithSignedPkg`
 has to be `true` for hvigor to sign the inner HAPs as well.
 
+Verified on 5.5.5 (`flutter build app --release --build-name=5.5.5 --build-number=50505`):
+`ohos-default-all-signed.app` and `entry-default-signed.hap` build and pass
+`hap-sign-tool verify-app` ("Verify success").
+
+### Build gotchas
+
+- **SDK snapshot mismatch.** If `flutter --version` exits non-zero with
+  `Wrong full snapshot version, expected '…'`, the cached `flutter_tools.snapshot` is
+  stale relative to the bundled Dart SDK. Remove `bin/cache/flutter_tools.snapshot` and
+  `bin/cache/flutter_tools.stamp` (they are symlinks into the puro shared cache) and run
+  `flutter --version` once to recompile the tool against the current Dart SDK.
+- **`pub get` must use `PUB_HOSTED_URL=https://pub.dev` with the OHOS SDK.** The fork
+  defaults to `pub.flutter-io.cn`, which lacks `image_picker_ios` (in the lock, so pub
+  still fetches it), and `flutter build` re-runs `pub get`. Running the OHOS SDK's
+  `pub get` also regenerates `.flutter-plugins-dependencies` *with* the `ohos` platform
+  section — the hvigor Flutter plugin reads `.plugins.ohos.filter(...)` and throws
+  `Cannot read properties of undefined (reading 'filter')` if that key is absent (which
+  it is when the file was written by upstream Flutter). The committed `pubspec.lock` is
+  the upstream-Flutter resolution; the OHOS `pub get` rewrites it, so restore it after.
+- **`TargetPlatform.ohos`.** The OHOS Flutter SDK adds `TargetPlatform.ohos` to the
+  enum, so an exhaustive `switch (defaultTargetPlatform)` fails to compile under it
+  (`The type 'TargetPlatform' is not exhaustively matched … doesn't match
+  'TargetPlatform.ohos'`). A `TargetPlatform.ohos` case cannot be written, since that
+  value does not exist in upstream Flutter. Use a trailing wildcard `_ =>` for the
+  mobile default (android/fuchsia): it catches `ohos` on the OHOS fork and stays
+  exhaustive with no dead code on upstream. `PlatformUtils.isOhos`
+  (`Platform.operatingSystem == 'ohos'`) is the runtime check when the enum is not
+  needed.
+
 ## Signing
 
 Two signing configs live in `ohos/build-profile.json5`:

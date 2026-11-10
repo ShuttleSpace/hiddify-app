@@ -46,8 +46,11 @@ enum BuiltinRule {
     systemDirect => switch (defaultTargetPlatform) {
       TargetPlatform.iOS || TargetPlatform.macOS => t.pages.settings.routing.builtinRules.systemDirect.apple,
       TargetPlatform.windows => t.pages.settings.routing.builtinRules.systemDirect.microsoft,
-      TargetPlatform.android || TargetPlatform.fuchsia => t.pages.settings.routing.builtinRules.systemDirect.android,
       TargetPlatform.linux => t.pages.settings.routing.builtinRules.systemDirect.linux,
+      // Android, Fuchsia and OpenHarmony (TargetPlatform.ohos on the OHOS Flutter
+      // fork) share the mobile default; a wildcard keeps the switch exhaustive on
+      // both the upstream and the OHOS enum.
+      _ => t.pages.settings.routing.builtinRules.systemDirect.android,
     },
     blockAds => t.pages.settings.routing.builtinRules.blockAds,
     bypassRegion => t.pages.settings.routing.builtinRules.bypassRegion(region: region.presentName(t)),
@@ -111,12 +114,6 @@ enum BuiltinRule {
           'msedge.net',
         ],
       ),
-      // Google Play is left out: it refuses some countries' addresses, so it only works through the proxy there.
-      TargetPlatform.android || TargetPlatform.fuchsia => Rule(
-        outbound: Outbound.direct,
-        ruleSets: ['$_geositeUrl/geosite-android.srs', '$_geositeUrl/geosite-googlefcm.srs'],
-        domainSuffixes: ['android.com', 'mtalk.google.com'],
-      ),
       TargetPlatform.linux => Rule(
         outbound: Outbound.direct,
         ruleSets: [
@@ -133,6 +130,14 @@ enum BuiltinRule {
           'flathub.org',
           'snapcraft.io',
         ],
+      ),
+      // Android, Fuchsia and OpenHarmony (TargetPlatform.ohos on the OHOS Flutter
+      // fork) share the mobile default. Google Play is left out: it refuses some
+      // countries' addresses, so it only works through the proxy there.
+      _ => Rule(
+        outbound: Outbound.direct,
+        ruleSets: ['$_geositeUrl/geosite-android.srs', '$_geositeUrl/geosite-googlefcm.srs'],
+        domainSuffixes: ['android.com', 'mtalk.google.com'],
       ),
     },
     blockAds => Rule(
