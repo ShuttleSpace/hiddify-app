@@ -204,15 +204,87 @@ Three version constraints had to be worked around in `dependency_overrides`:
 adds a pod, so `ios/Podfile.lock` and `macos/Podfile.lock` need regenerating with
 `pod install` after a dependency change.
 
+## hiddify-core for OHOS
+
+The proxy control plane now builds and runs on OHOS (arm64). `hiddify-core` gained a
+`make ohos` target (committed on the `ohos-build` branch of ShuttleSpace/hiddify-core, and
+published as `hiddify-lib-ohos.tar.gz` on the core's `v5.5.5` release). It cross-compiles the
+c-shared library for the aarch64 OHOS ABI with the OpenHarmony clang + musl sysroot from DevEco
+Studio (`NAIVE=0`: there is no prebuilt libcronet for OHOS).
+
+```bash
+# in hiddify-core/
+OHOS_SDK=/Applications/DevEco-Studio.app/Contents/sdk/default/openharmony/native \
+  make ohos          # -> bin/lib/hiddify-core.so
+```
+
+On the app side:
+
+- `lib/hiddifycore/core_interface/core_interface_wrapper.dart` now returns `CoreInterfaceDesktop`
+  for OHOS, and `core_interface_desktop.dart`'s `_libraryPath()` opens `libhiddify-core.so`
+  (the OHOS name) — so the app drives the core over the same gRPC control plane as the desktop
+  build, with no system tunnel service.
+- The prebuilt library is fetched and dropped where the OHOS build packages it:
+
+  ```bash
+  ohos/scripts/fetch-core-lib.sh        # -> ohos/entry/libs/arm64-v8a/libhiddify-core.so
+  ```
+
+  It is git-ignored (a prebuilt native dependency, not source). The HAP build bundles it
+  automatically into `libs/arm64-v8a/libhiddify-core.so`.
+
+### This OHOS build is unsigned
+
+The published `hiddify-lib-ohos.tar.gz` is just the core library. The OHOS **app** HAP is signed
+with the local-debug keystore, so it installs only on OpenHarmony devices / the emulator — a real
+HarmonyOS phone refuses it because the profile and the signing certificate do not match AGC's.
+`ohos.permission.MANAGE_VPN` also keeps the package from installing on a stock HarmonyOS device
+without the VPN extension (see below).
+
+To produce a HAP that installs on a real HarmonyOS device, configure AppGallery Connect and sign
+with the AGC material:
+
+1. Put the AGC files in `ohos/secrets/` (the local-debug set is not enough):
+   `hiddify-app.p12` (keystore), `hiddify-app-agc.cer` (leaf-first cert chain) and
+   `hiddify-app-agc.p7b` (the provision profile — easy to forget; without it nothing installs).
+2. Switch the signing config to AGC and rebuild:
+
+   ```bash
+   bash ohos/signature/use-signing.sh default
+   flutter build app --release --build-name=5.5.5 --build-number=50505
+   ```
+
+3. Or re-sign an already-built HAP offline with the AGC material (chain order matters —
+   `sign-app` wants a 2-level app cert chain, `sign-profile` a 3-level profile chain):
+
+   ```bash
+   JAVA_HOME=/Applications/DevEco-Studio.app/Contents/jbr/Contents/Home
+   HAP_TOOL=/Applications/DevEco-Studio.app/Contents/sdk/default/openharmony/toolchains/lib/hap-sign-tool.jar
+   S=ohos/secrets
+   "$JAVA_HOME/bin/java" -jar "$HAP_TOOL" sign-app \
+     --mode localAgcSign \
+     --appCertFile "$S/hiddify-app-agc.cer" \
+     --appKeyFile "$S/hiddify-app.p12" \
+     --appKeyPwd <keystore-password> \
+     --profileFile "$S/hiddify-app-agc.p7b" \
+     --inFile  build/ohos/app/entry-default-unsigned.hap \
+     --outFile build/ohos/app/entry-default-signed.hap
+   ```
+
+   The keystore password is never stored on disk; `build-profile.json5` keeps it as ciphertext
+   that hvigor derives from `ohos/secrets/material/`. Regenerate the local chain with
+   `KEYSTORE_PASSWORD=… ohos/signature/sign-with-keystore.sh` (see "Signing").
+
 ## What is still missing
 
-- **`hiddify-core` has no OHOS build.** The Makefile in `hiddify-core/` only has desktop and
-  mobile targets, and the HAP ships only `libapp.so` and `libflutter.so`. `getCoreInterface()`
-  checks `Platform.isAndroid || Platform.isIOS`, which are both false on OHOS, so the app falls
-  through to `CoreInterfaceDesktop` and calls `DynamicLibrary.open("hiddify-core.so")` — a
-  file that is not there. **The proxy does not run on OHOS yet**, on phone or desktop.
-  Fixing it means building the core for OHOS `arm64` and `x86_64` and adding an ohos branch
-  to `lib/hiddifycore/core_interface/core_interface_wrapper.dart`.
+- **Tunnel / VPN does not work yet.** The core's gRPC control plane runs, but `ohos.permission.
+  MANAGE_VPN` is declared without an `extensionAbilities` entry of `type: "vpn"` or a
+  `VpnExtensionAbility`, so the app cannot open a tunnel on HarmonyOS. This is the real blocker
+  for usable proxying, independent of the core build.
+- **x86_64 / 2in1 (HarmonyOS PC) is not configured.** The core `make ohos` builds only arm64,
+  and `ohos/entry/src/main/module.json5` declares `deviceTypes: ["phone"]` only. The toolchain
+  supports an x86_64 HAP (`flutter build hap --target-platform ohos-x64`) and the API 26 schema
+  accepts the `2in1` / `pc` device types, but neither is wired up.
 - **No VPN extension ability.** `ohos.permission.MANAGE_VPN` is declared, but the app has
   no `extensionAbilities` entry of `type: "vpn"` and no `VpnExtensionAbility`, so it cannot
   open a tunnel yet. Note that the extension type in the API 26 schema is `vpn`; the

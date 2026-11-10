@@ -52,6 +52,10 @@ class CoreInterfaceDesktop extends CoreInterface with InfraLogger {
       fullPath = p.join(fullPath, "hiddify-core.dll");
     } else if (Platform.isMacOS) {
       fullPath = p.join(fullPath, "hiddify-core.dylib");
+    } else if (Platform.operatingSystem == 'ohos') {
+      // OpenHarmony/HarmonyOS bundles the core as libhiddify-core.so in
+      // entry/libs/arm64-v8a/, which the build packages into the HAP.
+      fullPath = "libhiddify-core.so";
     } else {
       fullPath = p.join(fullPath, "hiddify-core.so");
     }

@@ -18,6 +18,9 @@
 **/libs/**/libapp.so
 **/libs/**/libflutter.so
 **/libs/**/libvmservice_snapshot.so
+# Prebuilt hiddify-core for OHOS: produced by `make ohos` in hiddify-core, published as
+# hiddify-lib-ohos.tar.gz. Fetch it with ohos/scripts/fetch-core-lib.sh instead of committing.
+**/libs/**/libhiddify-core.so
 
 # 签名机密材料：私钥库、CSR、证书链、hvigor 密码 material（勿提交）
 /secrets

@@ -12,5 +12,8 @@ CoreInterface getCoreInterface() {
   }
   if (Platform.isMacOS) return CoreInterfaceMacOS();
   if (Platform.isWindows || Platform.isLinux) return CoreInterfaceDesktopTun();
+  // OpenHarmony/HarmonyOS: the core runs as a c-shared library loaded via FFI
+  // (no system tunnel service yet — the VPN extension is a separate TODO), so the
+  // desktop interface (gRPC control plane) is the right one.
   return CoreInterfaceDesktop();
 }
