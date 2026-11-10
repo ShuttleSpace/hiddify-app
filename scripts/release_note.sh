@@ -59,7 +59,7 @@ describe() {
     hiddifyctl-darwin-arm64) echo "hiddifyctl · macOS Apple Silicon (CLI)" ;;
     hiddifyctl-windows-amd64.exe) echo "hiddifyctl · Windows x64 (CLI)" ;;
     Hiddify-OpenHarmony.hap) echo "OpenHarmony / HarmonyOS · HAP" ;;
-    Hiddify-OpenHarmony-Installer.app) echo "OpenHarmony / HarmonyOS · 安装包 (APP)" ;;
+    Hiddify-OpenHarmony-Installer.zip) echo "OpenHarmony / HarmonyOS · 安装包 (ZIP)" ;;
     *) echo "$1" ;;
   esac
 }
@@ -90,10 +90,14 @@ echo "| 平台 | 文件 | 大小 |"
 echo "|---|---|---|"
 
 found=0
+ohos_listed=
 listed_names="$(mktemp)"
 add_row() {  # $1=name  $2=size_label
   echo "| $(describe "$1") | [\`$1\`](${download_base}/$1) | $2 |"
   echo "$1" >> "$listed_names"
+  case "$(describe "$1")" in
+    *OpenHarmony*) ohos_listed=1 ;;
+  esac
 }
 
 if [ -d "$out_dir" ]; then
@@ -122,6 +126,49 @@ rm -f "$listed_names"
 
 if [ "$found" -eq 0 ]; then
   echo "| — | *没有产物* | — |"
+fi
+
+# OpenHarmony / HarmonyOS：下载表里出现 OHOS 行时才补这段签名说明。
+if [ -n "${ohos_listed:-}" ]; then
+  echo
+  echo "## OpenHarmony / HarmonyOS 签名说明"
+  echo
+  echo "本发布的 \`Hiddify-OpenHarmony.hap\` / \`Hiddify-OpenHarmony-Installer.zip\` 是用本地自签名"
+  echo "keystore（local-debug）签的，**只能装 OpenHarmony 设备 / 模拟器**；真机 HarmonyOS 会因"
+  echo "profile 与 AGC 签名证书不匹配而拒装。核心库 \`hiddify-lib-ohos.tar.gz\` 发布在"
+  echo "[核心仓库的 v5.5.5](https://github.com/ShuttleSpace/hiddify-core/releases/tag/v5.5.5)。"
+  echo
+  echo "要装真机，按 \`docs/harmonyos.md\` 配置 AppGallery Connect 后用 AGC 材料重签（命令行）："
+  echo
+  echo '```bash'
+  echo '# 方式 A：切到 AGC 签名配置后用 hvigor 重建（推荐，自动签名）'
+  echo '# 需要 ohos/secrets/{hiddify-app.p12, hiddify-app-agc.cer, hiddify-app-agc.p7b}'
+  echo 'bash ohos/signature/use-signing.sh default'
+  echo 'flutter build app --release --build-name=5.5.5 --build-number=50505'
+  echo ''
+  echo '# 方式 B：离线对已有 unsigned HAP 用 AGC 材料重签'
+  echo 'JAVA_HOME=/Applications/DevEco-Studio.app/Contents/jbr/Contents/Home'
+  echo 'HAP_TOOL=/Applications/DevEco-Studio.app/Contents/sdk/default/openharmony/toolchains/lib/hap-sign-tool.jar'
+  echo 'S=ohos/secrets'
+  echo '"$JAVA_HOME/bin/java" -jar "$HAP_TOOL" sign-app \'
+  echo '  -mode localSign \'
+  echo '  -keyAlias "hiddify-app" \'
+  echo '  -signAlg SHA256withECDSA \'
+  echo '  -appCertFile "$S/hiddify-app-agc.cer" \'
+  echo '  -profileFile "$S/hiddify-app-agc.p7b" \'
+  echo '  -keystoreFile "$S/hiddify-app.p12" \'
+  echo '  -keystorePwd "<keystore 明文口令>" \'
+  echo '  -keyPwd      "<key 明文口令>" \'
+  echo '  -inFile  ohos/entry/build/default/outputs/default/entry-default-unsigned.hap \'
+  echo '  -outFile build/ohos/app/entry-default-signed.hap \'
+  echo '  -signCode 1'
+  echo '```'
+  echo
+  echo '> `-appCertFile` 要 leaf 在前的证书链、`sign-app` 至少 2 级；AGC 下载顺序相反，用前需反转。'
+  echo '> 私钥仍在本地 `hiddify-app.p12`，口令走 `-keystorePwd/-keyPwd`（或用 `sign-with-keystore.sh` 派生到 hvigor）。'
+  echo
+  echo "> 注：核心的 gRPC 控制面能在 OHOS 上运行，但**隧道/VPN 尚未实现**（缺少"
+  echo "> \`type: \"vpn\"\` 的 extension ability），所以现在还不能真正转发流量。"
 fi
 
 echo

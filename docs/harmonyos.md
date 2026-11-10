@@ -254,22 +254,31 @@ with the AGC material:
    flutter build app --release --build-name=5.5.5 --build-number=50505
    ```
 
-3. Or re-sign an already-built HAP offline with the AGC material (chain order matters —
-   `sign-app` wants a 2-level app cert chain, `sign-profile` a 3-level profile chain):
+3. Or re-sign an already-built HAP offline with the AGC material. `hap-sign-tool` uses
+   single-dash options and the `localSign` mode (the private key stays in the local `.p12`;
+   the AGC `.cer` / `.p7b` carry the signed cert chain and profile):
 
    ```bash
    JAVA_HOME=/Applications/DevEco-Studio.app/Contents/jbr/Contents/Home
    HAP_TOOL=/Applications/DevEco-Studio.app/Contents/sdk/default/openharmony/toolchains/lib/hap-sign-tool.jar
    S=ohos/secrets
    "$JAVA_HOME/bin/java" -jar "$HAP_TOOL" sign-app \
-     --mode localAgcSign \
-     --appCertFile "$S/hiddify-app-agc.cer" \
-     --appKeyFile "$S/hiddify-app.p12" \
-     --appKeyPwd <keystore-password> \
-     --profileFile "$S/hiddify-app-agc.p7b" \
-     --inFile  build/ohos/app/entry-default-unsigned.hap \
-     --outFile build/ohos/app/entry-default-signed.hap
+     -mode localSign \
+     -keyAlias "hiddify-app" \
+     -signAlg SHA256withECDSA \
+     -appCertFile "$S/hiddify-app-agc.cer" \
+     -profileFile "$S/hiddify-app-agc.p7b" \
+     -keystoreFile "$S/hiddify-app.p12" \
+     -keystorePwd "<keystore plaintext password>" \
+     -keyPwd      "<key plaintext password>" \
+     -inFile  ohos/entry/build/default/outputs/default/entry-default-unsigned.hap \
+     -outFile build/ohos/app/entry-default-signed.hap \
+     -signCode 1
    ```
+
+   `-appCertFile` must be a chain (leaf first, at least two certificates); AGC's download is
+   root-first, so reverse it before use. `sign-profile` (used by `sign-with-keystore.sh`) needs
+   a three-level chain for `-profileCertFile`.
 
    The keystore password is never stored on disk; `build-profile.json5` keeps it as ciphertext
    that hvigor derives from `ohos/secrets/material/`. Regenerate the local chain with
