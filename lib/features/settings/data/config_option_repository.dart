@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dartx/dartx.dart';
 import 'package:flutter/foundation.dart';
@@ -626,7 +627,12 @@ abstract class ConfigOptions {
       enableTproxyPort: ref.watch(enableTproxyPort),
       enableDirectPort: ref.watch(enableDirectPort),
       enableRedirectPort: ref.watch(enableRedirectPort),
-      tunImplementation: ref.watch(tunImplementation),
+      // OHOS hands the core a foreign descriptor (the vNIC of the VPN
+      // extension), so the tun has to be the userspace "go" stack: the system and
+      // mixed stacks drive a kernel TUN device and cannot work on it.
+      tunImplementation: Platform.operatingSystem == 'ohos'
+          ? TunImplementation.sing15
+          : ref.watch(tunImplementation),
       mtu: ref.watch(mtu),
       strictRoute: ref.watch(strictRoute),
       connectionTestUrl: ref.watch(connectionTestUrl),

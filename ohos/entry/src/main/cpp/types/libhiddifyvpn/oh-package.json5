@@ -1,0 +1,6 @@
+{
+  "name": "libhiddifyvpn.so",
+  "types": "./index.d.ts",
+  "version": "1.0.0",
+  "description": "Relays the OHOS VPN vNIC file descriptor from the extension process to the app process."
+}

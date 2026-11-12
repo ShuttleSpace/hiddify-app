@@ -2,6 +2,12 @@
 {
   "apiType": 'stageMode',
   "buildOption": {
+    "externalNativeOptions": {
+      // VPN tun fd 中转（SCM_RIGHTS）：扩展进程 → 主进程，见 src/main/cpp/vpn_fd_relay.cpp。
+      "path": "./src/main/cpp/CMakeLists.txt",
+      "arguments": "",
+      "cppFlags": "",
+    }
   },
   "targets": [
     {

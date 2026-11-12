@@ -1824,6 +1824,13 @@ class HiddifyCoreNativeLibrary {
       _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>)>>('StartCoreGrpcServer');
   late final _StartCoreGrpcServer =
       _StartCoreGrpcServerPtr.asFunction<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>)>();
+
+  void SetupTun(int fd) {
+    return _SetupTun(fd);
+  }
+
+  late final _SetupTunPtr = _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int)>>('SetupTun');
+  late final _SetupTun = _SetupTunPtr.asFunction<void Function(int)>();
 }
 
 final class __mbstate_t extends ffi.Union {

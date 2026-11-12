@@ -33,10 +33,23 @@
         ]
       }
     ],
+    "extensionAbilities": [
+      {
+        "name": "HiddifyVpnExtension",
+        "srcEntry": "./ets/entryability/VpnExtensionAbility.ets",
+        "type": "vpn",
+        // 注意（实测，2026-11-11）：VPN 扩展**一定**在另一个进程里，而且那个进程在
+        // 另一个 SELinux 域（vpn_isolate_hap）。extensionProcessMode 的 schema 对
+        // type:"vpn" 只允许 instance|type|bundle，"bundle" 也不会并入主进程；只有
+        // statusBarView 才允许 runWithMainProcess。因此 vNIC fd 无法交给主进程，
+        // 详见 docs/superpowers/plans/2026-11-10-ohos-vpn-spike-results.md。
+        "extensionProcessMode": "bundle",
+        "exported": true
+      }
+    ],
     "requestPermissions": [
       { "name": "ohos.permission.INTERNET" },
       // VPN 隧道：鸿蒙上只能靠 VPN 扩展能力建隧道。
-      // 配套的 extensionAbilities(type: vpn) 还没实现，见 docs 里 TODO。
       { "name": "ohos.permission.MANAGE_VPN" },
       // 流量统计：受限 ACL 权限，需要在 AGC「ACL 权限」页签单独申请通过后，
       // 再把 profile 里的 acls.allowed-acls 带上它。
