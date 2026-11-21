@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import random
 import re
 import sys
@@ -71,7 +72,8 @@ CHANGELOG_MARKER = "<!-- CHANGELOG -->"
 CHANGELOG_FILE = Path(__file__).resolve().parents[1] / "release_changelog.md"
 TABLE_BEGIN = "<!-- ASSETS:BEGIN -->"
 TABLE_END = "<!-- ASSETS:END -->"
-REPO = "hiddify/hiddify-app"
+# the fork publishes its own releases: its links must not point at upstream's
+REPO = os.environ.get("GITHUB_REPOSITORY", "hiddify/hiddify-app")
 
 
 def sha256_file(path: Path) -> str:
