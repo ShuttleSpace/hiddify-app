@@ -100,7 +100,7 @@ jobs:
         run: make windows-validate
 
       - name: Sign the Release tree
-        if: inputs.release
+        if: inputs.release && env.WINDOWS_SIGN_BACKEND != ''
         env: *signing-env
         run: |
           & .\windows\scripts\sign_windows_artifacts.ps1 -Path build\windows\x64\runner\Release
@@ -122,7 +122,7 @@ jobs:
       # Signs Setup.exe / MSIX and the PE files inside the portable zip. Skips files that already
       # verify as signed (MSVC runtimes; pre-signed Release PE).
       - name: Sign the packages
-        if: inputs.release
+        if: inputs.release && env.WINDOWS_SIGN_BACKEND != ''
         env: *signing-env
         run: |
           & .\windows\scripts\sign_windows_artifacts.ps1 -Path dist
