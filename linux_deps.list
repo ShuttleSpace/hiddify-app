@@ -24,6 +24,10 @@ locate squashfs-tools
 # tray_manager https://pub.dev/packages/tray_manager
 libayatana-appindicator3-dev
 
+# hotkey_manager https://github.com/leanflutter/hotkey_manager#linux-requirements
+# it links keybinder-3.0, which the deb and rpm name below
+libkeybinder-3.0-dev
+
 # for running .appimage
 fuse
 

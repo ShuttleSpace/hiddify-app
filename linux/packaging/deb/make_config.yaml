@@ -11,6 +11,8 @@ essential: false
 # VPN mode asks for the administrator password once, through pkexec (policykit-1 on older releases)
 dependencies:
   - pkexec | policykit-1
+  # the global hotkey plugin links it
+  - libkeybinder-3.0-0
 icon: assets/images/source/ic_launcher_border.png
 
 # Matches the GTK application id (linux/CMakeLists.txt), so the window gets the launcher's icon

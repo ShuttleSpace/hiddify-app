@@ -27,6 +27,8 @@ generic_name: Hiddify
 requires:
   # VPN mode asks for the administrator password once, through pkexec
   - polkit
+  # the global hotkey plugin links keybinder-3.0, which Fedora calls keybinder3
+  - keybinder3
 
 categories:
   - Network
