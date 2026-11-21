@@ -92,8 +92,6 @@ object PlatformInterfaceBridge : PlatformInterface {
         platform().cancelNotification(identifier, typeID)
     }
 
-    override fun writeLog(message: String) = platform().writeLog(message)
-
     // the rest of the core's platform interface (neighbor monitor, shell, bridge, auto redirect):
     // the wrapper answers "not supported", so the bridge only has to ask it
     override fun startNeighborMonitor(listener: NeighborUpdateListener?) =
