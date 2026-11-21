@@ -33,6 +33,10 @@ env:
   # The Makefile uses the POSIX rm of the runner instead of cmd's rmdir.
   IS_GITHUB_ACTIONS: 1
 
+  # the two backends of configure_windows_signing.ps1; empty - the build stays unsigned
+  AZURE_SIGNING_ACCOUNT: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
+  WINDOWS_SIGNING_KEY: ${{ secrets.WINDOWS_SIGNING_KEY }}
+
 jobs:
   build:
     name: windows-x64
@@ -54,7 +58,7 @@ jobs:
           generated-code: true
 
       - name: Configure code signing
-        if: inputs.release
+        if: inputs.release && (env.AZURE_SIGNING_ACCOUNT != '' || env.WINDOWS_SIGNING_KEY != '')
         env:
           AZURE_SIGNING_ENDPOINT: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
           AZURE_SIGNING_ACCOUNT: ${{ secrets.AZURE_SIGNING_ACCOUNT }}

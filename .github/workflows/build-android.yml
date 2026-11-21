@@ -38,6 +38,9 @@ env:
   SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
   # empty without the fork's Sentry project: the symbol upload then skips itself
   SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+  # empty without the fork's keystore: the release build is then signed with the debug key,
+  # which installs everywhere (a garbage key.jks failed the packaging step instead)
+  ANDROID_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY }}
 
 jobs:
   build:
@@ -82,7 +85,7 @@ jobs:
           generated-code: ${{ inputs.generated-code }}
 
       - name: Set up the signing key
-        if: inputs.release
+        if: inputs.release && env.ANDROID_SIGNING_KEY != ''
         env:
           SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY }}
           STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
