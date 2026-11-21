@@ -114,8 +114,9 @@ jobs:
         env: *signing-env
         run: make windows-exe-release
 
+      # the MSIX packaging tool refuses to pack without the certificate the Store build signs with
       - name: Package the MSIX
-        if: inputs.release
+        if: inputs.release && env.WINDOWS_SIGN_BACKEND != ''
         env: *signing-env
         run: make windows-msix-release
 
