@@ -81,5 +81,7 @@ object PlatformInterfaceBridge : PlatformInterface {
     override fun usePlatformAutoDetectInterfaceControl(): Boolean =
         platform().usePlatformAutoDetectInterfaceControl()
 
-    override fun useProcFS(): Boolean = platform().useProcFS()
+    override fun cancelNotification(identifier: String, typeID: Int) {
+        platform().cancelNotification(identifier, typeID)
+    }
 }
