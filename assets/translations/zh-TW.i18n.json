@@ -93,7 +93,8 @@
       "autoSave": {
         "success": "更改已自動儲存"
       }
-    }
+    },
+    "scanQr": "掃描 QR Code"
   },
   "intro": {
     "banner": "暢享無限制網路的所需一切",
@@ -294,7 +295,10 @@
           "expired": "電視已不再接受此代碼的連結。請在電視上重新開啟新增設定檔畫面，並掃描新的代碼。",
           "busy": "電視上等待中的連結太多。請先在電視上匯入或捨棄，然後再試一次。",
           "unreachable": "無法連到電視。請確認手機和電視連線到同一個 Wi-Fi 網路。"
-        }
+        },
+        "urlToClipboard": "URL 到剪貼簿",
+        "showUrlQr": "顯示 URL QR Code",
+        "jsonToClipboard": "JSON 到剪貼簿"
       },
       "msg": {
         "save": {
@@ -312,7 +316,8 @@
             "one": "已更新 $count 個設定檔",
             "other": "已更新 $count 個設定檔"
           },
-          "bulkPartial": "${success} 個已更新\n${failed} 個失敗：${names}"
+          "bulkPartial": "${success} 個已更新\n${failed} 個失敗：${names}",
+          "successNamed": "「${name}」更新成功"
         },
         "delete": {
           "success": "設定檔已刪除",
@@ -358,7 +363,18 @@
         "adminPreferenceAskEachTime": "每次詢問",
         "adminPreferencePreferAdmin": "一律使用管理員權限",
         "adminPreferencePreferNoAdmin": "一律不使用管理員權限繼續",
-        "adminPreferenceReset": "每次詢問是否使用管理員權限"
+        "adminPreferenceReset": "每次詢問是否使用管理員權限",
+        "customProxy": "自訂代理",
+        "server": "伺服器",
+        "serverHint": "proxy.example.com",
+        "port": "連接埠",
+        "protocol": "協定",
+        "credentialsOptional": "僅當代理需要時填寫",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {
@@ -382,7 +398,9 @@
       "buffer": "緩衝區",
       "diagnostics": "診斷報告",
       "diagnosticsMsg": "當機報告、日誌和您的設定（不含伺服器和密碼），打包為一個 zip",
-      "fullReport": "完整報告"
+      "fullReport": "完整報告",
+      "shareCoreLogs": "分享核心日誌",
+      "shareAppLogs": "分享應用程式日誌"
     },
     "about": {
       "title": "關於",
@@ -446,7 +464,12 @@
         "useSystemTlsEngineMsg": "沒有 TLS 指紋的連線，會在系統 TLS 通過此裝置上的檢查後，使用 macOS、iOS 或 Windows 的 TLS；否則看起來會像 Chrome。",
         "uploadTestSize": "上傳測試大小",
         "megabytes": "$n MB",
-        "speedTest": "測速"
+        "speedTest": "測速",
+        "useXrayCoreWhenPossible": "盡可能使用 xray-core",
+        "useXrayCoreWhenPossibleMsg": "解析訂閱連結時使用 xray-core。您需要重新匯入訂閱連結才能啟用此選項",
+        "debugMode": "偵錯模式",
+        "debugModeMsg": "重新啟動應用程式以套用此變更",
+        "logLevel": "日誌級別"
       },
       "routing": {
         "title": "路由",
@@ -524,14 +547,17 @@
               "stun": "STUN",
               "dns": "DNS",
               "bittorrent": "BitTorrent"
-            }
+            },
+            "notAvailabeInThisPlatform": "在此平台上不可用"
           },
           "genericList": {
             "addNew": "新增值",
             "update": "更新值",
             "clearList": "清除清單",
             "clearListMsg": "所有項目將被刪除"
-          }
+          },
+          "empty": "尚未新增規則\n\n點擊 + 按鈕建立新規則，或從預設規則中選擇",
+          "create": "建立新規則"
         },
         "builtinRules": {
           "tag": "內建",
@@ -656,7 +682,106 @@
           "preferIpv6": "IPv6 優先",
           "ipv4OnlyDescription": "應用程式只使用 IPv4。IPv6 會立即被拒絕。",
           "preferIpv4Description": "IPv4 優先。僅在確認支援 IPv6 的代理上使用 IPv6。",
-          "preferIpv6Description": "IPv6 優先，僅在確認支援 IPv6 的代理上使用。"
+          "preferIpv6Description": "IPv6 優先，僅在確認支援 IPv6 的代理上使用。",
+          "disable": "關閉",
+          "enable": "開啟",
+          "prefer": "首選",
+          "only": "僅"
+        },
+        "generalOptions": {
+          "title": "路由一般選項",
+          "region": "地區",
+          "regions": {
+            "ir": "伊朗 (ir)",
+            "cn": "中國 (cn)",
+            "ru": "俄羅斯 (ru)",
+            "af": "阿富汗 (af)",
+            "id": "印尼 (id)",
+            "tr": "土耳其 (tr)",
+            "br": "巴西 (br)",
+            "other": "其他"
+          },
+          "balancerStrategy": {
+            "title": "Balancer 策略",
+            "roundRobin": "Round Robin",
+            "consistentHash": "Consistent Hash",
+            "stickySession": "Sticky Session"
+          },
+          "resolveDestination": "解析目的地",
+          "ipv6Route": "IPv6 路由",
+          "ipv6Modes": {
+            "disable": "停用",
+            "enable": "啟用",
+            "prefer": "首選",
+            "only": "僅"
+          },
+          "perAppProxy": {
+            "title": "依應用程式代理",
+            "hideSysApps": "隱藏系統應用程式",
+            "selectAll": "Select all",
+            "deselectAll": "Deselect all",
+            "options": {
+              "import": {
+                "clipboard": "從剪貼簿匯入選擇",
+                "file": "從檔案匯入選擇",
+                "msg": "匯入將取代您目前的選擇。確定要繼續嗎？"
+              },
+              "export": {
+                "clipboard": "複製選擇到剪貼簿",
+                "file": "匯出選擇到檔案"
+              },
+              "shareToAll": "分享給所有人",
+              "clearAllSelections": "清除所有選擇"
+            },
+            "modes": {
+              "all": "全部",
+              "proxy": "代理",
+              "bypass": "繞過",
+              "allMsg": "代理所有應用程式",
+              "proxyMsg": "僅代理選定應用程式",
+              "bypassMsg": "不代理選定應用程式"
+            },
+            "autoSelection": {
+              "title": "自動選擇",
+              "performNow": "立即執行",
+              "resetToDefault": "重設為預設",
+              "autoUpdateInterval": "自動更新間隔",
+              "toast": {
+                "success": "自動選擇應用程式成功完成",
+                "failure": "自動選擇失敗",
+                "regionNotFound": "未找到「${region}」地區的自動選擇",
+                "alreadyInAuto": "您的選擇已在自動清單中"
+              },
+              "dialog": {
+                "title": "自動選擇應用程式",
+                "msg": "由於地區更改為「${region}」，依應用程式代理的自動選擇功能已被停用"
+              }
+            },
+            "filters": {
+              "all": "全部",
+              "system": "系統應用",
+              "nonSystem": "非系統應用",
+              "internet": "有網路權限",
+              "noInternet": "無網路權限"
+            },
+            "summary": {
+              "active": "$n 個生效",
+              "user": "$n 個使用者選擇",
+              "auto": "$n 個自動選擇",
+              "forced": "$n 個強制排除"
+            }
+          }
+        },
+        "predefinedRules": {
+          "title": "預設規則",
+          "ads": {
+            "name": "攔截廣告",
+            "description": ""
+          },
+          "bypassLan": {
+            "name": "繞過區域網路",
+            "description": ""
+          }
         }
       },
       "dns": {
@@ -719,7 +844,12 @@
         "lanGroup": "區域網路分享",
         "lanSharingPort": "分享連接埠",
         "otherPorts": "其他連接埠",
-        "closedInVpnLocal": "VPN 模式下關閉"
+        "closedInVpnLocal": "VPN 模式下關閉",
+        "lanQrSubtitle": "適用於此 Wi-Fi 的 SOCKS5 代理",
+        "lanIPError": "取得本機 IP 位址失敗",
+        "lanSharingPasswordNotSet": "密碼未設定",
+        "lanSharingPassword": "VPN 共享密碼",
+        "copyLink": "複製連結"
       },
       "tlsTricks": {
         "title": "TLS 技巧",
@@ -923,7 +1053,12 @@
       "openWebPage": "開啟網頁",
       "support": "支援",
       "openLinkTitle": "開啟此連結？",
-      "openLinkAction": "開啟"
+      "openLinkAction": "開啟",
+      "remainingTime": "剩餘時間",
+      "remainingDurationNew": "${duration} 天",
+      "remainingUsage": "剩餘",
+      "profileSite": "提供商",
+      "profileSupport": "支援"
     }
   },
   "dialogs": {
@@ -990,6 +1125,15 @@
       "importRouteRuleByDeepLinkWarning": {
         "title": "匯入路由規則？",
         "message": "路由規則決定您的流量走向。\n請僅從您信任的來源匯入。"
+      },
+      "perAppProxy": {
+        "shareOnGithub": {
+          "title": "改進自動選擇",
+          "msg": "透過分享您選擇的應用程式，可以幫助完善「自動選擇」清單"
+        },
+        "import": {
+          "msg": "這將取代您目前所有的依應用程式代理選擇。您確定要繼續嗎？"
+        }
       }
     },
     "adminBgService": {
@@ -1041,7 +1185,10 @@
             "會忽略系統代理的應用程式，例如 Telegram、許多遊戲和部分更新工具，不會受到保護。",
             "如果它們無法運作，請改用 VPN 模式。"
           ]
-        }
+        },
+        "msg": "VPN 模式需要一次性的管理員權限來安裝 Hiddify 背景服務。之後無需再次授權即可連線。",
+        "connectWithAdmin": "使用管理員權限連線",
+        "stop": "停止"
       },
       "proxyNeedsAdmin": {
         "title": "建議使用管理員權限",
@@ -1075,7 +1222,9 @@
       "avoidIfUnsure": "如果您無法完全確定，請勿付款或分享敏感資訊",
       "ownResponsibility": "繼續操作的風險由您自行承擔",
       "open": "開啟",
-      "openIn": "開啟 (${seconds})"
+      "openIn": "開啟 (${seconds})",
+      "youAreAboutToVisit": "您即將造訪：",
+      "thisWebsiteIsNotInOurTrustedList": "此網站不在我們的信任清單中。請謹慎操作。"
     },
     "proxyInfo": {
       "fullTag": "完整標籤",
@@ -1219,7 +1368,8 @@
       "quickHelp": "這是做什麼的？",
       "quickFirst": "先測試上次最快的",
       "quickStop": "當其餘的先前較慢時，就停止測試",
-      "quickNew": "新的代理，以及一天沒測試的代理，一律會測試"
+      "quickNew": "新的代理，以及一天沒測試的代理，一律會測試",
+      "description": "此設定檔包含 $count 個代理。全部執行會消耗電量、流量和記憶體。Hiddify 可以先測試一次,只保留最快的 $keep 個執行,暫停其餘代理。"
     },
     "keepTags": {
       "title": "選擇代理",

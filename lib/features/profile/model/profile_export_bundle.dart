@@ -33,8 +33,6 @@ class ProfileExportBundle {
           'download': info.download,
           'total': info.total,
           'expire': info.expire.toIso8601String(),
-          'webPageUrl': info.webPageUrl,
-          'supportUrl': info.supportUrl,
         },
     },
     'config': config,
@@ -54,8 +52,6 @@ class ProfileExportBundle {
           download: subscription['download'] as int,
           total: subscription['total'] as int,
           expire: DateTime.parse(subscription['expire'] as String),
-          webPageUrl: subscription['webPageUrl'] as String?,
-          supportUrl: subscription['supportUrl'] as String?,
         );
       }
       return ProfileExportBundle(

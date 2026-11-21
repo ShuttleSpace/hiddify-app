@@ -347,11 +347,6 @@ class KeepTagsDialog extends HookConsumerWidget {
       }
     }
 
-    bool beingPinged(String tag) => switch (pinging.value[tag]) {
-      final asked? => live[tag]?.urlTestTime.seconds.toInt() == asked,
-      _ => false,
-    };
-
     // a speed test sends megabytes through each: the speed test dialog says how much first
     Future<void> speedTest() async {
       final target = await ref
@@ -595,7 +590,6 @@ class KeepTagsDialog extends HookConsumerWidget {
                                       checked: selected.value.contains(tag),
                                       paused: paused(tag),
                                       live: live.containsKey(tag),
-                                      testing: beingPinged(tag),
                                       onTap: () => toggle(tag),
                                     );
                                   },
@@ -790,16 +784,12 @@ class _PickRow extends StatelessWidget {
     required this.checked,
     required this.paused,
     required this.live,
-    this.testing = false,
     required this.onTap,
   });
 
   final OutboundInfo proxy;
   final bool checked;
   final bool paused;
-
-  /// A ping asked for is on its way.
-  final bool testing;
 
   /// The core runs it: its ping is or will be known.
   final bool live;
@@ -837,7 +827,6 @@ class _PickRow extends StatelessWidget {
               testable: false,
               // one at rest with no ping known waits for none
               showPing: live && !(proxy.resting && last == 0),
-              testing: testing,
             ),
           ),
         ),

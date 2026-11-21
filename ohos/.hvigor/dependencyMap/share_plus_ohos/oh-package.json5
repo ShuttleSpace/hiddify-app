@@ -1,0 +1,1 @@
+{"name":"share_plus_ohos","version":"1.0.0","description":"HarmonyOS system share plugin for share_plus (Share Kit).","main":"index.ets","author":"TsinbeiLabs","license":"Apache-2.0","dependencies":{"@ohos/flutter_ohos":"file:./har/flutter.har"}}

@@ -93,7 +93,8 @@
       "autoSave": {
         "success": "Cambios guardados automáticamente"
       }
-    }
+    },
+    "scanQr": "Escanear QR"
   },
   "intro": {
     "banner": "Todo lo que necesitas para un internet sin restricciones",
@@ -294,7 +295,10 @@
           "expired": "El televisor ya no acepta enlaces con este código. Abre de nuevo la pantalla de añadir perfil en el televisor y escanea el código nuevo.",
           "busy": "El televisor tiene demasiados enlaces en espera. Impórtalos o descártalos en el televisor y vuelve a intentarlo.",
           "unreachable": "No se pudo conectar con el televisor. Comprueba que el teléfono y el televisor estén en la misma red Wi-Fi."
-        }
+        },
+        "urlToClipboard": "URL al portapapeles",
+        "showUrlQr": "Mostrar QR de la URL",
+        "jsonToClipboard": "JSON al portapapeles"
       },
       "msg": {
         "save": {
@@ -312,7 +316,8 @@
             "one": "$count perfil actualizado",
             "other": "$count perfiles actualizados"
           },
-          "bulkPartial": "${success} actualizados\n${failed} fallidos: ${names}"
+          "bulkPartial": "${success} actualizados\n${failed} fallidos: ${names}",
+          "successNamed": "\"${name}\" actualizado con éxito"
         },
         "delete": {
           "success": "Perfil eliminado",
@@ -358,7 +363,18 @@
         "adminPreferenceAskEachTime": "Preguntar cada vez",
         "adminPreferencePreferAdmin": "Usar siempre el permiso de administrador",
         "adminPreferencePreferNoAdmin": "Continuar siempre sin permiso de administrador",
-        "adminPreferenceReset": "Preguntar cada vez por el permiso de administrador"
+        "adminPreferenceReset": "Preguntar cada vez por el permiso de administrador",
+        "customProxy": "Custom proxy",
+        "server": "Server",
+        "serverHint": "proxy.example.com",
+        "port": "Port",
+        "protocol": "Protocol",
+        "credentialsOptional": "Only if the proxy asks for them",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {
@@ -382,7 +398,9 @@
       "buffer": "Búfer",
       "diagnostics": "Informe de diagnóstico",
       "diagnosticsMsg": "Informes de fallos, registros y tus ajustes sin servidores ni contraseñas, en un solo zip",
-      "fullReport": "Informe completo"
+      "fullReport": "Informe completo",
+      "shareCoreLogs": "Compartir registros del núcleo",
+      "shareAppLogs": "Compartir registros de la aplicación"
     },
     "about": {
       "title": "Acerca de",
@@ -446,7 +464,12 @@
         "useSystemTlsEngineMsg": "Las conexiones sin huella TLS usan el TLS de macOS, iOS o Windows una vez que supera una comprobación en este dispositivo; de lo contrario, se parecen a Chrome.",
         "uploadTestSize": "Tamaño de la prueba de subida",
         "megabytes": "$n MB",
-        "speedTest": "Prueba de velocidad"
+        "speedTest": "Prueba de velocidad",
+        "useXrayCoreWhenPossible": "Usar xray-core cuando sea posible",
+        "useXrayCoreWhenPossibleMsg": "Usa xray-core al analizar enlaces de suscripción. Necesitas reimportar el enlace para habilitar esta opción",
+        "debugMode": "Modo de depuración",
+        "debugModeMsg": "Reinicia la aplicación para aplicar este cambio",
+        "logLevel": "Nivel de registro"
       },
       "routing": {
         "title": "Enrutamiento",
@@ -524,14 +547,17 @@
               "stun": "STUN",
               "dns": "DNS",
               "bittorrent": "BitTorrent"
-            }
+            },
+            "notAvailabeInThisPlatform": "No disponible en esta plataforma"
           },
           "genericList": {
             "addNew": "Añadir nuevo valor",
             "update": "Actualizar valor",
             "clearList": "Limpiar lista",
             "clearListMsg": "Se eliminarán todos los elementos"
-          }
+          },
+          "empty": "No se han añadido reglas todavía\n\nToca el botón + para crear una nueva regla o elige de las reglas predefinidas",
+          "create": "Crear nueva regla"
         },
         "builtinRules": {
           "tag": "Integrada",
@@ -656,7 +682,106 @@
           "preferIpv6": "IPv6 primero",
           "ipv4OnlyDescription": "Las apps usan solo IPv4. IPv6 se rechaza al instante.",
           "preferIpv4Description": "Primero IPv4. IPv6 solo a través de un proxy comprobado que lo admite.",
-          "preferIpv6Description": "Primero IPv6, solo a través de un proxy comprobado que lo admite."
+          "preferIpv6Description": "Primero IPv6, solo a través de un proxy comprobado que lo admite.",
+          "disable": "Desactivado",
+          "enable": "Activado",
+          "prefer": "Preferido",
+          "only": "Exclusivo"
+        },
+        "generalOptions": {
+          "title": "Opciones generales de enrutamiento",
+          "region": "Región",
+          "regions": {
+            "ir": "Irán (ir)",
+            "cn": "China (cn)",
+            "ru": "Rusia (ru)",
+            "af": "Afganistán (af)",
+            "id": "Indonesia (id)",
+            "tr": "Turquía (tr)",
+            "br": "Brasil (br)",
+            "other": "Otro"
+          },
+          "balancerStrategy": {
+            "title": "Estrategia de Balancer",
+            "roundRobin": "Round robin",
+            "consistentHash": "Consistent hash",
+            "stickySession": "Sticky session"
+          },
+          "resolveDestination": "Resolver destino",
+          "ipv6Route": "Ruta IPv6",
+          "ipv6Modes": {
+            "disable": "Desactivar",
+            "enable": "Activar",
+            "prefer": "Preferido",
+            "only": "Exclusivo"
+          },
+          "perAppProxy": {
+            "title": "Proxy por aplicación",
+            "hideSysApps": "Ocultar aplicaciones del sistema",
+            "selectAll": "Select all",
+            "deselectAll": "Deselect all",
+            "options": {
+              "import": {
+                "clipboard": "Importar selección desde el portapapeles",
+                "file": "Importar selección desde un archivo",
+                "msg": "La importación reemplazará tus selecciones actuales. ¿Estás seguro de que quieres continuar?"
+              },
+              "export": {
+                "clipboard": "Copiar selección al portapapeles",
+                "file": "Exportar selección a un archivo"
+              },
+              "shareToAll": "Compartir con todos",
+              "clearAllSelections": "Borrar todas las selecciones"
+            },
+            "modes": {
+              "all": "Todo",
+              "proxy": "Proxy",
+              "bypass": "Omitir",
+              "allMsg": "Usar proxy en todas las aplicaciones",
+              "proxyMsg": "Usar proxy solo en aplicaciones seleccionadas",
+              "bypassMsg": "No usar proxy en aplicaciones seleccionadas"
+            },
+            "autoSelection": {
+              "title": "Selección automática",
+              "performNow": "Ejecutar ahora",
+              "resetToDefault": "Restablecer por defecto",
+              "autoUpdateInterval": "Intervalo de actualización automática",
+              "toast": {
+                "success": "Selección automática de aplicaciones completada con éxito",
+                "failure": "Fallo en la selección automática",
+                "regionNotFound": "No se encontró selección automática para la región \"${region}\"",
+                "alreadyInAuto": "Tus selecciones ya están en la lista automática"
+              },
+              "dialog": {
+                "title": "Selección automática de aplicaciones",
+                "msg": "La función de selección automática para el proxy por aplicación se ha desactivado debido al cambio de región a \"${region}\""
+              }
+            },
+            "filters": {
+              "all": "Todos",
+              "system": "Sistema",
+              "nonSystem": "No sistema",
+              "internet": "Con permiso de internet",
+              "noInternet": "Sin permiso de internet"
+            },
+            "summary": {
+              "active": "$n activos",
+              "user": "$n de usuario",
+              "auto": "$n automáticos",
+              "forced": "$n forzados"
+            }
+          }
+        },
+        "predefinedRules": {
+          "title": "Reglas predefinidas",
+          "ads": {
+            "name": "Bloquear anuncios",
+            "description": ""
+          },
+          "bypassLan": {
+            "name": "Omitir LAN",
+            "description": ""
+          }
         }
       },
       "dns": {
@@ -719,7 +844,12 @@
         "lanGroup": "Compartir en la red local",
         "lanSharingPort": "Puerto para compartir",
         "otherPorts": "Otros puertos",
-        "closedInVpnLocal": "cerrado en modo VPN"
+        "closedInVpnLocal": "cerrado en modo VPN",
+        "lanQrSubtitle": "Proxy SOCKS5 para esta red Wi-Fi",
+        "lanIPError": "Error al obtener la IP local",
+        "lanSharingPasswordNotSet": "Contraseña no establecida",
+        "lanSharingPassword": "Contraseña de compartir VPN",
+        "copyLink": "Copiar enlace"
       },
       "tlsTricks": {
         "title": "Trucos de TLS",
@@ -923,7 +1053,12 @@
       "openWebPage": "Abrir página web",
       "support": "Soporte",
       "openLinkTitle": "¿Abrir este enlace?",
-      "openLinkAction": "Abrir"
+      "openLinkAction": "Abrir",
+      "remainingTime": "Tiempo restante",
+      "remainingDurationNew": "${duration} días",
+      "remainingUsage": "Restante",
+      "profileSite": "Proveedor",
+      "profileSupport": "Soporte"
     }
   },
   "dialogs": {
@@ -990,6 +1125,15 @@
       "importRouteRuleByDeepLinkWarning": {
         "title": "¿Importar regla de enrutamiento?",
         "message": "Las reglas de enrutamiento deciden por dónde va tu tráfico.\nImpórtalas solo de una fuente en la que confíes."
+      },
+      "perAppProxy": {
+        "shareOnGithub": {
+          "title": "Mejorando la selección automática",
+          "msg": "Al compartir las aplicaciones seleccionadas, ayudas a completar la lista de \"selección automática\""
+        },
+        "import": {
+          "msg": "Esto reemplazará todas tus selecciones actuales de proxy por aplicación. ¿Estás seguro de que quieres continuar?"
+        }
       }
     },
     "adminBgService": {
@@ -1041,7 +1185,10 @@
             "Las apps que ignoran el proxy del sistema, como Telegram, muchos juegos y algunas herramientas de actualización, no quedan protegidas.",
             "Si dejan de funcionar, elige el modo VPN."
           ]
-        }
+        },
+        "msg": "El modo VPN necesita un permiso de administrador único para instalar el servicio en segundo plano de Hiddify. Después, puedes conectarte sin otra solicitud.",
+        "connectWithAdmin": "Conectar con permiso de administrador",
+        "stop": "Detener"
       },
       "proxyNeedsAdmin": {
         "title": "Se recomienda permiso de administrador",
@@ -1075,7 +1222,9 @@
       "avoidIfUnsure": "Si no estás totalmente seguro, no pagues ni compartas información sensible",
       "ownResponsibility": "Continúas bajo tu propia responsabilidad",
       "open": "Abrir",
-      "openIn": "Abrir (${seconds})"
+      "openIn": "Abrir (${seconds})",
+      "youAreAboutToVisit": "Estás a punto de visitar:",
+      "thisWebsiteIsNotInOurTrustedList": "Este sitio web no está en nuestra lista de confianza. Procede con precaución."
     },
     "proxyInfo": {
       "fullTag": "Etiqueta completa",
@@ -1219,7 +1368,8 @@
       "quickHelp": "¿Qué hace?",
       "quickFirst": "Primero se prueban los más rápidos de la vez anterior",
       "quickStop": "La prueba se detiene cuando el resto fue más lento antes",
-      "quickNew": "Los proxies nuevos y los que no se probaron en un día siempre se prueban"
+      "quickNew": "Los proxies nuevos y los que no se probaron en un día siempre se prueban",
+      "description": "Este perfil tiene $count proxies. Mantenerlos todos activos gasta batería, datos y memoria. Hiddify puede probarlos una vez, dejar activos los $keep más rápidos y pausar el resto."
     },
     "keepTags": {
       "title": "Elegir proxies",

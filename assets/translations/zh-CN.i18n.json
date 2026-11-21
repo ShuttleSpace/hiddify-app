@@ -92,8 +92,18 @@
       },
       "autoSave": {
         "success": "更改已自动保存"
+      },
+      "qrCode": {
+        "notFound": "未识别到二维码",
+        "save": {
+          "success": "二维码保存成功",
+          "failure": "二维码保存失败：$error"
+        }
       }
-    }
+    },
+    "scanQr": "扫描二维码",
+    "copy": "复制",
+    "copied": "已复制"
   },
   "intro": {
     "banner": "畅享无限制网络的所需一切",
@@ -224,6 +234,52 @@
         "editConfirm": "复制并编辑",
         "savedAsProfile": "已复制到新配置文件“${name}”",
         "failed": "无法读取此代理的配置"
+      },
+      "nodeBlacklist": {
+        "title": "节点黑名单",
+        "copyJson": "复制 JSON",
+        "pasteJson": "粘贴 JSON",
+        "policy": "策略",
+        "edit": "编辑",
+        "editRule": "编辑黑名单规则",
+        "form": "表单",
+        "editor": "编辑器",
+        "delete": "删除",
+        "addRule": "添加黑名单规则",
+        "ruleName": "规则名称",
+        "matchMode": "匹配模式",
+        "field": "字段",
+        "operator": "运算符",
+        "value": "值",
+        "cancel": "取消",
+        "save": "保存",
+        "enableRule": "启用规则",
+        "disableRule": "禁用规则",
+        "nodeDisabled": "$name 已被禁用",
+        "matchModes": {
+          "any": "任一",
+          "all": "全部"
+        },
+        "fields": {
+          "countryCode": "国家代码",
+          "region": "地区",
+          "city": "城市",
+          "nodeName": "节点名称",
+          "ipCidr": "IP CIDR",
+          "asn": "ASN",
+          "organization": "组织"
+        },
+        "operators": {
+          "equals": "等于",
+          "contains": "包含",
+          "startsWith": "开头是",
+          "cidrMatch": "CIDR 匹配"
+        },
+        "policies": {
+          "useGlobal": "使用全局规则",
+          "customOnly": "仅自定义",
+          "globalPlusCustom": "全局 + 自定义"
+        }
       }
     },
     "profiles": {
@@ -294,7 +350,10 @@
           "expired": "电视已不再接收此二维码的链接。请在电视上重新打开添加配置文件界面，并扫描新的二维码。",
           "busy": "电视上等待处理的链接太多。请先在电视上导入或放弃它们，然后重试。",
           "unreachable": "无法连接到电视。请确认手机和电视在同一个 Wi-Fi 网络中。"
-        }
+        },
+        "urlToClipboard": "URL 到剪贴板",
+        "showUrlQr": "显示 URL 二维码",
+        "jsonToClipboard": "JSON 到剪贴板"
       },
       "msg": {
         "save": {
@@ -312,7 +371,8 @@
             "one": "已更新 $count 个配置文件",
             "other": "已更新 $count 个配置文件"
           },
-          "bulkPartial": "${success} 个已更新\n${failed} 个失败：${names}"
+          "bulkPartial": "${success} 个已更新\n${failed} 个失败：${names}",
+          "successNamed": "\"${name}\" 更新成功"
         },
         "delete": {
           "success": "配置文件已删除",
@@ -358,7 +418,20 @@
         "adminPreferenceAskEachTime": "每次询问",
         "adminPreferencePreferAdmin": "始终使用管理员权限",
         "adminPreferencePreferNoAdmin": "始终不使用管理员权限继续",
-        "adminPreferenceReset": "每次询问是否使用管理员权限"
+        "adminPreferenceReset": "每次询问是否使用管理员权限",
+        "homePage": "提供商主页（管理页）",
+        "homePageHint": "https://provider.example",
+        "customProxy": "自定义代理",
+        "server": "服务器",
+        "serverHint": "proxy.example.com",
+        "port": "端口",
+        "protocol": "协议",
+        "credentialsOptional": "仅当代理会要求时填写",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {
@@ -382,7 +455,9 @@
       "buffer": "缓冲区",
       "diagnostics": "诊断报告",
       "diagnosticsMsg": "崩溃报告、日志和不含服务器与密码的设置，打包为一个 zip",
-      "fullReport": "完整报告"
+      "fullReport": "完整报告",
+      "shareCoreLogs": "分享核心日志",
+      "shareAppLogs": "分享应用日志"
     },
     "about": {
       "title": "关于",
@@ -446,7 +521,13 @@
         "useSystemTlsEngineMsg": "没有 TLS 指纹的连接，会在系统 TLS 通过本设备上的检查后，使用 macOS、iOS 或 Windows 的 TLS；否则看起来像 Chrome。",
         "uploadTestSize": "上传测试大小",
         "megabytes": "$n MB",
-        "speedTest": "测速"
+        "speedTest": "测速",
+        "useXrayCoreWhenPossible": "尽可能使用 xray-core",
+        "useXrayCoreWhenPossibleMsg": "解析订阅链接时使用 xray-core。您需要重新导入订阅链接才能启用此选项",
+        "openMainWindowOnStartup": "启动时打开主界面",
+        "debugMode": "调试模式",
+        "debugModeMsg": "重启应用以应用此更改",
+        "logLevel": "日志级别"
       },
       "routing": {
         "title": "路由",
@@ -524,14 +605,17 @@
               "stun": "STUN",
               "dns": "DNS",
               "bittorrent": "BitTorrent"
-            }
+            },
+            "notAvailabeInThisPlatform": "在此平台上不可用"
           },
           "genericList": {
             "addNew": "添加新值",
             "update": "更新值",
             "clearList": "清空列表",
             "clearListMsg": "所有项目将被删除"
-          }
+          },
+          "empty": "尚未添加规则\n\n点击 + 按钮创建新规则或从预设规则中选择",
+          "create": "创建新规则"
         },
         "builtinRules": {
           "tag": "内置",
@@ -656,7 +740,106 @@
           "preferIpv6": "IPv6 优先",
           "ipv4OnlyDescription": "应用只使用 IPv4。IPv6 会被立即拒绝。",
           "preferIpv4Description": "IPv4 优先。仅在经验证支持 IPv6 的代理上使用 IPv6。",
-          "preferIpv6Description": "IPv6 优先，仅在经验证支持 IPv6 的代理上使用。"
+          "preferIpv6Description": "IPv6 优先，仅在经验证支持 IPv6 的代理上使用。",
+          "disable": "关闭",
+          "enable": "开启",
+          "prefer": "首选",
+          "only": "专享"
+        },
+        "generalOptions": {
+          "title": "路由通用选项",
+          "region": "地区",
+          "regions": {
+            "ir": "伊朗 (ir)",
+            "cn": "中国 (cn)",
+            "ru": "俄罗斯 (ru)",
+            "af": "阿富汗 (af)",
+            "id": "印度尼西亚 (id)",
+            "tr": "土耳其 (tr)",
+            "br": "巴西 (br)",
+            "other": "其他"
+          },
+          "balancerStrategy": {
+            "title": "Balancer 策略",
+            "roundRobin": "Round robin",
+            "consistentHash": "Consistent hash",
+            "stickySession": "Sticky session"
+          },
+          "resolveDestination": "解析目的地",
+          "ipv6Route": "IPv6 路由",
+          "ipv6Modes": {
+            "disable": "禁用",
+            "enable": "启用",
+            "prefer": "首选",
+            "only": "专享"
+          },
+          "perAppProxy": {
+            "title": "分应用代理",
+            "hideSysApps": "隐藏系统应用",
+            "selectAll": "全选",
+            "deselectAll": "取消全选",
+            "filters": {
+              "all": "全部",
+              "system": "系统应用",
+              "nonSystem": "非系统应用",
+              "internet": "有联网权限",
+              "noInternet": "无联网权限"
+            },
+            "options": {
+              "import": {
+                "clipboard": "从剪贴板导入选择",
+                "file": "从文件导入选择",
+                "msg": "导入将替换您当前的选择。确定要继续吗？"
+              },
+              "export": {
+                "clipboard": "复制选择到剪贴板",
+                "file": "导出选择到文件"
+              },
+              "shareToAll": "分享给所有人",
+              "clearAllSelections": "清除所有选择"
+            },
+            "modes": {
+              "all": "全部",
+              "proxy": "代理",
+              "bypass": "绕过",
+              "allMsg": "代理所有应用",
+              "proxyMsg": "仅代理选定应用",
+              "bypassMsg": "不代理选定应用"
+            },
+            "autoSelection": {
+              "title": "自动选择",
+              "performNow": "立即执行",
+              "resetToDefault": "重置为默认",
+              "autoUpdateInterval": "自动更新间隔",
+              "toast": {
+                "success": "自动选择应用成功完成",
+                "failure": "自动选择失败",
+                "regionNotFound": "未找到 \"${region}\" 地区的自动选择",
+                "alreadyInAuto": "您的选择已在自动列表中"
+              },
+              "dialog": {
+                "title": "自动选择应用",
+                "msg": "由于地区更改为 \"${region}\"，分应用代理的自动选择功能已被禁用"
+              }
+            },
+            "summary": {
+              "active": "$n 个生效",
+              "user": "$n 个用户选择",
+              "auto": "$n 个自动选择",
+              "forced": "$n 个强制排除"
+            }
+          }
+        },
+        "predefinedRules": {
+          "title": "预设规则",
+          "ads": {
+            "name": "拦截广告",
+            "description": ""
+          },
+          "bypassLan": {
+            "name": "绕过局域网",
+            "description": ""
+          }
         }
       },
       "dns": {
@@ -719,7 +902,12 @@
         "lanGroup": "局域网共享",
         "lanSharingPort": "共享端口",
         "otherPorts": "其他端口",
-        "closedInVpnLocal": "VPN 模式下关闭"
+        "closedInVpnLocal": "VPN 模式下关闭",
+        "lanQrSubtitle": "适用于此 Wi-Fi 的 SOCKS5 代理",
+        "lanIPError": "获取本地 IP 地址失败",
+        "lanSharingPasswordNotSet": "密码未设置",
+        "lanSharingPassword": "VPN 共享密码",
+        "copyLink": "复制链接"
       },
       "tlsTricks": {
         "title": "TLS 技巧",
@@ -892,6 +1080,125 @@
           "selectProfile": "选择配置",
           "conduitPairingId": "Conduit 配对 ID"
         }
+      },
+      "appearance": {
+        "title": "外观",
+        "textSize": "文本大小",
+        "textSizes": {
+          "system": "跟随系统",
+          "small": "小",
+          "standard": "标准",
+          "large": "大",
+          "extraLarge": "特大"
+        },
+        "themeColor": "主题色",
+        "themeColors": {
+          "brand": "Hiddify",
+          "dynamicColor": "系统动态色",
+          "seed": "预设颜色"
+        },
+        "presetColors": "预设颜色"
+      },
+      "traffic": {
+        "title": "流量与网络",
+        "live": "实时流量",
+        "upload": "上传",
+        "download": "下载",
+        "today": "今日",
+        "thisMonth": "本月",
+        "allRecorded": "全部记录",
+        "recordHistory": "记录流量历史",
+        "retention": "保留期限",
+        "retentionMonths": "$n 个月",
+        "showTraySpeed": "在托盘显示网速",
+        "showTraySpeedWarning": "高 CPU 占用",
+        "showTraySpeedWarningMsg": "此操作可能导致系统 CPU 占用过大。",
+        "viewHistory": "查看历史日历",
+        "historyCalendarTitle": "流量历史日历",
+        "previousMonth": "上个月",
+        "nextMonth": "下个月",
+        "selectDay": "选择一天",
+        "noTrafficForDay": "当天没有记录流量",
+        "traySpeedLayout": "托盘网速布局",
+        "traySpeedLayoutHorizontal": "水平并排",
+        "traySpeedLayoutVertical": "纵向堆叠",
+        "clearHistory": "清除流量历史",
+        "clearHistoryMsg": "此操作无法撤销。"
+      },
+      "nodeBlacklist": {
+        "title": "节点黑名单",
+        "global": "全局规则",
+        "provider": "提供商规则",
+        "filteredCount": "已过滤节点",
+        "showFiltered": "显示已过滤节点",
+        "importJson": "导入 JSON",
+        "exportJson": "导出 JSON",
+        "importText": "导入纯文本",
+        "currentNodeBlocked": "当前节点已被加入黑名单"
+      },
+      "networkIdentity": {
+        "title": "GeoIP 与网络身份",
+        "refresh": "刷新",
+        "country": "国家/地区",
+        "region": "区域",
+        "city": "城市",
+        "asn": "ASN",
+        "organization": "组织",
+        "notAvailable": "连接并刷新以识别出口网络。",
+        "resources": "GeoIP 资源",
+        "resourcesMsg": "GeoIP、GeoSite 和 MMDB 资源由 sing-box 核心管理。当路由规则使用它们时，会反映其健康状态和更新时间。",
+        "noReferences": "当前路由规则未引用 Geo 资源。"
+      },
+      "backup": {
+        "title": "备份与恢复",
+        "local": "本地备份",
+        "localMsg": "创建版本化设置备份文件。订阅和缓存资源不会包含在内。",
+        "create": "创建备份",
+        "created": "备份已创建。",
+        "createFailed": "创建备份失败。",
+        "backupDirectory": "备份目录",
+        "chooseDirectory": "选择目录",
+        "directoryNotSet": "使用保存对话框",
+        "restore": "恢复",
+        "restored": "备份已恢复。",
+        "settingsData": "设置数据",
+        "automatic": "自动备份",
+        "enable": "启用自动备份",
+        "interval": "间隔",
+        "days": "$n 天",
+        "target": "目标",
+        "neverRun": "从未执行",
+        "lastRun": "上次执行：$time",
+        "runNow": "立即执行",
+        "webdav": "WebDAV",
+        "noWebdav": "尚未配置 WebDAV 连接。",
+        "connect": "连接",
+        "edit": "编辑",
+        "test": "测试",
+        "upload": "上传",
+        "remove": "移除",
+        "connected": "WebDAV 已连接。",
+        "connectionWorks": "WebDAV 连接正常。",
+        "connectionFailed": "WebDAV 连接失败。",
+        "uploaded": "备份已上传到 WebDAV。",
+        "uploadFailed": "WebDAV 上传失败。",
+        "noRemote": "未找到远程备份。",
+        "selectRemote": "选择远程备份",
+        "remoteRestored": "远程备份已恢复。",
+        "restoreFailed": "WebDAV 恢复失败。"
+      },
+      "shortcuts": {
+        "title": "快捷键",
+        "mobileMsg": "全局快捷键仅在桌面平台可用。移动端仍可使用系统快捷入口和快捷磁贴。",
+        "globalHotkeys": "全局快捷键",
+        "globalHotkeysMsg": "Hiddify 在后台时也可使用。",
+        "failed": "部分快捷键未能注册",
+        "toggleConnection": "切换连接",
+        "addClipboard": "从剪贴板添加配置",
+        "cycleMode": "循环服务模式",
+        "openSettings": "打开设置",
+        "closeWindow": "关闭窗口",
+        "quit": "退出"
       }
     }
   },
@@ -923,7 +1230,12 @@
       "openWebPage": "打开网页",
       "support": "支持",
       "openLinkTitle": "打开此链接？",
-      "openLinkAction": "打开"
+      "openLinkAction": "打开",
+      "remainingTime": "剩余时间",
+      "remainingDurationNew": "${duration} 天",
+      "remainingUsage": "剩余",
+      "profileSite": "提供商",
+      "profileSupport": "支持"
     }
   },
   "dialogs": {
@@ -990,6 +1302,15 @@
       "importRouteRuleByDeepLinkWarning": {
         "title": "导入路由规则？",
         "message": "路由规则决定您的流量走向。\n请仅从您信任的来源导入。"
+      },
+      "perAppProxy": {
+        "shareOnGithub": {
+          "title": "改进自动选择",
+          "msg": "通过分享您选择的应用，可以帮助完善“自动选择”列表"
+        },
+        "import": {
+          "msg": "这将替换您当前所有的分应用代理选择。您确定要继续吗？"
+        }
       }
     },
     "adminBgService": {
@@ -1041,7 +1362,10 @@
             "忽略系统代理的应用，如 Telegram、许多游戏和一些更新工具，不受保护。",
             "如果它们无法使用，请改用 VPN 模式。"
           ]
-        }
+        },
+        "msg": "VPN 模式需要一次性的管理员权限来安装 Hiddify 后台服务。之后无需再次授权即可连接。",
+        "connectWithAdmin": "使用管理员权限连接",
+        "stop": "停止"
       },
       "proxyNeedsAdmin": {
         "title": "建议使用管理员权限",
@@ -1075,7 +1399,9 @@
       "avoidIfUnsure": "如果您不能完全确定，请勿付款或分享敏感信息",
       "ownResponsibility": "继续操作的风险由您自行承担",
       "open": "打开",
-      "openIn": "打开 (${seconds})"
+      "openIn": "打开 (${seconds})",
+      "youAreAboutToVisit": "您即将访问：",
+      "thisWebsiteIsNotInOurTrustedList": "此网站不在我们的信任列表中。请谨慎操作。"
     },
     "proxyInfo": {
       "fullTag": "完整标签",
@@ -1219,7 +1545,8 @@
       "quickHelp": "它是做什么的？",
       "quickFirst": "上次最快的会先测试",
       "quickStop": "如果其余的以前较慢，测试会提前停止",
-      "quickNew": "新代理和一天未测试的代理总会被测试"
+      "quickNew": "新代理和一天未测试的代理总会被测试",
+      "description": "此配置包含 $count 个代理。全部运行会消耗电量、流量和内存。Hiddify 可以先测试一次,只保留最快的 $keep 个运行,暂停其余代理。"
     },
     "keepTags": {
       "title": "选择代理",
@@ -1333,7 +1660,9 @@
       "retry": "重新测试",
       "change": "更改",
       "turnOff": "关闭"
-    }
+    },
+    "shellProxyEnv": "已导出 HTTP_PROXY=127.0.0.1:$port 的终端现在指向已关闭的端口。请在这些终端执行 \"unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy\"，否则 curl、git 和 go 构建都会失败。",
+    "systemProxyReleased": "已关闭系统代理，macOS 网络设置已恢复成你原来的样子。"
   },
   "errors": {
     "unexpected": "意外错误",

@@ -1,0 +1,13 @@
+{
+  "name": "url_launcher_ohos",
+  "version": "1.0.0",
+  "description": "Please describe the basic information.",
+  "main": "index.ets",
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@ohos/flutter_ohos": "file:../../../../../caches/42d3d75a56efe1a2e9902f52dc8006099c45d937/artifacts/engine/ohos-arm64-release/flutter_embedding_release.har"
+  },
+  "devDependencies": {},
+  "dynamicDependencies": {}
+}

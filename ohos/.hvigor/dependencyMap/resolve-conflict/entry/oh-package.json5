@@ -1,0 +1,23 @@
+{
+  "name": "entry",
+  "version": "1.0.0",
+  "description": "Please describe the basic information.",
+  "main": "",
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "@ohos/flutter_ohos": "/Users/humphrey/.puro/shared/caches/42d3d75a56efe1a2e9902f52dc8006099c45d937/artifacts/engine/ohos-arm64-release/flutter_embedding_release.har",
+    "flutter_native_arm64_v8a": "/Users/humphrey/.puro/shared/caches/42d3d75a56efe1a2e9902f52dc8006099c45d937/artifacts/engine/ohos-arm64-release/arm64_v8a_release.har",
+    "app_links_ohos": "/Users/humphrey/.puro/shared/pub_cache/hosted/pub.flutter-io.cn/app_links_ohos-0.2.0/ohos",
+    "file_picker_ohos": "/Users/humphrey/.puro/shared/pub_cache/hosted/pub.flutter-io.cn/file_picker_ohos-1.0.1/ohos",
+    "flutter_native_splash_ohos": "/Users/humphrey/.puro/shared/pub_cache/hosted/pub.flutter-io.cn/flutter_native_splash_ohos-1.0.0/ohos",
+    "flutter_secure_storage_ohos": "/Users/humphrey/.puro/shared/pub_cache/hosted/pub.flutter-io.cn/flutter_secure_storage_ohos-1.0.0/ohos",
+    "package_info_plus_ohos": "/Users/humphrey/.puro/shared/pub_cache/hosted/pub.flutter-io.cn/package_info_plus_ohos-0.0.7/ohos",
+    "path_provider_ohos": "/Users/humphrey/.puro/shared/pub_cache/hosted/pub.flutter-io.cn/path_provider_ohos-2.2.1/ohos",
+    "share_plus_ohos": "/Users/humphrey/.puro/shared/pub_cache/hosted/pub.flutter-io.cn/share_plus_ohos-1.0.0/ohos",
+    "shared_preferences_ohos": "/Users/humphrey/.puro/shared/pub_cache/hosted/pub.flutter-io.cn/shared_preferences_ohos-2.2.0/ohos",
+    "url_launcher_ohos": "/Users/humphrey/.puro/shared/pub_cache/hosted/pub.flutter-io.cn/url_launcher_ohos-6.3.0/ohos"
+  },
+  "devDependencies": {},
+  "dynamicDependencies": {}
+}

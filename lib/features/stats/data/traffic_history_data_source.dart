@@ -49,7 +49,7 @@ class TrafficHistoryDao extends DatabaseAccessor<Db>
     await transaction(() async {
       final key = dayKey(day);
       Expression<bool> matchesProfile($DailyTrafficEntriesTable tbl) =>
-          profileId == null ? tbl.profileId.isNull() : tbl.profileId.equals(profileId!);
+          profileId == null ? tbl.profileId.isNull() : tbl.profileId.equals(profileId);
       final existing = await (select(
         dailyTrafficEntries,
       )..where((tbl) => tbl.day.equals(key) & matchesProfile(tbl))).getSingleOrNull();

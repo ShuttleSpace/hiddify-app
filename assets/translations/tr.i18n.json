@@ -93,7 +93,8 @@
       "autoSave": {
         "success": "Değişiklikler otomatik olarak kaydedildi"
       }
-    }
+    },
+    "scanQr": "QR Tara"
   },
   "intro": {
     "banner": "Sınırsız bir internet için ihtiyacınız olan her şey",
@@ -294,7 +295,10 @@
           "expired": "TV artık bu kodla bağlantı almıyor. TV'de profil ekleme ekranını yeniden açın ve yeni kodu tarayın.",
           "busy": "TV'de çok fazla bağlantı bekliyor. Bunları TV'de içe aktarın veya silin, sonra tekrar deneyin.",
           "unreachable": "TV'ye ulaşılamadı. Telefonun ve TV'nin aynı Wi-Fi ağında olduğundan emin olun."
-        }
+        },
+        "urlToClipboard": "URL'yi panoya kopyala",
+        "showUrlQr": "URL QR kodunu göster",
+        "jsonToClipboard": "JSON'u panoya kopyala"
       },
       "msg": {
         "save": {
@@ -312,7 +316,8 @@
             "one": "$count profil güncellendi",
             "other": "$count profil güncellendi"
           },
-          "bulkPartial": "${success} güncellendi\n${failed} başarısız: ${names}"
+          "bulkPartial": "${success} güncellendi\n${failed} başarısız: ${names}",
+          "successNamed": "\"${name}\" başarıyla güncellendi"
         },
         "delete": {
           "success": "Profil silindi",
@@ -358,7 +363,18 @@
         "adminPreferenceAskEachTime": "Her seferinde sor",
         "adminPreferencePreferAdmin": "Her zaman yönetici izni kullan",
         "adminPreferencePreferNoAdmin": "Her zaman yönetici izni olmadan devam et",
-        "adminPreferenceReset": "Yönetici izni için her seferinde sor"
+        "adminPreferenceReset": "Yönetici izni için her seferinde sor",
+        "customProxy": "Custom proxy",
+        "server": "Server",
+        "serverHint": "proxy.example.com",
+        "port": "Port",
+        "protocol": "Protocol",
+        "credentialsOptional": "Only if the proxy asks for them",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {
@@ -382,7 +398,9 @@
       "buffer": "Arabellek",
       "diagnostics": "Tanılama raporu",
       "diagnosticsMsg": "Çökme raporları, loglar ve sunucusuz, parolasız ayarlarınız, tek bir zip dosyası olarak",
-      "fullReport": "Tam rapor"
+      "fullReport": "Tam rapor",
+      "shareCoreLogs": "Çekirdek loglarını paylaş",
+      "shareAppLogs": "Uygulama loglarını paylaş"
     },
     "about": {
       "title": "Hakkında",
@@ -446,7 +464,12 @@
         "useSystemTlsEngineMsg": "TLS parmak izi olmayan bağlantılar, bu cihazda bir denetimden geçtikten sonra macOS, iOS veya Windows’un TLS’ini kullanır; aksi hâlde Chrome gibi görünür.",
         "uploadTestSize": "Yükleme testi boyutu",
         "megabytes": "$n MB",
-        "speedTest": "Hız testi"
+        "speedTest": "Hız testi",
+        "useXrayCoreWhenPossible": "Mümkün olduğunda xray-core kullan",
+        "useXrayCoreWhenPossibleMsg": "Abonelik bağlantılarını ayrıştırırken xray-core kullanın. Bu seçeneği etkinleştirmek için bağlantıyı yeniden içe aktarmanız gerekir.",
+        "debugMode": "Hata ayıklama modu",
+        "debugModeMsg": "Bu değişikliği uygulamak için uygulamayı yeniden başlatın",
+        "logLevel": "Log seviyesi"
       },
       "routing": {
         "title": "Yönlendirme",
@@ -524,14 +547,17 @@
               "stun": "STUN",
               "dns": "DNS",
               "bittorrent": "BitTorrent"
-            }
+            },
+            "notAvailabeInThisPlatform": "Bu platformda mevcut değil"
           },
           "genericList": {
             "addNew": "Yeni değer ekle",
             "update": "Değeri güncelle",
             "clearList": "Listeyi temizle",
             "clearListMsg": "Tüm öğeler silinecek"
-          }
+          },
+          "empty": "Henüz kural eklenmedi\n\nYeni bir kural oluşturmak için + düğmesine dokunun veya önceden tanımlanmış kurallardan birini seçin",
+          "create": "Yeni kural oluştur"
         },
         "builtinRules": {
           "tag": "Yerleşik",
@@ -656,7 +682,106 @@
           "preferIpv6": "Önce IPv6",
           "ipv4OnlyDescription": "Uygulamalar yalnızca IPv4 kullanır. IPv6 hemen reddedilir.",
           "preferIpv4Description": "Önce IPv4. IPv6 yalnızca onu taşıdığı doğrulanmış bir proxy üzerinden.",
-          "preferIpv6Description": "Önce IPv6, yalnızca onu taşıdığı doğrulanmış bir proxy üzerinden."
+          "preferIpv6Description": "Önce IPv6, yalnızca onu taşıdığı doğrulanmış bir proxy üzerinden.",
+          "disable": "Kapalı",
+          "enable": "Açık",
+          "prefer": "Tercih edilen",
+          "only": "Özel"
+        },
+        "generalOptions": {
+          "title": "Genel yönlendirme seçenekleri",
+          "region": "Bölge",
+          "regions": {
+            "ir": "İran (ir)",
+            "cn": "Çin (cn)",
+            "ru": "Rusya (ru)",
+            "af": "Afganistan (af)",
+            "id": "Endonezya (id)",
+            "tr": "Türkiye (tr)",
+            "br": "Brezilya (br)",
+            "other": "Diğer"
+          },
+          "balancerStrategy": {
+            "title": "Balancer stratejisi",
+            "roundRobin": "Round Robin",
+            "consistentHash": "Consistent Hash",
+            "stickySession": "Sticky Session"
+          },
+          "resolveDestination": "Hedefi çözümle",
+          "ipv6Route": "IPv6 rotası",
+          "ipv6Modes": {
+            "disable": "Devre dışı bırak",
+            "enable": "Etkinleştir",
+            "prefer": "Tercih edilen",
+            "only": "Özel"
+          },
+          "perAppProxy": {
+            "title": "Uygulama bazlı proxy",
+            "hideSysApps": "Sistem uygulamalarını gizle",
+            "selectAll": "Select all",
+            "deselectAll": "Deselect all",
+            "options": {
+              "import": {
+                "clipboard": "Seçimi panodan içe aktar",
+                "file": "Seçimi dosyadan içe aktar",
+                "msg": "İçe aktarma mevcut seçimlerinizin üzerine yazacaktır. Devam etmek istediğinizden emin misiniz?"
+              },
+              "export": {
+                "clipboard": "Seçimi panoya kopyala",
+                "file": "Seçimi dosyaya aktar"
+              },
+              "shareToAll": "Herkesle paylaş",
+              "clearAllSelections": "Tüm seçimleri temizle"
+            },
+            "modes": {
+              "all": "Tümü",
+              "proxy": "Proxy",
+              "bypass": "Bypass",
+              "allMsg": "Tüm uygulamaları proxy'le",
+              "proxyMsg": "Yalnızca seçili uygulamaları proxy'le",
+              "bypassMsg": "Seçili uygulamaları proxy'leme"
+            },
+            "autoSelection": {
+              "title": "Otomatik seçim",
+              "performNow": "Şimdi gerçekleştir",
+              "resetToDefault": "Varsayılana sıfırla",
+              "autoUpdateInterval": "Otomatik güncelleme aralığı",
+              "toast": {
+                "success": "Otomatik uygulama seçimi başarıyla tamamlandı",
+                "failure": "Otomatik seçim başarısız oldu",
+                "regionNotFound": "\"${region}\" bölgesi için otomatik seçim bulunamadı",
+                "alreadyInAuto": "Seçimleriniz zaten otomatik listede"
+              },
+              "dialog": {
+                "title": "Otomatik uygulama seçimi",
+                "msg": "Uygulama bazlı proxy için otomatik seçim özelliği, bölge \"${region}\" olarak değiştirildiği için devre dışı bırakıldı"
+              }
+            },
+            "filters": {
+              "all": "Tümü",
+              "system": "Sistem",
+              "nonSystem": "Sistem dışı",
+              "internet": "İnternet izni var",
+              "noInternet": "İnternet izni yok"
+            },
+            "summary": {
+              "active": "$n aktif",
+              "user": "$n kullanıcı",
+              "auto": "$n otomatik",
+              "forced": "$n zorunlu"
+            }
+          }
+        },
+        "predefinedRules": {
+          "title": "Önceden tanımlanmış kurallar",
+          "ads": {
+            "name": "Reklamları engelle",
+            "description": ""
+          },
+          "bypassLan": {
+            "name": "LAN'ı atla",
+            "description": ""
+          }
         }
       },
       "dns": {
@@ -719,7 +844,12 @@
         "lanGroup": "Yerel ağda paylaşım",
         "lanSharingPort": "Paylaşım portu",
         "otherPorts": "Diğer portlar",
-        "closedInVpnLocal": "VPN modunda kapalı"
+        "closedInVpnLocal": "VPN modunda kapalı",
+        "lanQrSubtitle": "Bu Wi-Fi için SOCKS5 proxy",
+        "lanIPError": "Yerel IP adresi alınamadı",
+        "lanSharingPasswordNotSet": "Şifre ayarlanmamış",
+        "lanSharingPassword": "VPN paylaşım şifresi",
+        "copyLink": "Bağlantıyı kopyala"
       },
       "tlsTricks": {
         "title": "TLS hileleri",
@@ -923,7 +1053,12 @@
       "openWebPage": "Web sayfasını aç",
       "support": "Destek",
       "openLinkTitle": "Bu bağlantı açılsın mı?",
-      "openLinkAction": "Aç"
+      "openLinkAction": "Aç",
+      "remainingTime": "Kalan süre",
+      "remainingDurationNew": "${duration} gün",
+      "remainingUsage": "Kalan",
+      "profileSite": "Sağlayıcı",
+      "profileSupport": "Destek"
     }
   },
   "dialogs": {
@@ -990,6 +1125,15 @@
       "importRouteRuleByDeepLinkWarning": {
         "title": "Rota kuralını içe aktar?",
         "message": "Rota kuralları trafiğinizin nereye gideceğini belirler.\nYalnızca güvendiğiniz bir kaynaktan içe aktarın."
+      },
+      "perAppProxy": {
+        "shareOnGithub": {
+          "title": "Otomatik seçimi iyileştirme",
+          "msg": "Seçili uygulamaları paylaşarak \"otomatik seçim\" listesini tamamlamaya yardımcı olursunuz"
+        },
+        "import": {
+          "msg": "Bu işlem mevcut tüm uygulama bazlı proxy seçimlerinizi değiştirecektir. Devam etmek istediğinizden emin misiniz?"
+        }
       }
     },
     "adminBgService": {
@@ -1041,7 +1185,10 @@
             "Telegram, birçok oyun ve bazı güncelleme araçları gibi sistem proxy'sini yok sayan uygulamalar korunmaz.",
             "Çalışmazlarsa bunun yerine VPN modunu seçin."
           ]
-        }
+        },
+        "msg": "VPN modu, Hiddify arka plan hizmetini yüklemek için bir kerelik yönetici izni gerektirir. Bundan sonra başka bir istem olmadan bağlanabilirsiniz.",
+        "connectWithAdmin": "Yönetici izniyle bağlan",
+        "stop": "Durdur"
       },
       "proxyNeedsAdmin": {
         "title": "Yönetici izni önerilir",
@@ -1075,7 +1222,9 @@
       "avoidIfUnsure": "Tamamen emin değilseniz ödeme yapmayın ve hassas bilgi paylaşmayın",
       "ownResponsibility": "Devam ederseniz sorumluluk size aittir",
       "open": "Aç",
-      "openIn": "Aç (${seconds})"
+      "openIn": "Aç (${seconds})",
+      "youAreAboutToVisit": "Şu adresi ziyaret etmek üzeresiniz:",
+      "thisWebsiteIsNotInOurTrustedList": "Bu web sitesi güvenilir listemizde değil. Lütfen dikkatli devam edin."
     },
     "proxyInfo": {
       "fullTag": "Tam etiket",
@@ -1219,7 +1368,8 @@
       "quickHelp": "Ne yapar?",
       "quickFirst": "Önce geçen seferin en hızlıları test edilir",
       "quickStop": "Kalanlar daha önce daha yavaş olduysa test durur",
-      "quickNew": "Yeni proxy'ler ve bir gündür test edilmeyenler her zaman test edilir"
+      "quickNew": "Yeni proxy'ler ve bir gündür test edilmeyenler her zaman test edilir",
+      "description": "Bu profilde $count proxy var. Hepsini çalıştırmak pil, veri ve bellek harcar. Hiddify onları bir kez test edip en hızlı $keep tanesini çalışır bırakabilir, diğerlerini duraklatabilir."
     },
     "keepTags": {
       "title": "Proxy seç",

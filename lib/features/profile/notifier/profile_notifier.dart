@@ -158,7 +158,7 @@ class AddProfileNotifier extends _$AddProfileNotifier with AppLogger {
     if (state.isLoading) return;
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      return await _profilesRepo
+      await _profilesRepo
           .addLocal(configJson, userOverride: UserOverride(name: name))
           .match(
             (err) {
@@ -171,6 +171,7 @@ class AddProfileNotifier extends _$AddProfileNotifier with AppLogger {
             },
           )
           .run();
+      return;
     });
   }
 

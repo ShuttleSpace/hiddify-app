@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:hiddify/features/connection/model/connection_status.dart';
 import 'package:hiddify/features/connection/notifier/connection_notifier.dart';
 import 'package:hiddify/features/profile/model/profile_entity.dart';
 import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
@@ -70,12 +71,16 @@ class McpServerNotifier extends Notifier<void> {
         final status = ref.read(connectionNotifierProvider).valueOrNull;
         final active = ref.read(activeProfileProvider).valueOrNull;
         final data = {
-          'state': status?.when(
-            disconnected: (_) => 'disconnected',
-            connecting: () => 'connecting',
-            connected: () => 'connected',
-            disconnecting: () => 'disconnecting',
-          ),
+          'state': switch (status) {
+            null => null,
+            Disconnected() => 'disconnected',
+            Connecting() => 'connecting',
+            Waiting() => 'waiting',
+            NoAvailableProxies() => 'no available proxies',
+            Connected() => 'connected',
+            HotReloading() => 'hot reloading',
+            Disconnecting() => 'disconnecting',
+          },
           'isConnected': status?.isConnected ?? false,
           'activeProfile': active == null
               ? null

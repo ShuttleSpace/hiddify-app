@@ -117,6 +117,10 @@ dependencies:
   archive: ^4.0.4
   installed_apps: ^2.2.1
 
+  # the fork's own features: the webdav backup vault, the global hotkey, the MCP server's xml bodies
+  flutter_secure_storage: ^10.3.1
+  hotkey_manager: ^0.2.3
+  xml: ^6.5.0
   # change case of text
   # for example camelCase to snake_case
   # helloWorld -> hello_worlds

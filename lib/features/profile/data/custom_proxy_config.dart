@@ -62,7 +62,7 @@ class CustomProxyConfig {
           'tag': 'proxy',
           'server': server.trim(),
           'server_port': serverPort,
-          if (auth case final a?) ...auth,
+          ...?auth,
         },
         {'type': 'direct', 'tag': 'direct'},
       ],

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hiddify/core/localization/translations.dart';
+import 'package:hiddify/core/model/constants.dart';
 import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
 import 'package:hiddify/core/widget/unique_keys_layout.dart';
 import 'package:hiddify/features/proxy/active/ip_widget.dart';
@@ -224,6 +225,22 @@ class ProxyTile extends HookConsumerWidget with PresLogger {
             .scaleXY(begin: .5, end: 1, duration: 350.ms, curve: Curves.easeOutBack)
             .fadeIn(duration: 200.ms),
       ProxyRowState.untested => _Signal(_Logo.loading(colors.wait)),
+      // asleep: nothing is coming, so nothing moves. Its last ping stays, dim, beside the moon
+      // icon: of this run, else of the one before; a tap on it wakes and tests it
+      ProxyRowState.resting => Tooltip(
+        message: t.pages.proxies.status.resting,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (ConnectionConst.isValidDelay(delay))
+              Opacity(opacity: .55, child: _PingNumber(delay, color: delayColor(context, delay)))
+            else if (delay >= ConnectionConst.maxDelay)
+              Opacity(opacity: .55, child: Icon(Icons.close_rounded, size: 16, color: colors.red)),
+            const SizedBox(width: 6),
+            Icon(Icons.bedtime_outlined, size: 16, color: colors.wait),
+          ],
+        ),
+      ),
       ProxyRowState.connecting || ProxyRowState.registering => _Signal(_Logo.loading(colors.accent)),
       ProxyRowState.searching => _Searching(colors.accent),
       // number style: the last ping stays, faded, while the flag wears the badge

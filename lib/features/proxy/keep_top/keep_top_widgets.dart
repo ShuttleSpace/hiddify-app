@@ -343,7 +343,8 @@ class RestingProxiesHeader extends ConsumerWidget {
 /// [picking] whether the core still looks for the fastest. With regions chosen, a line says when
 /// proxies of other regions answered faster, and offers to keep any region.
 class KeepTopFooter extends HookConsumerWidget {
-  const KeepTopFooter({super.key, required this.listed, required this.picking, this.proxies = const []});
+  // no choosing UI reaches it yet: the overview lists what ran, it does not pick
+  const KeepTopFooter({super.key, required this.listed, this.picking = false, this.proxies = const []});
 
   final int listed;
   final bool picking;

@@ -99,7 +99,8 @@
       "autoSave": {
         "success": "تم حفظ التغييرات تلقائيًا"
       }
-    }
+    },
+    "scanQr": "مسح رمز QR"
   },
   "intro": {
     "banner": "كل ما تحتاجه لإنترنت بلا قيود",
@@ -300,7 +301,10 @@
           "expired": "لم يعد التلفاز يقبل الروابط بهذا الرمز. افتح شاشة إضافة ملف تعريف على التلفاز مرة أخرى وامسح الرمز الجديد.",
           "busy": "هناك روابط كثيرة تنتظر على التلفاز. استورِدها أو تجاهلها على التلفاز، ثم حاول مرة أخرى.",
           "unreachable": "تعذّر الوصول إلى التلفاز. تأكد من أن الهاتف والتلفاز على شبكة Wi-Fi نفسها."
-        }
+        },
+        "urlToClipboard": "رابط URL إلى الحافظة",
+        "showUrlQr": "عرض رمز QR للرابط",
+        "jsonToClipboard": "JSON إلى الحافظة"
       },
       "msg": {
         "save": {
@@ -322,7 +326,8 @@
             "few": "تم تحديث $count ملفات شخصية",
             "many": "تم تحديث $count ملفًا شخصيًا"
           },
-          "bulkPartial": "${success} تم تحديثها\n${failed} فشلت: ${names}"
+          "bulkPartial": "${success} تم تحديثها\n${failed} فشلت: ${names}",
+          "successNamed": "تم تحديث \"${name}\" بنجاح"
         },
         "delete": {
           "success": "تم حذف الملف الشخصي",
@@ -368,7 +373,18 @@
         "adminPreferenceAskEachTime": "اسأل في كل مرة",
         "adminPreferencePreferAdmin": "استخدم صلاحية المسؤول دائمًا",
         "adminPreferencePreferNoAdmin": "تابع دائمًا دون صلاحية المسؤول",
-        "adminPreferenceReset": "اسأل في كل مرة عن صلاحية المسؤول"
+        "adminPreferenceReset": "اسأل في كل مرة عن صلاحية المسؤول",
+        "customProxy": "Custom proxy",
+        "server": "Server",
+        "serverHint": "proxy.example.com",
+        "port": "Port",
+        "protocol": "Protocol",
+        "credentialsOptional": "Only if the proxy asks for them",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {
@@ -392,7 +408,9 @@
       "buffer": "المخزن المؤقت",
       "diagnostics": "تقرير التشخيص",
       "diagnosticsMsg": "تقارير الأعطال والسجلات وإعداداتك دون الخوادم أو كلمات السر، في ملف zip واحد",
-      "fullReport": "التقرير الكامل"
+      "fullReport": "التقرير الكامل",
+      "shareCoreLogs": "مشاركة سجلات النواة",
+      "shareAppLogs": "مشاركة سجلات التطبيق"
     },
     "about": {
       "title": "حول التطبيق",
@@ -456,7 +474,12 @@
         "useSystemTlsEngineMsg": "تستخدم الاتصالات التي ليس لها بصمة TLS بروتوكول TLS الخاص بـ macOS أو iOS أو Windows بعد اجتيازه فحصًا على هذا الجهاز؛ وإلا فإنها تبدو مثل Chrome.",
         "uploadTestSize": "حجم اختبار الرفع",
         "megabytes": "$n ميغابايت",
-        "speedTest": "اختبار السرعة"
+        "speedTest": "اختبار السرعة",
+        "useXrayCoreWhenPossible": "استخدام xray-core عند الإمكان",
+        "useXrayCoreWhenPossibleMsg": "استخدم xray-core عند تحليل روابط الاشتراك. تحتاج إلى إعادة استيراد الرابط لتفعيل هذا الخيار",
+        "debugMode": "وضع التصحيح",
+        "debugModeMsg": "أعد تشغيل التطبيق لتطبيق هذا التغيير",
+        "logLevel": "مستوى السجل"
       },
       "routing": {
         "title": "التوجيه",
@@ -534,14 +557,17 @@
               "stun": "STUN",
               "dns": "DNS",
               "bittorrent": "BitTorrent"
-            }
+            },
+            "notAvailabeInThisPlatform": "غير متوفر على هذا النظام"
           },
           "genericList": {
             "addNew": "إضافة قيمة جديدة",
             "update": "تحديث القيمة",
             "clearList": "مسح القائمة",
             "clearListMsg": "سيتم حذف جميع العناصر"
-          }
+          },
+          "empty": "لم يتم إضافة قواعد بعد\n\nاضغط على زر + لإنشاء قاعدة جديدة أو اختر من القواعد المحددة مسبقًا",
+          "create": "إنشاء قاعدة جديدة"
         },
         "builtinRules": {
           "tag": "مدمجة",
@@ -687,7 +713,106 @@
           "preferIpv6": "IPv6 أولاً",
           "ipv4OnlyDescription": "تستخدم التطبيقات IPv4 فقط. يُرفض IPv6 فورًا.",
           "preferIpv4Description": "IPv4 أولاً. IPv6 فقط عبر بروكسي تأكد أنه يدعمه.",
-          "preferIpv6Description": "IPv6 أولاً، وفقط عبر بروكسي تأكد أنه يدعمه."
+          "preferIpv6Description": "IPv6 أولاً، وفقط عبر بروكسي تأكد أنه يدعمه.",
+          "disable": "إيقاف",
+          "enable": "تشغيل",
+          "prefer": "مفضل",
+          "only": "حصري"
+        },
+        "generalOptions": {
+          "title": "الخيارات العامة للتوجيه",
+          "region": "المنطقة",
+          "regions": {
+            "ir": "إيران (ir)",
+            "cn": "الصين (cn)",
+            "ru": "روسيا (ru)",
+            "af": "أفغانستان (af)",
+            "id": "إندونيسيا (id)",
+            "tr": "تركيا (tr)",
+            "br": "البرازيل (br)",
+            "other": "أخرى"
+          },
+          "balancerStrategy": {
+            "title": "استراتيجية Balancer",
+            "roundRobin": "Round robin",
+            "consistentHash": "Consistent hash",
+            "stickySession": "Sticky session"
+          },
+          "resolveDestination": "تحديد وجهة الاتصال",
+          "ipv6Route": "توجيه IPv6",
+          "ipv6Modes": {
+            "disable": "تعطيل",
+            "enable": "تفعيل",
+            "prefer": "مفضل",
+            "only": "حصري"
+          },
+          "perAppProxy": {
+            "title": "بروكسي لكل تطبيق",
+            "hideSysApps": "إخفاء تطبيقات النظام",
+            "selectAll": "Select all",
+            "deselectAll": "Deselect all",
+            "options": {
+              "import": {
+                "clipboard": "استيراد التحديد من الحافظة",
+                "file": "استيراد التحديد من ملف",
+                "msg": "سيؤدي الاستيراد إلى استبدال تحديداتك الحالية. هل أنت متأكد من رغبتك في المتابعة؟"
+              },
+              "export": {
+                "clipboard": "نسخ التحديد إلى الحافظة",
+                "file": "تصدير التحديد إلى ملف"
+              },
+              "shareToAll": "مشاركة مع الجميع",
+              "clearAllSelections": "مسح جميع التحديدات"
+            },
+            "modes": {
+              "all": "الكل",
+              "proxy": "بروكسي",
+              "bypass": "تجاوز",
+              "allMsg": "استخدام البروكسي لجميع التطبيقات",
+              "proxyMsg": "استخدام البروكسي للتطبيقات المحددة فقط",
+              "bypassMsg": "عدم استخدام البروكسي للتطبيقات المحددة"
+            },
+            "autoSelection": {
+              "title": "الاختيار التلقائي",
+              "performNow": "تنفيذ الآن",
+              "resetToDefault": "إعادة التعيين إلى الافتراضي",
+              "autoUpdateInterval": "فاصل التحديث التلقائي",
+              "toast": {
+                "success": "اكتمل الاختيار التلقائي للتطبيقات بنجاح",
+                "failure": "فشل الاختيار التلقائي",
+                "regionNotFound": "لم يتم العثور على اختيار تلقائي لمنطقة \"${region}\"",
+                "alreadyInAuto": "اختياراتك موجودة بالفعل في القائمة التلقائية"
+              },
+              "dialog": {
+                "title": "الاختيار التلقائي للتطبيقات",
+                "msg": "تم تعطيل ميزة الاختيار التلقائي للبروكسي بسبب تغيير المنطقة إلى \"${region}\""
+              }
+            },
+            "filters": {
+              "all": "الكل",
+              "system": "تطبيقات النظام",
+              "nonSystem": "تطبيقات غير النظام",
+              "internet": "لديه إذن الإنترنت",
+              "noInternet": "بدون إذن الإنترنت"
+            },
+            "summary": {
+              "active": "$n نشط",
+              "user": "$n محدد يدويًا",
+              "auto": "$n تلقائي",
+              "forced": "$n مستبعد"
+            }
+          }
+        },
+        "predefinedRules": {
+          "title": "القواعد المحددة مسبقًا",
+          "ads": {
+            "name": "حظر الإعلانات",
+            "description": ""
+          },
+          "bypassLan": {
+            "name": "تجاوز الشبكة المحلية",
+            "description": ""
+          }
         }
       },
       "dns": {
@@ -750,7 +875,12 @@
         "lanGroup": "المشاركة على الشبكة المحلية",
         "lanSharingPort": "منفذ المشاركة",
         "otherPorts": "منافذ أخرى",
-        "closedInVpnLocal": "مغلق في وضع VPN"
+        "closedInVpnLocal": "مغلق في وضع VPN",
+        "lanQrSubtitle": "وكيل SOCKS5 لشبكة Wi-Fi هذه",
+        "lanIPError": "فشل في الحصول على عنوان IP المحلي",
+        "lanSharingPasswordNotSet": "كلمة المرور غير محددة",
+        "lanSharingPassword": "كلمة مرور مشاركة VPN",
+        "copyLink": "نسخ الرابط"
       },
       "tlsTricks": {
         "title": "حيل TLS",
@@ -958,7 +1088,12 @@
       "openWebPage": "فتح صفحة الويب",
       "support": "الدعم",
       "openLinkTitle": "فتح هذا الرابط؟",
-      "openLinkAction": "فتح"
+      "openLinkAction": "فتح",
+      "remainingTime": "الوقت المتبقي",
+      "remainingDurationNew": "${duration} يوم",
+      "remainingUsage": "المتبقي",
+      "profileSite": "المزوّد",
+      "profileSupport": "الدعم"
     }
   },
   "dialogs": {
@@ -1025,6 +1160,15 @@
       "importRouteRuleByDeepLinkWarning": {
         "title": "استيراد قاعدة توجيه؟",
         "message": "قواعد التوجيه تحدد وجهة بياناتك.\nلا تستوردها إلا من مصدر تثق به."
+      },
+      "perAppProxy": {
+        "shareOnGithub": {
+          "title": "تحسين الاختيار التلقائي",
+          "msg": "بمشاركة التطبيقات التي اخترتها، فإنك تساعد في إكمال قائمة \"الاختيار التلقائي\""
+        },
+        "import": {
+          "msg": "سيؤدي هذا إلى استبدال جميع تحديداتك الحالية لبروكسي التطبيقات. هل أنت متأكد من رغبتك في المتابعة؟"
+        }
       }
     },
     "adminBgService": {
@@ -1076,7 +1220,10 @@
             "التطبيقات التي تتجاهل بروكسي النظام، مثل Telegram وكثير من الألعاب وبعض أدوات التحديث، غير محمية.",
             "إذا توقفت عن العمل، فاختر وضع VPN بدلًا منه."
           ]
-        }
+        },
+        "msg": "يحتاج وضع VPN إلى صلاحية المسؤول لمرة واحدة لتثبيت خدمة Hiddify في الخلفية. بعد ذلك، يمكنك الاتصال دون طلب آخر.",
+        "connectWithAdmin": "الاتصال بصلاحية المسؤول",
+        "stop": "إيقاف"
       },
       "proxyNeedsAdmin": {
         "title": "يُنصح بصلاحية المسؤول",
@@ -1110,7 +1257,9 @@
       "avoidIfUnsure": "إذا لم تكن متأكدًا تمامًا، لا تدفع ولا تشارك معلومات حساسة",
       "ownResponsibility": "أنت تتابع على مسؤوليتك الخاصة",
       "open": "فتح",
-      "openIn": "فتح (${seconds})"
+      "openIn": "فتح (${seconds})",
+      "youAreAboutToVisit": "أنت على وشك زيارة:",
+      "thisWebsiteIsNotInOurTrustedList": "هذا الموقع ليس ضمن قائمة المواقع الموثوقة لدينا. يرجى المتابعة بحذر."
     },
     "proxyInfo": {
       "fullTag": "العلامة الكاملة",
@@ -1254,7 +1403,8 @@
       "quickHelp": "ماذا يفعل؟",
       "quickFirst": "يُختبر أولًا الأسرع في المرة السابقة",
       "quickStop": "يتوقف الاختبار عندما كان الباقي أبطأ سابقًا",
-      "quickNew": "تُختبر دائمًا البروكسيات الجديدة وما لم يُختبر منذ يوم"
+      "quickNew": "تُختبر دائمًا البروكسيات الجديدة وما لم يُختبر منذ يوم",
+      "description": "يحتوي هذا الملف الشخصي على $count وكيلًا. تشغيلها كلها يستهلك البطارية والبيانات والذاكرة. يمكن لـ Hiddify اختبارها مرة واحدة، وإبقاء أسرع $keep قيد التشغيل وإيقاف البقية مؤقتًا."
     },
     "keepTags": {
       "title": "اختيار الوكلاء",

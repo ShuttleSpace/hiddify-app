@@ -93,7 +93,8 @@
       "autoSave": {
         "success": "تغییرات به‌طور خودکار ذخیره شد"
       }
-    }
+    },
+    "scanQr": "اسکن QR"
   },
   "intro": {
     "banner": "هرآنچه برای اینترنت بدون محدودیت نیاز دارید",
@@ -313,7 +314,10 @@
           "expired": "تلویزیون دیگر با این کد لینک نمی‌پذیرد. صفحهٔ افزودن پروفایل را در تلویزیون دوباره باز کنید و کد جدید را اسکن کنید.",
           "busy": "لینک‌های زیادی در تلویزیون منتظر هستند. آن‌ها را در تلویزیون وارد یا رد کنید و دوباره امتحان کنید.",
           "unreachable": "اتصال به تلویزیون ممکن نشد. مطمئن شوید گوشی و تلویزیون به یک وای‌فای وصل هستند."
-        }
+        },
+        "urlToClipboard": "URL به کلیپ‌بورد",
+        "showUrlQr": "نمایش QR کد URL",
+        "jsonToClipboard": "JSON به کلیپ‌بورد"
       },
       "msg": {
         "save": {
@@ -331,7 +335,8 @@
             "one": "$count پروفایل به‌روزرسانی شد",
             "other": "$count پروفایل به‌روزرسانی شد"
           },
-          "bulkPartial": "${success} به‌روزرسانی شد\n${failed} ناموفق: ${names}"
+          "bulkPartial": "${success} به‌روزرسانی شد\n${failed} ناموفق: ${names}",
+          "successNamed": "«${name}» با موفقیت به‌روز شد"
         },
         "delete": {
           "success": "پروفایل حذف شد",
@@ -377,7 +382,18 @@
         "adminPreferenceAskEachTime": "هر بار بپرس",
         "adminPreferencePreferAdmin": "همیشه از ادمین استفاده کن",
         "adminPreferencePreferNoAdmin": "همیشه بدون ادمین ادامه بده",
-        "adminPreferenceReset": "هر بار درباره مجوز ادمین بپرس"
+        "adminPreferenceReset": "هر بار درباره مجوز ادمین بپرس",
+        "customProxy": "پروکسی سفارشی",
+        "server": "سرور",
+        "serverHint": "proxy.example.com",
+        "port": "درگاه",
+        "protocol": "پروتکل",
+        "credentialsOptional": "فقط در صورتی که پروکسی بخواهد",
+        "socks": "SOCKS",
+        "http": "HTTP",
+        "appearanceSeedColor": "Colour",
+        "username": "Username",
+        "password": "Password"
       }
     },
     "logs": {
@@ -401,7 +417,9 @@
       "buffer": "بافر",
       "diagnostics": "گزارش عیب‌یابی",
       "diagnosticsMsg": "ارسال یا ذخیرهٔ گزارش‌های کرش، لاگ‌ها، وضعیت اتصال و تنظیمات شما بدون سرور و رمز",
-      "fullReport": "گزارش کامل"
+      "fullReport": "گزارش کامل",
+      "shareCoreLogs": "اشتراک‌گذاری گزارش‌های هسته",
+      "shareAppLogs": "اشتراک‌گذاری گزارش‌های برنامه"
     },
     "about": {
       "title": "درباره",
@@ -465,7 +483,12 @@
         "useSystemTlsEngineMsg": "اتصال‌هایی که اثرانگشت TLS ندارند، پس از گذراندن یک آزمون روی این دستگاه، از TLS خود macOS، iOS یا Windows استفاده می‌کنند؛ وگرنه مانند Chrome دیده می‌شوند.",
         "uploadTestSize": "حجم سنجش آپلود",
         "megabytes": "$n مگابایت",
-        "speedTest": "تست سرعت"
+        "speedTest": "تست سرعت",
+        "useXrayCoreWhenPossible": "استفاده از xray-core در صورت امکان",
+        "useXrayCoreWhenPossibleMsg": "هنگام پردازش لینک‌های اشتراک از xray-core استفاده شود. برای فعال‌سازی این گزینه باید لینک اشتراک را مجدداً وارد کنید.",
+        "debugMode": "حالت اشکال‌زدایی",
+        "debugModeMsg": "برای اعمال این تغییر، برنامه را مجدداً راه‌اندازی کنید",
+        "logLevel": "سطح گزارش‌گیری"
       },
       "routing": {
         "title": "مسیریابی",
@@ -543,14 +566,17 @@
               "stun": "STUN",
               "dns": "DNS",
               "bittorrent": "BitTorrent"
-            }
+            },
+            "notAvailabeInThisPlatform": "در این پلتفرم در دسترس نیست"
           },
           "genericList": {
             "addNew": "افزودن مقدار جدید",
             "update": "به‌روزرسانی مقدار",
             "clearList": "پاک کردن لیست",
             "clearListMsg": "تمام موارد حذف خواهند شد"
-          }
+          },
+          "empty": "هنوز هیچ قانونی اضافه نشده است\n\nبرای ایجاد قانون جدید یا انتخاب از قوانین پیش‌فرض، روی دکمه + ضربه بزنید",
+          "create": "ایجاد قانون جدید"
         },
         "builtinRules": {
           "tag": "قانون توکار",
@@ -675,7 +701,106 @@
           "preferIpv6": "روشن، اول IPv6",
           "ipv4OnlyDescription": "برنامه‌ها فقط IPv4 به کار می‌برند. IPv6 بی‌درنگ رد می‌شود.",
           "preferIpv4Description": "اول IPv4. ‏IPv6 فقط از پراکسی‌ای که بررسی نشان داده آن را رد می‌کند.",
-          "preferIpv6Description": "اول IPv6، فقط از پراکسی‌ای که بررسی نشان داده آن را رد می‌کند."
+          "preferIpv6Description": "اول IPv6، فقط از پراکسی‌ای که بررسی نشان داده آن را رد می‌کند.",
+          "disable": "غیرفعال",
+          "enable": "فعال",
+          "prefer": "ترجیحی",
+          "only": "انحصاری"
+        },
+        "generalOptions": {
+          "title": "تنظیمات عمومی مسیریابی",
+          "region": "منطقه",
+          "regions": {
+            "ir": "ایران (ir)",
+            "cn": "چین (cn)",
+            "ru": "روسیه (ru)",
+            "af": "افغانستان (af)",
+            "id": "اندونزی (id)",
+            "tr": "ترکیه (tr)",
+            "br": "برزیل (br)",
+            "other": "سایر"
+          },
+          "balancerStrategy": {
+            "title": "استراتژی Balancer",
+            "roundRobin": "Round robin",
+            "consistentHash": "Consistent hash",
+            "stickySession": "Sticky session"
+          },
+          "resolveDestination": "تحلیل آدرس مقصد",
+          "ipv6Route": "مسیریابی IPv6",
+          "ipv6Modes": {
+            "disable": "غیرفعال",
+            "enable": "فعال",
+            "prefer": "ترجیحی",
+            "only": "انحصاری"
+          },
+          "perAppProxy": {
+            "title": "پروکسی برای هر برنامه",
+            "hideSysApps": "پنهان کردن برنامه‌های سیستمی",
+            "selectAll": "Select all",
+            "deselectAll": "Deselect all",
+            "options": {
+              "import": {
+                "clipboard": "وارد کردن انتخاب‌ها از کلیپ‌بورد",
+                "file": "وارد کردن انتخاب‌ها از فایل",
+                "msg": "وارد کردن، انتخاب‌های فعلی شما را جایگزین خواهد کرد. آیا مطمئن هستید که می‌خواهید ادامه دهید؟"
+              },
+              "export": {
+                "clipboard": "کپی انتخاب‌ها به کلیپ‌بورد",
+                "file": "خروجی انتخاب‌ها به فایل"
+              },
+              "shareToAll": "اشتراک‌گذاری با همه",
+              "clearAllSelections": "پاک کردن تمام انتخاب‌ها"
+            },
+            "modes": {
+              "all": "همه",
+              "proxy": "پروکسی",
+              "bypass": "دور زدن",
+              "allMsg": "پروکسی کردن تمام برنامه‌ها",
+              "proxyMsg": "فقط برنامه‌های انتخاب‌شده پروکسی شوند",
+              "bypassMsg": "برنامه‌های انتخاب‌شده پروکسی نشوند"
+            },
+            "autoSelection": {
+              "title": "انتخاب خودکار",
+              "performNow": "اکنون انجام بده",
+              "resetToDefault": "بازنشانی به پیش‌فرض",
+              "autoUpdateInterval": "فاصله زمانی به‌روزرسانی خودکار",
+              "toast": {
+                "success": "انتخاب خودکار برنامه‌ها با موفقیت انجام شد",
+                "failure": "انتخاب خودکار ناموفق بود",
+                "regionNotFound": "انتخاب خودکار برای منطقه \"${region}\" یافت نشد",
+                "alreadyInAuto": "انتخاب‌های شما از قبل در لیست خودکار موجود است"
+              },
+              "dialog": {
+                "title": "انتخاب خودکار برنامه‌ها",
+                "msg": "قابلیت انتخاب خودکار برای پروکسی هر برنامه به دلیل تغییر منطقه به \"${region}\" غیرفعال شد"
+              }
+            },
+            "filters": {
+              "all": "همه",
+              "system": "سیستمی",
+              "nonSystem": "غیرسیستمی",
+              "internet": "دارای دسترسی اینترنت",
+              "noInternet": "بدون دسترسی اینترنت"
+            },
+            "summary": {
+              "active": "$n فعال",
+              "user": "$n انتخاب کاربر",
+              "auto": "$n خودکار",
+              "forced": "$n حذف اجباری"
+            }
+          }
+        },
+        "predefinedRules": {
+          "title": "قوانین پیش‌فرض",
+          "ads": {
+            "name": "مسدودسازی تبلیغات",
+            "description": ""
+          },
+          "bypassLan": {
+            "name": "دور زدن LAN",
+            "description": ""
+          }
         }
       },
       "dns": {
@@ -738,7 +863,12 @@
         "lanGroup": "اشتراک در شبکه محلی",
         "lanSharingPort": "پورت اشتراک",
         "otherPorts": "پورت‌های دیگر",
-        "closedInVpnLocal": "در حالت VPN بسته است"
+        "closedInVpnLocal": "در حالت VPN بسته است",
+        "lanQrSubtitle": "پروکسی SOCKS5 برای همین وای‌فای",
+        "lanIPError": "خطا در دریافت آدرس IP محلی",
+        "lanSharingPasswordNotSet": "رمز عبور تنظیم نشده",
+        "lanSharingPassword": "رمز عبور اشتراک VPN",
+        "copyLink": "کپی لینک"
       },
       "tlsTricks": {
         "title": "ترفندهای TLS",
@@ -942,7 +1072,12 @@
       "openWebPage": "باز کردن صفحه وب",
       "support": "پشتیبانی",
       "openLinkTitle": "این لینک باز شود؟",
-      "openLinkAction": "باز کردن"
+      "openLinkAction": "باز کردن",
+      "remainingTime": "زمان باقی‌مانده",
+      "remainingDurationNew": "${duration} روز",
+      "remainingUsage": "باقی‌مانده",
+      "profileSite": "سرویس‌دهنده",
+      "profileSupport": "پشتیبانی"
     }
   },
   "dialogs": {
@@ -1009,6 +1144,15 @@
       "importRouteRuleByDeepLinkWarning": {
         "title": "وارد کردن قانون مسیریابی؟",
         "message": "قوانین مسیریابی تعیین می‌کنند ترافیک شما از کجا عبور کند.\nفقط از منبعی که به آن اعتماد دارید وارد کنید."
+      },
+      "perAppProxy": {
+        "shareOnGithub": {
+          "title": "بهبود انتخاب خودکار",
+          "msg": "با اشتراک‌گذاری برنامه‌های انتخاب‌شده، به تکمیل لیست «انتخاب خودکار» کمک می‌کنید"
+        },
+        "import": {
+          "msg": "این عمل تمام انتخاب‌های فعلی شما برای پروکسی برنامه‌ها را جایگزین خواهد کرد. آیا مطمئن هستید؟"
+        }
       }
     },
     "adminBgService": {
@@ -1060,7 +1204,10 @@
             "برنامه‌هایی که پروکسی سیستم را نادیده می‌گیرند، مثل تلگرام، بسیاری از بازی‌ها و برخی ابزارهای به‌روزرسانی، محافظت نمی‌شوند.",
             "اگر کار نکردند، حالت VPN را انتخاب کنید."
           ]
-        }
+        },
+        "msg": "حالت VPN برای نصب سرویس پس‌زمینه هیدیفای یک بار به مجوز ادمین نیاز دارد. پس از آن می‌توانید بدون درخواست دوباره متصل شوید.",
+        "connectWithAdmin": "اتصال با مجوز ادمین",
+        "stop": "توقف"
       },
       "proxyNeedsAdmin": {
         "title": "مجوز ادمین توصیه می‌شود",
@@ -1094,7 +1241,9 @@
       "avoidIfUnsure": "اگر کاملاً مطمئن نیستید، پرداخت نکنید و اطلاعات حساس به اشتراک نگذارید",
       "ownResponsibility": "ادامه دادن با مسئولیت خودتان است",
       "open": "باز کردن",
-      "openIn": "باز کردن (${seconds})"
+      "openIn": "باز کردن (${seconds})",
+      "youAreAboutToVisit": "شما در حال بازدید از این آدرس هستید:",
+      "thisWebsiteIsNotInOurTrustedList": "این وب‌سایت در لیست مورد اعتماد ما نیست. لطفاً با احتیاط ادامه دهید."
     },
     "proxyInfo": {
       "fullTag": "تگ کامل",
@@ -1215,7 +1364,8 @@
         "bannerMsg": "بنویسید چه اتفاقی افتاد و «ادامه» را بزنید",
         "stop": "توقف",
         "ended": "لاگ کامل تمام شد. گزارش را از «گزارش مشکل» بفرستید."
-      }
+      },
+      "send": "ارسال گزارش"
     },
     "keepTop": {
       "title": "اشتراکی بزرگ",
@@ -1238,7 +1388,8 @@
       "quickHelp": "این گزینه چه می‌کند؟",
       "quickFirst": "سریع‌ترهای دفعه‌ی قبل اول سنجیده می‌شوند",
       "quickStop": "وقتی بقیه قبلاً کندتر بوده‌اند، سنجش تمام می‌شود",
-      "quickNew": "پروکسی‌های تازه و آن‌هایی که یک روز سنجیده نشده‌اند همیشه سنجیده می‌شوند"
+      "quickNew": "پروکسی‌های تازه و آن‌هایی که یک روز سنجیده نشده‌اند همیشه سنجیده می‌شوند",
+      "description": "این پروفایل $count پروکسی دارد. روشن ماندن همه‌ی آن‌ها باتری، اینترنت و حافظه مصرف می‌کند. هیدیفای می‌تواند یک بار همه را بسنجد، $keep تای سریع‌تر را روشن نگه دارد و بقیه را متوقف کند."
     },
     "keepTags": {
       "title": "انتخاب پروکسی‌ها",
