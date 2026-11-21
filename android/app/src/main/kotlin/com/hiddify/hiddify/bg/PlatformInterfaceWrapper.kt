@@ -41,6 +41,9 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 interface PlatformInterfaceWrapper : PlatformInterface {
     override fun usePlatformAutoDetectInterfaceControl(): Boolean = true
 
+    // the same as the Apple platforms: Android restricts /proc, so the core counts on its own
+    override fun useProcFS(): Boolean = false
+
     override fun autoDetectInterfaceControl(fd: Int) {
     }
 

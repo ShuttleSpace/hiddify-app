@@ -24,6 +24,8 @@ on:
 env:
   CHANNEL: ${{ inputs.channel }}
   SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+  # empty without the fork's Sentry project: the symbol upload then skips itself
+  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
 jobs:
   build:
@@ -66,7 +68,7 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Upload debug symbols to Sentry
-        if: inputs.release && inputs.upload-symbols
+        if: inputs.release && inputs.upload-symbols && env.SENTRY_AUTH_TOKEN != ''
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
