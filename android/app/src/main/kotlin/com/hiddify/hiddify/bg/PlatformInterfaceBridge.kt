@@ -1,11 +1,18 @@
 package com.hiddify.hiddify.bg
 
+import com.hiddify.core.libbox.AutoRedirectHandler
+import com.hiddify.core.libbox.AutoRedirectSession
+import com.hiddify.core.libbox.BridgeOptions
+import com.hiddify.core.libbox.BridgeSession
 import com.hiddify.core.libbox.ConnectionOwner
 import com.hiddify.core.libbox.InterfaceUpdateListener
 import com.hiddify.core.libbox.LocalDNSTransport
+import com.hiddify.core.libbox.NeighborUpdateListener
 import com.hiddify.core.libbox.NetworkInterfaceIterator
 import com.hiddify.core.libbox.Notification
 import com.hiddify.core.libbox.PlatformInterface
+import com.hiddify.core.libbox.PlatformUser
+import com.hiddify.core.libbox.ShellSession
 import com.hiddify.core.libbox.StringIterator
 import com.hiddify.core.libbox.TunOptions
 import com.hiddify.core.libbox.WIFIState
@@ -84,4 +91,48 @@ object PlatformInterfaceBridge : PlatformInterface {
     override fun cancelNotification(identifier: String, typeID: Int) {
         platform().cancelNotification(identifier, typeID)
     }
+
+    override fun writeLog(message: String) = platform().writeLog(message)
+
+    // the rest of the core's platform interface (neighbor monitor, shell, bridge, auto redirect):
+    // the wrapper answers "not supported", so the bridge only has to ask it
+    override fun startNeighborMonitor(listener: NeighborUpdateListener?) =
+        platform().startNeighborMonitor(listener)
+
+    override fun closeNeighborMonitor(listener: NeighborUpdateListener?) =
+        platform().closeNeighborMonitor(listener)
+
+    override fun registerMyInterface(name: String?) = platform().registerMyInterface(name)
+
+    override fun usePlatformShell(): Boolean = platform().usePlatformShell()
+
+    override fun checkPlatformShell() = platform().checkPlatformShell()
+
+    override fun openShellSession(
+        user: PlatformUser?,
+        command: String?,
+        environ: StringIterator?,
+        term: String?,
+        rows: Int,
+        cols: Int,
+    ): ShellSession = platform().openShellSession(user, command, environ, term, rows, cols)
+
+    override fun lookupUser(username: String?): PlatformUser = platform().lookupUser(username)
+
+    override fun lookupSFTPServer(): String = platform().lookupSFTPServer()
+
+    override fun readSystemSSHHostKey(): String = platform().readSystemSSHHostKey()
+
+    override fun tailscaleHostname(): String = platform().tailscaleHostname()
+
+    override fun usePlatformBridge(): Boolean = platform().usePlatformBridge()
+
+    override fun createBridge(options: BridgeOptions?): BridgeSession = platform().createBridge(options)
+
+    override fun usePlatformAutoRedirect(): Boolean = platform().usePlatformAutoRedirect()
+
+    override fun createAutoRedirect(
+        options: ByteArray?,
+        handler: AutoRedirectHandler?,
+    ): AutoRedirectSession = platform().createAutoRedirect(options, handler)
 }
